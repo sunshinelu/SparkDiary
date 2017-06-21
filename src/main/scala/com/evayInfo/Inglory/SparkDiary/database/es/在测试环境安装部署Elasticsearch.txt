@@ -1,0 +1,284 @@
+时间：2017年03月20日
+
+1.安装环境
+	CentOS 6.7
+	java version "1.7.0_67"
+	ElasticSearch版本：2.3.5
+	测试环境：172.16.96.21~172.16.96.24
+	
+2.ElasticSearch配置
+ceshi1:
+vim elasticsearch.yml
+
+#配置es的集群名称，默认是elasticsearch，es会自动发现在同一网段下的es，如果在同一网段下有多个集群，就可以用这个属性来区分不同的集群。
+cluster.name: elasticsearch-2.3.5
+
+#节点名，默认随机指定一个name列表中名字，该列表在es的jar包中config文件夹里name.txt文件中，其中有很多作者添加的有趣名字。 
+node.name: es-01
+
+#指定集群中的节点中有几个有master资格的节点。对于大集群可以写3个以上。
+covery.zen.minimum_master_nodes: 3
+
+#默认是3s，这是设置集群中自动发现其它节点时ping连接超时时间，为避免因为网络差而导致启动报错，现设成了40s。
+discovery.zen.ping.timeout: 40s
+
+#设置是否打开多播发现节点，默认是true。
+discovery.zen.ping.multicast.enabled: false
+
+#设置绑定的ip地址，这是我的master虚拟机的IP。
+network.host: ceshi1.yiyun
+
+#指明集群中其它可能为master的节点ip,以防es启动后发现不了集群中的其他节点。
+discovery.zen.ping.unicast.hosts: ["ceshi1.yiyun", "ceshi2.yiyun", "ceshi3.yiyun", "ceshi4.yiuyn"]
+
+
+ceshi2~ceshi4修改以下两项：
+node.name
+network.host
+
+
+ceshi2:
+
+#配置es的集群名称，默认是elasticsearch，es会自动发现在同一网段下的es，如果在同一网段下有多个集群，就可以用这个属性来区分不同的集群。
+cluster.name: elasticsearch-2.3.5
+
+#节点名，默认随机指定一个name列表中名字，该列表在es的jar包中config文件夹里name.txt文件中，其中有很多作者添加的有趣名字。 
+node.name: es-02
+
+#指定集群中的节点中有几个有master资格的节点。对于大集群可以写3个以上。
+covery.zen.minimum_master_nodes: 3
+
+#默认是3s，这是设置集群中自动发现其它节点时ping连接超时时间，为避免因为网络差而导致启动报错，现设成了40s。
+discovery.zen.ping.timeout: 40s
+
+#设置是否打开多播发现节点，默认是true。
+discovery.zen.ping.multicast.enabled: false
+
+#设置绑定的ip地址，这是我的master虚拟机的IP。
+network.host: ceshi2.yiyun
+
+#指明集群中其它可能为master的节点ip,以防es启动后发现不了集群中的其他节点。
+discovery.zen.ping.unicast.hosts: ["ceshi1.yiyun", "ceshi2.yiyun", "ceshi3.yiyun", "ceshi4.yiuyn"]
+
+
+ceshi3:
+
+#配置es的集群名称，默认是elasticsearch，es会自动发现在同一网段下的es，如果在同一网段下有多个集群，就可以用这个属性来区分不同的集群。
+cluster.name: elasticsearch-2.3.5
+
+#节点名，默认随机指定一个name列表中名字，该列表在es的jar包中config文件夹里name.txt文件中，其中有很多作者添加的有趣名字。 
+node.name: es-03
+
+#指定集群中的节点中有几个有master资格的节点。对于大集群可以写3个以上。
+covery.zen.minimum_master_nodes: 3
+
+#默认是3s，这是设置集群中自动发现其它节点时ping连接超时时间，为避免因为网络差而导致启动报错，现设成了40s。
+discovery.zen.ping.timeout: 40s
+
+#设置是否打开多播发现节点，默认是true。
+discovery.zen.ping.multicast.enabled: false
+
+#设置绑定的ip地址，这是我的master虚拟机的IP。
+network.host: ceshi3.yiyun
+
+#指明集群中其它可能为master的节点ip,以防es启动后发现不了集群中的其他节点。
+discovery.zen.ping.unicast.hosts: ["ceshi1.yiyun", "ceshi2.yiyun", "ceshi3.yiyun", "ceshi4.yiuyn"]
+
+
+
+ceshi4:
+
+#配置es的集群名称，默认是elasticsearch，es会自动发现在同一网段下的es，如果在同一网段下有多个集群，就可以用这个属性来区分不同的集群。
+cluster.name: elasticsearch-2.3.5
+
+#节点名，默认随机指定一个name列表中名字，该列表在es的jar包中config文件夹里name.txt文件中，其中有很多作者添加的有趣名字。 
+node.name: es-04
+
+#指定集群中的节点中有几个有master资格的节点。对于大集群可以写3个以上。
+covery.zen.minimum_master_nodes: 3
+
+#默认是3s，这是设置集群中自动发现其它节点时ping连接超时时间，为避免因为网络差而导致启动报错，现设成了40s。
+discovery.zen.ping.timeout: 40s
+
+#设置是否打开多播发现节点，默认是true。
+discovery.zen.ping.multicast.enabled: false
+
+#设置绑定的ip地址，这是我的master虚拟机的IP。
+network.host: ceshi4.yiyun
+
+#指明集群中其它可能为master的节点ip,以防es启动后发现不了集群中的其他节点。
+discovery.zen.ping.unicast.hosts: ["ceshi1.yiyun", "ceshi2.yiyun", "ceshi3.yiyun", "ceshi4.yiuyn"]
+
+
+
+
+
+
+
+
+
+
+3.插件安装
+参考链接：
+http://blog.csdn.net/lx553798608/article/details/51728541
+
+cd /root/software/elasticsearch-2.3.4/bin/
+./plugin install mobz/elasticsearch-head
+
+
+
+
+4.IK Analysis for Elasticsearch
+https://github.com/medcl/elasticsearch-analysis-ik
+wget https://codeload.github.com/medcl/elasticsearch-analysis-ik/zip/v1.9.5
+unzip v1.9.5 
+cd elasticsearch-analysis-ik-1.9.5/
+mvn package
+
+#拷贝生成的elasticsearch-analysis-ik-1.9.5.zip至elasticsearch的plugins/ik目录（无该目录则自己新建），解压elasticsearch-analysis-ik-1.9.5.zip
+cd /root/software/elasticsearch-2.3.4/plugins
+mkdir ik
+cd ik
+cp /root/sunlu/Program/elasticsearch-analysis-ik-1.9.5/target/releases/elasticsearch-analysis-ik-1.9.5.zip .
+unzip elasticsearch-analysis-ik-1.9.5.zip 
+
+
+5.ElasticSearch启动
+
+方法一：（推荐使用）
+由于elasticsearch2.0版本以后不能使用root来启动，所以需要创建一个普通用户来启动。
+参考链接：
+http://www.2cto.com/os/201703/607529.html
+groupadd elasticsearch
+
+useradd elasticsearch -g elasticsearch
+
+chown -R elasticsearch.elasticsearch /root/software/elasticsearch-2.3.4
+
+su - elasticsearch
+
+cd /root/software/elasticsearch-2.3.4/bin/
+
+./elasticsearch
+
+
+方法二：（目前暂时使用该方法）
+参考链接：
+http://blog.csdn.net/qq_30171043/article/details/52188353
+bin/elasticsearch -Des.insecure.allow.root=true
+
+cd /root/software/elasticsearch-2.3.5/bin
+nohup ./elasticsearch -Des.insecure.allow.root=true &
+
+6. 查看进程是否存在
+ps aux|grep elasticsearch
+
+
+http://ceshi1.yiyun:9200/
+http://ceshi1.yiyun:9200/_plugin/head/
+
+
+#查看所有的节点
+curl 'ceshi1.yiyun:9200/_cat/nodes?v'
+##########################################################################################
+#host         ip           heap.percent ram.percent load node.role master name  
+#172.16.96.23 172.16.96.23           10          97 0.11 d         m      es-03 
+#172.16.96.21 172.16.96.21           10          98 0.09 d         *      es-01 
+#172.16.96.24 172.16.96.24           11          95 0.02 d         m      es-04 
+#172.16.96.22 172.16.96.22            9          90 0.02 d         m      es-02 
+##########################################################################################
+
+#查看所有的索引库
+curl 'ceshi1.yiyun:9200/_cat/indices?v'
+########################################################################################
+#health status index pri rep docs.count docs.deleted store.size pri.store.size 
+#green  open   spark   5   1          5            0     34.6kb         17.3kb 
+##############################################################################################
+
+7.测试spark读写ES数据。
+参考链接：
+http://blog.csdn.net/stark_summer/article/details/49743687
+https://www.iteblog.com/archives/1728.html
+
+修改spark-defaults.conf文件
+cd $SPARK_HOME
+cd conf/
+vi spark-defaults.conf
+#spark.es.nodes指定es集群的机器列表，但是不需要把集群所有的节点都列在里面。
+spark.es.nodes ceshi1.yiyun
+spark.es.port  9200
+
+
+spark-shell --jars /root/sunlu/Program/jarLibs/elasticsearch-spark-20_2.11-5.2.2.jar
+
+
+//将结果保存到es中
+import org.apache.spark.{SparkConf, SparkContext}
+val conf = new SparkConf()//.setAppName("ESDemo1").setMaster("local")
+conf.set("es.nodes", "ceshi1.yiyun")
+conf.set("es.port", "9200")
+conf.set("es.index.auto.create", "true")
+
+import org.elasticsearch.spark._
+val sc = new SparkContext(conf)         
+val numbers = Map("one" -> 1, "two" -> 2, "three" -> 3)
+val airports = Map("OTP" -> "Otopeni", "SFO" -> "San Fran")
+
+sc.makeRDD(Seq(numbers, airports)).saveToEs("spark/docs")
+
+//定义Person　case class
+case class Person(name: String, age: Int)
+val people = sc.textFile("file:///root/software/spark-2.0.2-bin-hadoop2.6/examples/src/main/resources/people.txt").
+    map(_.split(",")).map(p => Person(p(0),p(1).trim.toInt)).toDF()
+people.saveToEs("spark/people")
+
+//读取es的数据
+import org.apache.spark.sql.SQLContext
+//创建sqlContext
+val sqlContext = new SQLContext(sc)
+val df1 = sqlContext.esDF("spark/people")
+println(df1.schema.treeString)
+df1.show()
+
+val df2 = sqlContext.esDF("spark/people","?q=wang")
+df2.show()
+
+
+ES参考链接：
+elasticsearch2.3安装以及集群部署：http://blog.csdn.net/lx553798608/article/details/51728541
+elasticsearch2.3.5集群配置：http://blog.csdn.net/qq_30171043/article/details/52188353
+elasticsearch第二章：搭建elasticsearch2.3.3 cluster；http://blog.csdn.net/suzimo1950679341/article/details/51576855
+IK Analysis for Elasticsearch；https://github.com/medcl/elasticsearch-analysis-ik
+elasticsearch集群安装配置_插件安装：http://blog.csdn.net/u010010664/article/details/52468289
+linux下elasticsearch 安装、配置及示例：http://blog.csdn.net/sinat_28224453/article/details/51134978
+安装和使用elasticsearch：http://blog.csdn.net/ebw123/article/details/46707559
+Elasticsearch-2.3.x填坑之路：http://www.cnblogs.com/skyblue/p/5504595.html
+elasticsearch2.2 集群搭建各种坑：http://www.cnblogs.com/muzhiye/p/elasticsearch_set_cluster.html
+
+Linux下Elasticsearch-5.1.2简单集群搭建：https://my.oschina.net/Listening/blog/827954
+ElasticSearch5.1.1集群部署：http://blog.csdn.net/omaverick1/article/details/53744586?utm_source=itdadao&utm_medium=referral
+Elasticsearch 5.0 集群：http://www.tuicool.com/articles/a2yQVrq
+
+elasticsearch不能以root运行的问题：http://blog.csdn.net/showhilllee/article/details/53404042
+elasticsearch安装中root无法启动的解决办法：http://www.2cto.com/os/201703/607529.html
+
+elasticsearch-analysis-ik 分词插件安装及配置：http://blog.csdn.net/hyman_yx/article/details/51683911
+Elasticsearch中文分词器IK配置和使用：http://www.2cto.com/database/201611/560699.html
+ElasticSearch中IK配置：http://blog.sina.com.cn/s/blog_6f3ff2c90102vwkd.html
+
+ES集群Master节点配置问题；http://www.cnblogs.com/wmx3ng/p/4707838.html
+
+spark与elasticsearch整合：http://blog.csdn.net/myproudcodelife/article/details/50985057
+使用Apache Spark将数据写入ElasticSearch：https://www.iteblog.com/archives/1728.html
+Apache Spark support：https://www.elastic.co/guide/en/elasticsearch/hadoop/master/spark.html#spark
+elasticsearch-hadoop：https://github.com/elastic/elasticsearch-hadoop
+Write ES error with Spark 2.0 release：https://discuss.elastic.co/t/write-es-error-with-spark-2-0-release/56967
+
+Elasticsearch Spark (for Spark 2.0, Scala 2.11)：https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch-spark-20_2.11
+Elasticsearch Spark (for Spark 1.3 1.6, Scala 2.11)：https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch-spark-13_2.11
+Elasticsearch Spark (for Spark 2.0, Scala 2.10)：https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch-spark-20_2.10
+Elasticsearch Spark (for Spark 1.3 1.6, Scala 2.10)：https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch-spark-13_2.10
+
+
+
+
