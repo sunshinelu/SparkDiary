@@ -43,7 +43,7 @@ object svmDemo {
     println("Area under ROC = " + accuracy)
 /*
     //保存模型
-    val ModelPath = "/user/huangmeiling/svm_model"
+    val ModelPath = "result/svm_model"
     model.save(sc, ModelPath)
     val sameModel = SVMModel.load(sc, ModelPath)
 */

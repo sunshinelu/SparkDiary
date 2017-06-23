@@ -49,7 +49,7 @@ object decisionTreeDemo {
 
     /*
     // 保存模型
-    val ModelPath = "/user/huangmeiling/Decision_Tree_Model"
+    val ModelPath = "result/Decision_Tree_Model"
     model.save(sc, ModelPath)
     val sameModel = DecisionTreeModel.load(sc, ModelPath)
     */
