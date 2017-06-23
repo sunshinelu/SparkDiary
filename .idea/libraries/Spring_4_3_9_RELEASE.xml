@@ -1,6 +1,5 @@
 <component name="libraryTable">
-  <library name="Spring-4.3.9.RELEASE" type="spring">
-    <properties version="4.3.9.RELEASE" />
+  <library name="Spring-4.3.9.RELEASE">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/lib/spring-aspects-4.3.9.RELEASE.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/spring-aop-4.3.9.RELEASE.jar!/" />
