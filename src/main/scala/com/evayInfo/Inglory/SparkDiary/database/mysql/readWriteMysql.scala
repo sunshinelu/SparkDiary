@@ -2,13 +2,13 @@ package com.evayInfo.Inglory.SparkDiary.database.mysql
 
 import java.util.Properties
 
-
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
 /**
  * Created by sunlu on 17/6/23.
+ * 对mysql数据库进行读写操作
  */
 object readWriteMysql {
 
@@ -27,7 +27,6 @@ object readWriteMysql {
     val conf = new SparkConf().setAppName(s"readWriteMysql").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(conf).getOrCreate()
     val sc = spark.sparkContext
-    import spark.implicits._
 
     //connect mysql database
     val url1 = "jdbc:mysql://localhost:3306/sunluMySQL"
