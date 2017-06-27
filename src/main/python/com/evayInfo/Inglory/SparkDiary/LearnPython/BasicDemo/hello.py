@@ -52,5 +52,10 @@ print s
 print len(s)
 print s[2][1]
 
-print "tuple"
+print "tuple 使用Demo"
 classmates2 = ('Michael', 'Bob', 'Tracy')
+t = ('a', 'b', ['A', 'B'])
+print t
+t[2][0] = "X"
+t[2][1] = "Y"
+print t
