@@ -31,7 +31,7 @@ object featureSelectorsDemo1 {
 
     val spark = SparkSession.builder.appName("featureSelectorsDemo1").master("local[*]").getOrCreate()
     val dataset = spark.createDataFrame(data, StructType(Array(attrGroup.toStructField())))
-
+    import spark.implicits._
     dataset.show()
     /*
 +--------------------+
