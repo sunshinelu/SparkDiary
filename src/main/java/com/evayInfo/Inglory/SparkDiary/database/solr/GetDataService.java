@@ -1,6 +1,5 @@
 package com.evayInfo.Inglory.SparkDiary.database.solr;
 
-import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
@@ -8,12 +7,16 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.ModifiableSolrParams;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by sunlu on 17/6/21.
+ *
+ *
  */
 public class GetDataService {
 
@@ -48,23 +51,25 @@ public class GetDataService {
         ModifiableSolrParams params = new ModifiableSolrParams();
         SolrQuery filterQuery = new SolrQuery();
         int fromDoc = 0;
-        int rows = 100000;
-       // filterQuery.addFilterQuery("title:*");//查询标题不为空
+        int rows = 53127;
+        filterQuery.setQuery("*:*");
+        filterQuery.addFilterQuery("title:*");//查询标题不为空
         filterQuery.setStart(fromDoc);
 //        filterQuery.addSort("lastModified", ORDER.desc);
         filterQuery.setRows(rows);
         params.add(filterQuery);
         return params;
     }
-
     public static void main(String[] args) throws IOException {
 
+        FileOutputStream fos = new FileOutputStream("D:\\result.txt");
+        OutputStreamWriter osw = new OutputStreamWriter(fos);
         List<Content> contentList = GetDataService.getData();
-        System.out.println("=================");
+        for (int i = 0; i < contentList.size(); i++)
+            osw.write(contentList.get(i).getId() + "," + contentList.get(i).getLastModified() + "\r\n");
+        //osw.flush();
         System.out.println(contentList.size());
-        for (int i = 0; i <= 10; i++) {
-            // System.out.println(contentList.get(i).getId()+"---"+contentList.get(i).getLastModified());
-        }
+        osw.close();
     }
 
 }
