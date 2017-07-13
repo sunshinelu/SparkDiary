@@ -157,12 +157,12 @@ object deleteHbaseData {
     ds1.select("label").dropDuplicates().show()
 
     val addColume = udf((args: String) => 1)
-    ds1.withColumn("value", addColume($"label")).groupBy("label").agg(sum($"value")).show()
+    ds1.withColumn("value", addColume($"label")).groupBy("label").agg(sum($"value")).show(90)
 
     val addColume2 = udf(() => 1)
-    ds1.withColumn("value", addColume2()).groupBy("label").agg(sum($"value")).show()
+    ds1.withColumn("value", addColume2()).groupBy("label").agg(sum($"value")).show(90)
 
-    ylzxDF.withColumn("value", addColume2()).groupBy("manuallabel").agg(sum($"value")).show()
+    ylzxDF.withColumn("value", addColume2()).groupBy("manuallabel").agg(sum($"value")).show(90)
 
   }
 }
