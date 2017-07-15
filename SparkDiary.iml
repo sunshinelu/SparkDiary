@@ -2,7 +2,7 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Python" name="Python">
-      <configuration sdkName="Python 2.7.10 (/usr/bin/python)" />
+      <configuration sdkName="Python 2.7.13 (~/anaconda/bin/python)" />
     </facet>
     <facet type="Spring" name="Spring">
       <configuration>
@@ -29,6 +29,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="scala-sdk-2.11.8" level="application" />
     <orderEntry type="library" name="Spring-4.3.9.RELEASE" level="project" />
+    <orderEntry type="library" name="Python 2.7.13 (~/anaconda/bin/python) interpreter library" level="application" />
     <orderEntry type="library" name="Maven: javax.ws.rs:javax.ws.rs-api:2.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.hadoop:hadoop-hdfs:2.6.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:11.0.2" level="project" />
@@ -297,6 +298,9 @@
     <orderEntry type="library" name="Maven: org.codehaus.woodstox:stax2-api:3.1.4" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.woodstox:woodstox-core-asl:4.4.1" level="project" />
     <orderEntry type="library" name="Maven: org.noggit:noggit:0.6" level="project" />
-    <orderEntry type="library" name="Python 2.7.10 (/usr/bin/python) interpreter library" level="application" />
+    <orderEntry type="library" name="Maven: org.tensorflow:tensorflow:1.2.1" level="project" />
+    <orderEntry type="library" name="Maven: org.tensorflow:libtensorflow:1.2.1" level="project" />
+    <orderEntry type="library" name="Maven: org.tensorflow:libtensorflow_jni:1.2.1" level="project" />
+    <orderEntry type="library" name="Maven: org.jsoup:jsoup:1.7.1" level="project" />
   </component>
 </module>
