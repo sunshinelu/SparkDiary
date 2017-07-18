@@ -74,13 +74,50 @@ object wHotTopic {
     //    df_c.printSchema()
     //    df_u.printSchema()
 
-    //字符串处理
+    //使用Jsoup进行字符串处理
     val replaceString = udf((content: String) => {
       Jsoup.parse(content).body().text()
     })
 
     val df1 = df_w.withColumn("content", replaceString(col("TEXT")))
-    df1.select("content").show(2)
+    df1.select("content").take(15).foreach(println)
+
+    val df2 = df_c.withColumn("content", replaceString(col("TEXT")))
+    df2.select("content").take(10).foreach(println)
+
+    // 获取"@用户名"
+
+    val userPatten = "@[\\u4e00-\\u9fa5a-zA-Z0-9_-]{4,30}".r
+    //val userPatten = "@[^,，：:\\s@]+".r//这种
+
+    def getUsers(content: String): String = {
+      val userNames = userPatten.findAllMatchIn(content).mkString(";")
+      userNames
+    }
+    val getUserFunc2 = udf((arg: String) => getUsers(arg))
+
+    val getUserFunc = udf((content: String) => {
+      val userNames = userPatten.findAllMatchIn(content).mkString(";")
+      userNames
+    })
+
+    val df3 = df1.withColumn("userNames", getUserFunc(col("content")))
+    df3.select("userNames").take(15).foreach(println)
+    val df3_2 = df1.withColumn("userNames", getUserFunc2(col("content")))
+    df3_2.select("userNames").take(15).foreach(println)
+
+
+
+    // 获取"#话题#"
+    val topicPatten = "#[^#]+#".r
+    val getTopicsFunc = udf((content: String) => {
+      val userNames = topicPatten.findAllMatchIn(content).mkString(";")
+      userNames
+    })
+
+    val df4 = df3.withColumn("topics", getTopicsFunc(col("content")))
+    df4.select("topics").take(15).foreach(println)
+
 
     /*
     val reg = """((http|https|ftp|ftps):\\/\\/)?([a-zA-Z0-9-]+\\.){1,5}(com|cn|net|org|hk|tw)((\\/(\\w|-)+(\\.([a-zA-Z]+))?)+)?(\\/)?(\\??([\\.%:a-zA-Z0-9_-]+=[#\\.%:a-zA-Z0-9_-]+(&amp;)?)+)?""".r
