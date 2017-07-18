@@ -2,7 +2,7 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Python" name="Python">
-      <configuration sdkName="Python 3.6.1 (D:\ProgramFiles\Anaconda3\python.exe)" />
+      <configuration sdkName="Python 2.7.13 (D:\ProgramFiles\Anaconda3\envs\python2\python.exe)" />
     </facet>
     <facet type="Spring" name="Spring">
       <configuration>
@@ -310,6 +310,6 @@
     <orderEntry type="library" name="Maven: org.tensorflow:libtensorflow:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.tensorflow:libtensorflow_jni:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.jsoup:jsoup:1.7.1" level="project" />
-    <orderEntry type="library" name="Python 3.6.1 (D:\ProgramFiles\Anaconda3\python.exe) interpreter library" level="application" />
+    <orderEntry type="library" name="Python 2.7.13 (D:\ProgramFiles\Anaconda3\envs\python2\python.exe) interpreter library" level="application" />
   </component>
 </module>
