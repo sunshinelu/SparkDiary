@@ -64,7 +64,9 @@ object wHotTopic {
     val sc = spark.sparkContext
 
 
-    val url = "jdbc:mysql://localhost:3306/bbs"
+//    val url = "jdbc:mysql://localhost:3306/bbs"
+    val url = "jdbc:mysql://localhost:3306/bbs?useUnicode=true&characterEncoding=UTF-8&" +
+      "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
     val user = "root"
     val password = "root"
     val df_w = getMysqlData(spark, url, user, password, "DA_WEIBO")
