@@ -46,8 +46,10 @@ object regTest {
  */
 
     val ss = "对得真妙@何炅 //@何炅:前路，也阳光//@李维嘉:回望，太美好"
+    val ss2 = "这属于侵略中国，符合触发武力统一的条件。//@你好台湾网：【美参院军事委员会：允许军舰停靠台湾】据台媒，美参议院军事委员会在两党的支持下，同意美国海军军舰可定期停靠高雄等台湾港口，并将台湾纳入美国一项年度国防政策措施之中。这项决议一旦获得国会批准，那将意味着美国近40年来对台政策的]"
+
     val reg6 = "//@[\\u4e00-\\u9fa5a-zA-Z0-9_-]+".r
-    val p6 = reg6.findAllMatchIn(ss).mkString(";")
+    val p6 = reg6.findAllMatchIn(ss2).mkString(";")
     println("p6 is: " + p6)
     //提取结果为：//@何炅;//@李维嘉
 
@@ -55,15 +57,17 @@ object regTest {
        提取转发全部内容
         */
 
-    val reg7 = "//@[\\u4e00-\\u9fa5a-zA-Z0-9_-]+:[\\u4e00-\\u9fa5a-zA-Z0-9_,.?:;'\"!，。！“”：；？]+".r
-    val p7 = reg7.findAllMatchIn(ss).mkString(";")
+    //    val ss2 = "这属于侵略中国，符合触发武力统一的条件。//@你好台湾网：【美参院军事委员会：允许军舰停靠台湾】据台媒，美参议院军事委员会在两党的支持下，同意美国海军军舰可定期停靠高雄等台湾港口，并将台湾纳入美国一项年度国防政策措施之中。这项决议一旦获得国会批准，那将意味着美国近40年来对台政策的]"
+    //    val reg7 = "//@[\\u4e00-\\u9fa5a-zA-Z0-9_-]+:[\\u4e00-\\u9fa5a-zA-Z0-9_：【】,.?:;'\"!，。！“”；？]+".r
+    val reg7 = "//@[\\u4e00-\\u9fa5a-zA-Z0-9_-]+[\\u4e00-\\u9fa5a-zA-Z0-9_：【】,.?:;'\"!，。！“”；？]+".r
+    val p7 = reg7.findAllMatchIn(ss2).mkString(";")
     println("p7 is: " + p7)
-    println(reg7.replaceAllIn(ss, ""))
+    println(reg7.replaceAllIn(ss2, ""))
     /*
     提取正文
      */
-    val reg8 = "//@[\\u4e00-\\u9fa5a-zA-Z0-9_-]+:[\\u4e00-\\u9fa5a-zA-Z0-9_,.?:;'\"!，。！“”：；？]+|@[^,，：:\\s@]+|#[^#]+#".r
-    val p8 = reg8.replaceAllIn(s, "")
+    val reg8 = "//@[\\u4e00-\\u9fa5a-zA-Z0-9_-]+[\\u4e00-\\u9fa5a-zA-Z0-9_：【】,.?:;'\"!，。！“”；？]+|@[^,，：:\\s@]+|#[^#]+#".r
+    val p8 = reg8.replaceAllIn(ss2, "")
     println("p8 is: " + p8)
 
     /*
@@ -83,6 +87,14 @@ object regTest {
     val p10 = reg10.findAllMatchIn(sss).mkString(";")
     println("p10 is: " + p10)
 
+    /*
+    提取回复信息
+     */
+
+    val ss3 = "回复@你好台湾网:其实特别简单"
+    val reg11 = "回复@[^,，：:\\s@]+[:：]".r
+    val p11 = reg11.findAllMatchIn(ss3).mkString(";")
+    println("提取回复信息p11 is: " + p11)
 
 
   }
