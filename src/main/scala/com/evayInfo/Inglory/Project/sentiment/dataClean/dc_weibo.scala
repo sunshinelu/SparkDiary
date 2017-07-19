@@ -37,12 +37,18 @@ object dc_weibo {
 
     val df_w = mysqlUtil.getMysqlData(spark, url, user, password, "DA_WEIBO")
     val df_c = mysqlUtil.getMysqlData(spark, url, user, password, "DA_WEIBO_COMMENTS")
+
+
+
+
+
+
     //使用Jsoup进行字符串处理
     val replaceString = udf((content: String) => {
       Jsoup.parse(content).body().text()
     })
 
-    // 删除情感字符
+    // 使用Jsoup进行字符串处理，并删除情感字符
     val emoticonPatten = "\\[[0-9a-zA-Z\\u4e00-\\u9fa5]+\\]".r
     val rmEmtionFunc = udf((arg: String) => {
       emoticonPatten.replaceAllIn(Jsoup.parse(arg).body().text(), "").mkString("")
