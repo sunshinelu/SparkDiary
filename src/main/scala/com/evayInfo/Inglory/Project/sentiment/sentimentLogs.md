@@ -225,6 +225,7 @@
   `TIME`：时间
   `KEYWORD`：关键词
    新增一列`SOURCE`（来源）列：来源为`SEARCH`
+   新增一列`IS_COMMENT`：是否是评论
 
   
 7) `DA_SEED`
@@ -289,5 +290,5 @@
   `LABEL`：标签：正类、负类、中性、严重
   `TIME`：文章发表时间
   `SYSTIME`：分析时间
-  
+ `IS_COMMENT`：是否是评论 0：否 1：是'  
 

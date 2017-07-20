@@ -26,13 +26,13 @@ import org.apache.spark.sql.functions._
   `DEL_FLAG`
  *
  *
- * 只获取以下信息做情感分析,`DA_WEIXIN`中获取数据为：
+`DA_WEIXIN`中获取数据为：
   `WX_ID`（文章唯一标识）
-  `WX_DATE`：微信文章时间
-  对`WX_CONTENT`（微信文章内容）清洗后结果
-  `WX_ZT`：主题
+   `WX_TITLE`（微信文章标题）
+  `WX_DATE`（微信文章时间）
+  `WX_CONTENT`（微信文章内容）
+  `WX_ZT`（主题）
    新增一列`SOURCE`（来源）列：来源为`WEIXIN`
- *
  */
 object dc_weixin {
 
@@ -58,7 +58,7 @@ object dc_weixin {
     val user = "root"
     val password = "root"
     val df1 = mysqlUtil.getMysqlData(spark, url, user, password, "DA_WEIXIN").
-      select("WX_ID", "WX_CONTENT", "WX_ZT", "WX_DATE")
+      select("WX_ID", "WX_TITLE", "WX_CONTENT", "WX_ZT", "WX_DATE")
 
     // add source column
     val addSource = udf((arg: String) => "WEIXIIN")
@@ -66,7 +66,7 @@ object dc_weixin {
     df2.printSchema()
 
     // change all columns name
-    val colRenamed = Seq("ID", "CONTENT", "TOPIC", "DATE", "SOURCE")
+    val colRenamed = Seq("ID", "TITLE", "CONTENT", "TOPIC", "DATE", "SOURCE")
     val df3 = df2.toDF(colRenamed: _*)
     df3.printSchema()
 

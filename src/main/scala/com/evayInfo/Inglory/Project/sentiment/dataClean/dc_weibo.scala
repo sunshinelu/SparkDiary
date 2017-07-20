@@ -88,13 +88,19 @@ object dc_weibo {
     val df_c_2 = df_c_1.join(keyLib, Seq("WEIBO_ID"), "left").drop("WEIBO_ID")
     val df_w_2 = df_w_1.drop("WEIBO_ID")
 
-    // change all columns name
-    val colRenamed = Seq("ID", "TEXT", "DATE", "TOPIC")
-    val df_w_3 = df_w_2.toDF(colRenamed: _*)
-    val df_c_3 = df_c_2.toDF(colRenamed: _*)
+    // add IS_COMMENT column
+    val addIsComm = udf((arg: Int) => arg)
+    val df_w_3 = df_w_2.withColumn("IS_COMMENT", addIsComm(lit(0)))
+    val df_c_3 = df_c_2.withColumn("IS_COMMENT", lit(1))
 
-    // 合并 df_w_3 和 df_c_3
-    val df = df_w_3.union(df_c_3)
+
+    // change all columns name
+    val colRenamed = Seq("ID", "TEXT", "DATE", "TOPIC", "IS_COMMENT")
+    val df_w_4 = df_w_3.toDF(colRenamed: _*)
+    val df_c_4 = df_c_3.toDF(colRenamed: _*)
+
+    // 合并 df_w_4 和 df_c_4
+    val df = df_w_4.union(df_c_4)
     /*
     root
      |-- ID: string (nullable = false)
