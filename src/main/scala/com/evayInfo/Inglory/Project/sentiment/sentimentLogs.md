@@ -3,13 +3,12 @@
 
 ## 一、数据抓取分工：
 
-杨春：论坛贴吧、搜索引擎
+杨春：论坛贴吧、搜索引擎、网站门户
 
-孙伟：微博
+孙伟：微博、博客
 
 平高：微信
 
-网站门户、博客待定。。。。
 
 
 ## 二、数据清洗方案：
@@ -25,6 +24,10 @@
   `COMMENTSCOUNT`：评论数
   `CREATEDAT`：发表时间
   `UID`：微博作者ID
+  `TITLE`：标题
+  `WEIBO_KEY`：关键字
+
+
 
 `DA_WEIBO_COMMENTS`：
   `ID`：评论ID
@@ -33,7 +36,7 @@
   `CREATED_AT`： 发表时间
   `UID`： 评论人ID
   `SCREEN_NAME`：评论人昵称
-  `SOURCE`：来源设备',
+  `SOURCE`：来源设备
 
 
 2. 新浪微博中常见的符号有三种：@  #  //
@@ -100,14 +103,14 @@
 
 `DA_BBSARTICLE`文章表：
   `ID`：文章ID
-  `TITLE`：标题',
-  `CONTENT`：内容',
-  `AUTHOR`：作者',
-  `TIME`：发布时间',
-  `CLICKNUM`：点击数',
-  `REPLY`：回复数',
+  `TITLE`：标题
+  `CONTENT`：内容
+  `AUTHOR`：作者
+  `TIME`：发布时间
+  `CLICKNUM`：点击数
+  `REPLY`：回复数
   `KEYWORD`：主题
-  `BZ`：备注',
+  `BZ`：备注
   `TASKID`
 
 
@@ -122,9 +125,41 @@
 
 ### (四)、搜索引擎
 
+`DA_BAIDUARTICLE`
+  `ID`：文章ID
+  `CONTENT`：正文
+  `TITLE`：标题
+  `TIME`：时间
+  `KEYWORD`：关键词
+  `SOURCE`：源
+  `TASKID` 
+  `SOURCEURL`：源url
+  `CHARSET`：编码
+
 
 
 ### (五)、网站门户
+
+
+`DA_SEED`
+  `SEED_ID`：序号
+  `SEED_URL`：采集地址
+  `SEED_TITLE`：标题
+  `SEED_CONTENT`：内容
+  `SEED_DATE`：时间
+  `TASK_ID`：任务id
+  `CREATE_BY`：创建人
+  `CREATE_TIME`：创建时间
+  `UPDATE_BY`：修改人
+  `UPDATE_TIME`：修改时间
+  `DEL_FLAG`：删除标记 1:正常  2:删除
+  `MANUALLABEL`：标签
+  `TYPE`：区分网站、微信、微博
+  `FJFLAG`：标注是否为附件
+  `SOURCEURL`：源网页地址
+
+
+### (六)、博客
 
 
 
@@ -138,28 +173,36 @@
 
 1) `DA_WEIBO`中获取的数据为：
   `ID`（微博ID）
-   对`TEXT`（微博内容）进行正文提取后结果
+   `TITLE`（标题）
+   `TEXT`（微博内容）
    `CREATEDAT`（发表时间）
+   `WEIBO_KEY`（关键字）
    新增一列`SOURCE`（来源）列：来源为`WEIBO`
-
+   
 
 2) `DA_WEIBO_COMMENTS`中获取的数据为：
   `ID`（评论ID）
-  对`TEXT`（评论内容）进行正文提取后结果
+  `WEIBO_ID`：微博ID
+  `TITLE`（标题）：通过`WEIBO_ID`从`DA_WEIBO`表中`TITLE`列获取。
+  `TEXT`（评论内容）
   `CREATED_AT`： 发表时间
+  `WEIBO_KEY`（关键字）：通过`WEIBO_ID`从`DA_WEIBO`表中`WEIBO_KEY`列获取。
    新增一列`SOURCE`（来源）列：来源为`WEIBO`
+
 
 3) `DA_WEIXIN`中获取数据为：
   `WX_ID`（文章唯一标识）
-  `WX_DATE`：微信文章时间
-  对`WX_CONTENT`（微信文章内容）清洗后结果
-  `WX_ZT`：主题
+   `WX_TITLE`（微信文章标题）
+  `WX_DATE`（微信文章时间）
+  `WX_CONTENT`（微信文章内容）
+  `WX_ZT`（主题）
    新增一列`SOURCE`（来源）列：来源为`WEIXIN`
    
  
 4) `DA_BBSARTICLE`文章表中获取的数据为：
   `ID`（文章ID）
-  对`CONTENT`（内容）进行数据清洗后结果
+  `TITLE`（标题）
+  `CONTENT`（内容）
   `TIME`（发布时间）
   `KEYWORD`（主题）
    新增一列`SOURCE`（来源）列：来源为`LUNTAN`
@@ -169,30 +212,61 @@
 5) `DA_BBSCOMMENT`评论表中获取的数据为：
   `ID`（评论ID）
   `ARTICLEID`（对应文章表中的文章id）
+  `TITLE`（标题）：通过`ARTICLEID`从`DA_BBSARTICLE`表中`TITLE`列获取
   `JSRESTIME`（评论时间）
   对`BBSCONTENT`（评论的内容）进行数据清洗后结果
   新增一列`KEYWORD`（主题）：通过`ARTICLEID`从`DA_BBSARTICLE`表中`KEYWORD`列获取。
   新增一列`SOURCE`（来源）列：来源为`LUNTAN`
    
-   
+6) `DA_BAIDUARTICLE`
+  `ID`：文章ID
+  `CONTENT`：正文
+  `TITLE`：标题
+  `TIME`：时间
+  `KEYWORD`：关键词
+   新增一列`SOURCE`（来源）列：来源为`SEARCH`
+
   
+7) `DA_SEED`
+     `SEED_ID`：序号
+     `SEED_TITLE`：标题
+     `SEED_CONTENT`：内容
+     `SEED_DATE`：时间
+     `MANUALLABEL`：标签
+     新增一列`SOURCE`（来源）列：来源为`MENHU`
+
+
 
 ## 四、情感分析结果：
 
 ### 表中信息：
 文章的ID：
-文章时间：年－月－日
+文章时间：年－月－日 时－分－秒
 分析时间：年－月－日 时－分－秒
 情感打分：
 文章主题：
 
-`sentiment_trend`（情感分析表）：
+`sentiment_trend`（情感分析表）：9项
   `ARTICLEID`：文章id
   `TIME`：文章时间
   `SYSTIME`：分析时间
   `SCORE`：文章得分
   `KEYWORD`：标签（主题）
+  `SOURCE`:来源
+  `TITLE`：文章标题
+  `TEXT`:文章内容（不清洗）
+  `LABEL`:label列
 
+
+### 数据清洗结果表：（暂时不要）
+
+ `ARTICLEID`：文章id
+  文章的标题
+  文章内容：不清洗
+  文章内容：已清洗的
+  `TIME`：文章时间
+  `KEYWORD`：标签（主题）
+  `SOURCE`:来源
 
 
 ## 五、最新舆情
@@ -203,5 +277,17 @@
 ## 六、严重舆情
 
 
+## 七、最终结果表
 
+`SUMMARYARTICLE`
+  `ARTICLEID`：文章id
+  `TITLE`：文章标题
+  `CONTENT`：文章内容
+  `SOURCE`：文章来源
+  `KEYWORD`：标签:台湾  扶贫
+  `SCORE` ：文章得分
+  `LABEL`：标签：正类、负类、中性、严重
+  `TIME`：文章发表时间
+  `SYSTIME`：分析时间
+  
 
