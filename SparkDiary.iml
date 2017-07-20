@@ -2,7 +2,7 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Python" name="Python">
-      <configuration sdkName="" />
+      <configuration sdkName="Python 2.7.13 (D:\ProgramFiles\Anaconda3\envs\python2\python.exe)" />
     </facet>
     <facet type="Spring" name="Spring">
       <configuration>
@@ -12,7 +12,7 @@
       </configuration>
     </facet>
   </component>
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_7" inherit-compiler-output="false">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_7">
     <output url="file://$MODULE_DIR$/target/classes" />
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
@@ -59,7 +59,7 @@
     <orderEntry type="module-library">
       <library name="Maven: jdk.tools:jdk.tools:1.6">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/jdk/tools/jdk.tools/1.6/jdk.tools-1.6.jar!/" />
+          <root url="jar://C:/Program Files/Java/jdk1.8.0_131/lib/tools.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -310,5 +310,6 @@
     <orderEntry type="library" name="Maven: org.tensorflow:libtensorflow:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.tensorflow:libtensorflow_jni:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.jsoup:jsoup:1.7.1" level="project" />
+    <orderEntry type="library" name="Python 2.7.13 (D:\ProgramFiles\Anaconda3\envs\python2\python.exe) interpreter library" level="application" />
   </component>
 </module>
