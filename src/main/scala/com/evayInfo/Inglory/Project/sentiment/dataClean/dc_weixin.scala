@@ -26,13 +26,14 @@ import org.apache.spark.sql.functions._
   `DEL_FLAG`
  *
  *
-`DA_WEIXIN`中获取数据为：
+3) `DA_WEIXIN`中获取数据为：
   `WX_ID`（文章唯一标识）
-   `WX_TITLE`（微信文章标题）
+  `WX_TITLE`（微信文章标题）
   `WX_DATE`（微信文章时间）
   `WX_CONTENT`（微信文章内容）
   `WX_ZT`（主题）
    新增一列`SOURCE`（来源）列：来源为`WEIXIN`
+   新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
  */
 object dc_weixin {
 
@@ -60,19 +61,30 @@ object dc_weixin {
     val df1 = mysqlUtil.getMysqlData(spark, url, user, password, "DA_WEIXIN").
       select("WX_ID", "WX_TITLE", "WX_CONTENT", "WX_ZT", "WX_DATE")
 
-    // add source column
+    // add source column and IS_COMMENT column
     val addSource = udf((arg: String) => "WEIXIIN")
-    val df2 = df1.withColumn("Source", addSource($"WX_ID"))
-    df2.printSchema()
+    val df2 = df1.withColumn("SOURCE", addSource($"WX_ID")).withColumn("IS_COMMENT", lit(0))
 
     // change all columns name
-    val colRenamed = Seq("ID", "TITLE", "CONTENT", "TOPIC", "DATE", "SOURCE")
-    val df3 = df2.toDF(colRenamed: _*)
+    val colRenamed = Seq("ARTICLEID", "TITLE", "TEXT", "KEYWORD", "TIME", "SOURCE", "IS_COMMENT")
+    val df3 = df2.toDF(colRenamed: _*).withColumn("CONTENT", $"TEXT").na.drop(Array("CONTENT"))
     df3.printSchema()
+    /*
+    root
+     |-- ARTICLEID: string (nullable = false)
+     |-- TITLE: string (nullable = true)
+     |-- TEXT: string (nullable = true)
+     |-- KEYWORD: string (nullable = true)
+     |-- TIME: string (nullable = true)
+     |-- SOURCE: string (nullable = true)
+     |-- IS_COMMENT: integer (nullable = false)
+     |-- CONTENT: string (nullable = true)
+     */
+
 
     // save data to database
 
-    mysqlUtil.saveMysqlData(df3, url, user, password, "DC_WEIXIN", "overwrite") // save mode: overwrite OR append
+    //    mysqlUtil.saveMysqlData(df3, url, user, password, "DC_WEIXIN", "overwrite") // save mode: overwrite OR append
 
 
     sc.stop()

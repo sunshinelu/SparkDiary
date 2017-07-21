@@ -178,7 +178,7 @@
    `CREATEDAT`（发表时间）
    `WEIBO_KEY`（关键字）
    新增一列`SOURCE`（来源）列：来源为`WEIBO`
-   
+   新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
 
 2) `DA_WEIBO_COMMENTS`中获取的数据为：
   `ID`（评论ID）
@@ -188,7 +188,7 @@
   `CREATED_AT`： 发表时间
   `WEIBO_KEY`（关键字）：通过`WEIBO_ID`从`DA_WEIBO`表中`WEIBO_KEY`列获取。
    新增一列`SOURCE`（来源）列：来源为`WEIBO`
-
+   新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
 
 3) `DA_WEIXIN`中获取数据为：
   `WX_ID`（文章唯一标识）
@@ -197,7 +197,7 @@
   `WX_CONTENT`（微信文章内容）
   `WX_ZT`（主题）
    新增一列`SOURCE`（来源）列：来源为`WEIXIN`
-   
+   新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
  
 4) `DA_BBSARTICLE`文章表中获取的数据为：
   `ID`（文章ID）
@@ -206,6 +206,7 @@
   `TIME`（发布时间）
   `KEYWORD`（主题）
    新增一列`SOURCE`（来源）列：来源为`LUNTAN`
+   新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
 
 
 
@@ -215,8 +216,11 @@
   `TITLE`（标题）：通过`ARTICLEID`从`DA_BBSARTICLE`表中`TITLE`列获取
   `JSRESTIME`（评论时间）
   对`BBSCONTENT`（评论的内容）进行数据清洗后结果
-  新增一列`KEYWORD`（主题）：通过`ARTICLEID`从`DA_BBSARTICLE`表中`KEYWORD`列获取。
-  新增一列`SOURCE`（来源）列：来源为`LUNTAN`
+   新增一列`KEYWORD`（主题）：通过`ARTICLEID`从`DA_BBSARTICLE`表中`KEYWORD`列获取。
+   新增一列`SOURCE`（来源）列：来源为`LUNTAN`
+   新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
+   
+   
    
 6) `DA_BAIDUARTICLE`
   `ID`：文章ID
@@ -225,7 +229,7 @@
   `TIME`：时间
   `KEYWORD`：关键词
    新增一列`SOURCE`（来源）列：来源为`SEARCH`
-   新增一列`IS_COMMENT`：是否是评论
+   新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
 
   
 7) `DA_SEED`
@@ -235,7 +239,7 @@
      `SEED_DATE`：时间
      `MANUALLABEL`：标签
      新增一列`SOURCE`（来源）列：来源为`MENHU`
-
+     新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
 
 
 ## 四、情感分析结果：
@@ -290,5 +294,5 @@
   `LABEL`：标签：正类、负类、中性、严重
   `TIME`：文章发表时间
   `SYSTIME`：分析时间
- `IS_COMMENT`：是否是评论 0：否 1：是'  
+ `IS_COMMENT`：是否是评论 0：否 1：是 
 
