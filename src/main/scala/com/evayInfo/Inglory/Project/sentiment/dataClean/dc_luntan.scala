@@ -3,7 +3,7 @@ package com.evayInfo.Inglory.Project.sentiment.dataClean
 import com.evayInfo.Inglory.util.mysqlUtil
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
 /**
@@ -83,9 +83,9 @@ object dc_luntan {
       "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
     val user = "root"
     val password = "root"
-    // get DA_WEIBO
+    // get DA_BBSARTICLE
     val df_a = mysqlUtil.getMysqlData(spark, url, user, password, "DA_BBSARTICLE")
-    // get DA_WEIBO
+    // get DA_BBSCOMMENT
     val df_c = mysqlUtil.getMysqlData(spark, url, user, password, "DA_BBSCOMMENT")
     // select columns
     val df_a_1 = df_a.select("ID", "TITLE", "CONTENT", "TIME", "KEYWORD").withColumn("ARTICLEID", col("ID"))
@@ -121,6 +121,37 @@ object dc_luntan {
 
     sc.stop()
     spark.stop()
+
+  }
+
+  /*
+getLuntanData：获取清洗后的论坛数据
+*/
+  def getLuntanData(spark: SparkSession, url: String, user: String, password: String,
+                    articalTable: String, commentTable: String): DataFrame = {
+    // get DA_BBSARTICLE
+    val df_a = mysqlUtil.getMysqlData(spark, url, user, password, articalTable)
+    // get DA_BBSCOMMENT
+    val df_c = mysqlUtil.getMysqlData(spark, url, user, password, commentTable)
+    // select columns
+    val df_a_1 = df_a.select("ID", "TITLE", "CONTENT", "TIME", "KEYWORD").withColumn("ARTICLEID", col("ID"))
+    val df_c_1 = df_c.select("ID", "ARTICLEID", "BBSCONTENT", "JSRESTIME")
+    // `KEYWORD`和`TITLE`通过`ARTICLEID`从`DA_BBSARTICLE`表中`KEYWORD`和`TITLE`列获取。
+    val keyLib = df_a_1.select("ARTICLEID", "TITLE", "KEYWORD")
+    val df_c_2 = df_c_1.join(keyLib, Seq("ARTICLEID"), "left").select("ID", "TITLE", "BBSCONTENT", "JSRESTIME", "KEYWORD")
+    val df_a_2 = df_a_1.drop("ARTICLEID")
+    // add IS_COMMENT column
+    val df_a_3 = df_a_2.withColumn("IS_COMMENT", lit(0))
+    val df_c_3 = df_c_2.withColumn("IS_COMMENT", lit(1))
+
+    // change all columns name
+    val colRenamed = Seq("ARTICLEID", "TITLE", "TEXT", "TIME", "KEYWORD", "IS_COMMENT")
+    val df_a_4 = df_a_3.toDF(colRenamed: _*)
+    val df_c_4 = df_c_3.toDF(colRenamed: _*)
+
+    val df = df_a_4.union(df_c_4).withColumn("SOURCE", lit("LUNTAN")).withColumn("CONTENT", col("TEXT")).
+      na.drop(Array("CONTENT"))
+    df
 
   }
 

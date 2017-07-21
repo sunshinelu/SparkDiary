@@ -3,7 +3,7 @@ package com.evayInfo.Inglory.Project.sentiment.dataClean
 import com.evayInfo.Inglory.util.mysqlUtil
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
 /**
@@ -92,5 +92,26 @@ object dc_weixin {
 
 
   }
+
+  /*
+getWeixinData：获取清洗后的微信数据
+*/
+  def getWeixinData(spark: SparkSession, url: String, user: String, password: String,
+                    wTable: String): DataFrame = {
+
+    val df1 = mysqlUtil.getMysqlData(spark, url, user, password, wTable).
+      select("WX_ID", "WX_TITLE", "WX_CONTENT", "WX_ZT", "WX_DATE")
+
+    // add source column and IS_COMMENT column
+    val addSource = udf((arg: String) => "WEIXIIN")
+    val df2 = df1.withColumn("IS_COMMENT", lit(0)).withColumn("SOURCE", addSource(col("WX_ID")))
+
+    // change all columns name
+    val colRenamed = Seq("ARTICLEID", "TITLE", "TEXT", "KEYWORD", "TIME", "IS_COMMENT", "SOURCE")
+    val df3 = df2.toDF(colRenamed: _*).withColumn("CONTENT", col("TEXT")).na.drop(Array("CONTENT"))
+    df3
+  }
+
+
 
 }

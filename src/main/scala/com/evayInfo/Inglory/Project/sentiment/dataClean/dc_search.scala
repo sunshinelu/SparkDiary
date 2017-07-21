@@ -3,7 +3,7 @@ package com.evayInfo.Inglory.Project.sentiment.dataClean
 import com.evayInfo.Inglory.util.mysqlUtil
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
 /**
@@ -79,6 +79,24 @@ object dc_search {
      */
 
 
+  }
+
+  /*
+getSearchData：获取清洗后的搜索引擎数据
+*/
+  def getSearchData(spark: SparkSession, url: String, user: String, password: String,
+                    TableName: String): DataFrame = {
+    val df1 = mysqlUtil.getMysqlData(spark, url, user, password, TableName).
+      select("ID", "TITLE", "CONTENT", "TIME", "KEYWORD")
+
+    // add source column and IS_COMMENT column
+    val df2 = df1.withColumn("IS_COMMENT", lit(0)).withColumn("SOURCE", lit("SEARCH"))
+
+    // change all columns name
+    val colRenamed = Seq("ARTICLEID", "TITLE", "TEXT", "TIME", "KEYWORD", "IS_COMMENT", "SOURCE")
+    val df3 = df2.toDF(colRenamed: _*).withColumn("CONTENT", col("TEXT")).na.drop(Array("CONTENT"))
+
+    df3
   }
 
 }

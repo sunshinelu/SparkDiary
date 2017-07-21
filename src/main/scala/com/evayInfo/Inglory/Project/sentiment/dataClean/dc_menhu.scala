@@ -3,7 +3,7 @@ package com.evayInfo.Inglory.Project.sentiment.dataClean
 import com.evayInfo.Inglory.util.mysqlUtil
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
 /**
@@ -67,10 +67,12 @@ object dc_menhu {
     // add source column and IS_COMMENT column
     val df2 = df1.withColumn("SOURCE", lit("MENHU")).withColumn("IS_COMMENT", lit(0))
 
+    df2.printSchema()
     // change all columns name
     val colRenamed = Seq("ARTICLEID", "TITLE", "TEXT", "TIME", "KEYWORD", "SOURCE", "IS_COMMENT")
     val df3 = df2.toDF(colRenamed: _*).withColumn("CONTENT", $"TEXT").na.drop(Array("CONTENT"))
     df3.printSchema()
+    df3.select("SOURCE", "IS_COMMENT").show(3)
     /*
 root
  |-- ARTICLEID: string (nullable = false)
@@ -85,4 +87,24 @@ root
 
 
   }
+
+  /*
+getMenhuData：获取清洗后的门户网站数据
+*/
+
+  def getMenhuData(spark: SparkSession, url: String, user: String, password: String,
+                   TableName: String): DataFrame = {
+    val df1 = mysqlUtil.getMysqlData(spark, url, user, password, TableName).
+      select("SEED_ID", "SEED_TITLE", "SEED_CONTENT", "SEED_DATE", "MANUALLABEL")
+
+    // add source column and IS_COMMENT column
+    val df2 = df1.withColumn("IS_COMMENT", lit(0)).withColumn("SOURCE", lit("MENHU"))
+
+    // change all columns name
+    val colRenamed = Seq("ARTICLEID", "TITLE", "TEXT", "TIME", "KEYWORD", "IS_COMMENT", "SOURCE")
+    val df3 = df2.toDF(colRenamed: _*).withColumn("CONTENT", col("TEXT")).na.drop(Array("CONTENT"))
+    df3
+  }
+
+
 }
