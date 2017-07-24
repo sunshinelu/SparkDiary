@@ -57,7 +57,7 @@ object sentimentTrend {
     val luntanCtable = "DA_BBSCOMMENT"
     val searchTable = "DA_BAIDUARTICLE"
     val menhuTable = "DA_SEED"
-    //    val blogTable = "
+    val blogTable = "DA_BLOG"
     val savedTable = "SUMMARYARTICLE"
 
     val df_weibo = dc_weibo.getWeiboData(spark, url, user, password, weiboAtable, weiboCtable)
@@ -65,7 +65,7 @@ object sentimentTrend {
     val df_luntan = dc_luntan.getLuntanData(spark, url, user, password, luntanAtable, luntanCtable)
     val df_search = dc_search.getSearchData(spark, url, user, password, searchTable)
     val df_menhu = dc_menhu.getMenhuData(spark, url, user, password, menhuTable)
-    //    val df_bolg =
+    val df_bolg = dc_blog.getBlogData(spark, url, user, password, blogTable)
 
     /*
     println("df_weibo")
@@ -79,7 +79,7 @@ object sentimentTrend {
     println("df_menhu")
     df_menhu.printSchema()
 */
-    val df = df_weibo.union(df_weixin).union(df_luntan).union(df_search).union(df_menhu)
+    val df = df_weibo.union(df_weixin).union(df_luntan).union(df_search).union(df_menhu).union(df_bolg)
 
     //    println(df.select("IS_COMMENT").distinct().show())
 
@@ -138,6 +138,9 @@ object sentimentTrend {
     //    df5.printSchema()
 
     //    df5.show(5)
+    // truncate Mysql Table
+    mysqlUtil.truncateMysql(url, user, password, savedTable)
+    // save Mysql Data
     mysqlUtil.saveMysqlData(df5, url, user, password, savedTable, "append")
 
     sc.stop()

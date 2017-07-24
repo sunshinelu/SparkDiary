@@ -102,7 +102,8 @@ getMenhuData：获取清洗后的门户网站数据
 
     // change all columns name
     val colRenamed = Seq("ARTICLEID", "TITLE", "TEXT", "TIME", "KEYWORD", "IS_COMMENT", "SOURCE")
-    val df3 = df2.toDF(colRenamed: _*).withColumn("CONTENT", col("TEXT")).na.drop(Array("CONTENT"))
+    val df3 = df2.toDF(colRenamed: _*).withColumn("CONTENT", col("TEXT")).na.drop(Array("CONTENT")).
+      filter(length(col("CONTENT")) >= 1)
     df3
   }
 

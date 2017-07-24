@@ -150,7 +150,7 @@ getLuntanData：获取清洗后的论坛数据
     val df_c_4 = df_c_3.toDF(colRenamed: _*)
 
     val df = df_a_4.union(df_c_4).withColumn("SOURCE", lit("LUNTAN")).withColumn("CONTENT", col("TEXT")).
-      na.drop(Array("CONTENT"))
+      na.drop(Array("CONTENT")).filter(length(col("CONTENT")) >= 1)
     df
 
   }

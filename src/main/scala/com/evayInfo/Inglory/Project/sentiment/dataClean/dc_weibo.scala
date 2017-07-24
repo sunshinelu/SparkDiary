@@ -108,11 +108,11 @@ object dc_weibo {
 
     // add source column
     val addSource = udf((arg: String) => "WEIBO")
-    val df1 = df.withColumn("SOURCE", addSource($"ARTICLEID"))
+    val df1 = df.withColumn("SOURCE", addSource($"ARTICLEID")).na.drop(Array("TEXT")).filter(length(col("TEXT")) >= 15)
 
     //使用Jsoup进行字符串处理
     val jsoupExtFunc = udf((content: String) => {
-      Jsoup.parse(content.toString).body().text()
+      Jsoup.parse(content).body().text()
     })
     val df2 = df1.withColumn("JsoupExt", jsoupExtFunc(col("TEXT")))
     //df2.select("JsoupExt").take(5).foreach(println)
@@ -133,6 +133,7 @@ object dc_weibo {
     //      withColumn("SYSTIME", current_timestamp()).withColumn("SYSTIME", date_format($"SYSTIME", "yyyy-MM-dd HH:mm:ss"))
 
     df4.printSchema()
+    println(df4.count())
     /*
  |-- ARTICLEID: string (nullable = false)
  |-- TITLE: string (nullable = true)
@@ -145,7 +146,13 @@ object dc_weibo {
      */
 
     //    df4.select("CONTENT", "SysTime").take(5).foreach(println)
-
+    /*
+     def jsoupExtFunc2(content: String): String = {
+          val jsoupExt = Jsoup.parse(content).body().text()
+          jsoupExt
+        }
+        val jsoupExtUdf = udf((arg: String) => jsoupExtFunc2(arg))
+     */
 
     sc.stop()
     spark.stop()
@@ -156,7 +163,6 @@ getWeiboData：获取清洗后的微博数据全部数据
 */
   def getWeiboData(spark: SparkSession, url: String, user: String, password: String,
                    wTable: String, wCommentTable: String): DataFrame = {
-
     // get DA_WEIBO
     val df_w = mysqlUtil.getMysqlData(spark, url, user, password, wTable)
     // get DA_WEIBO_COMMENTS
@@ -183,19 +189,14 @@ getWeiboData：获取清洗后的微博数据全部数据
     val df = df_w_4.union(df_c_4)
 
     // add source column
-    val df1 = df.withColumn("SOURCE", lit("WEIBO")).na.drop(Array("TEXT")).filter(length(col("TEXT")) >= 5)
+    val addSource = udf((arg: String) => "WEIBO")
+    val df1 = df.withColumn("SOURCE", addSource(col("ARTICLEID"))).
+      na.drop(Array("TEXT")).filter(length(col("TEXT")) >= 15)
 
     //使用Jsoup进行字符串处理
     val jsoupExtFunc = udf((content: String) => {
       Jsoup.parse(content).body().text()
     })
-
-    def jsoupExtFunc2(content: String): String = {
-      val jsoupExt = Jsoup.parse(content).body().text()
-      jsoupExt
-    }
-    val jsoupExtUdf = udf((arg: String) => jsoupExtFunc2(arg))
-
     val df2 = df1.withColumn("JsoupExt", jsoupExtFunc(col("TEXT")))
     //df2.select("JsoupExt").take(5).foreach(println)
 

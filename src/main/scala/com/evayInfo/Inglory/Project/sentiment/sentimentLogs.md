@@ -161,6 +161,15 @@
 
 ### (六)、博客
 
+`DA_BLOG`
+  `ID`：文章ID
+  `TITLE`：标题
+  `CONTENT`：正文
+  `URL`：链接地址
+  `CREATEDAT`：发表时间
+  `AUTHOR`：博主
+  `BLOG_KEY`：标签
+  `SYSTIME`：系统时间
 
 
 
@@ -240,6 +249,18 @@
      `MANUALLABEL`：标签
      新增一列`SOURCE`（来源）列：来源为`MENHU`
      新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
+
+
+
+8) `DA_BLOG`
+  `ID`：文章ID
+  `TITLE`：标题
+  `CONTENT`：正文
+  `CREATEDAT`：发表时间
+  `BLOG_KEY`：标签
+   新增一列`SOURCE`（来源）列：来源为`BLOG`
+   新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
+
 
 
 ## 四、情感分析结果：
