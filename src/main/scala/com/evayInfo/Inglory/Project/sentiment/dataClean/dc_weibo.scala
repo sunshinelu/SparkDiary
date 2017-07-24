@@ -191,7 +191,7 @@ getWeiboData：获取清洗后的微博数据全部数据
     // add source column
     val addSource = udf((arg: String) => "WEIBO")
     val df1 = df.withColumn("SOURCE", addSource(col("ARTICLEID"))).
-      na.drop(Array("TEXT")).filter(length(col("TEXT")) >= 15)
+      na.drop(Array("TEXT")).filter(length(col("TEXT")) >= 1)
 
     //使用Jsoup进行字符串处理
     val jsoupExtFunc = udf((content: String) => {
