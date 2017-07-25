@@ -26,6 +26,7 @@
   `UID`：微博作者ID
   `TITLE`：标题
   `WEIBO_KEY`：关键字
+   `SYSTIME`：系统时间
 
 
 
@@ -86,6 +87,7 @@
   `WX_TITLE`：微信文章标题
   `WX_DATE`：微信文章时间
   `WX_CONTENT`：微信文章内容
+  `WX_APPC`：带样式的内容
   `WX_USER`
   `WX_TASK`：微信采集id
   `WX_IMG`
@@ -112,6 +114,9 @@
   `KEYWORD`：主题
   `BZ`：备注
   `TASKID`
+  `APPC`：带样式的正文
+   `URL`：源网页地址
+   `CREATTIME`：系统时间
 
 
 `DA_BBSCOMMENT`评论表：
@@ -121,7 +126,7 @@
   `JSRESTIME`：评论时间
   `FLOORID`：楼
   `BBSCONTENT`：评论的内容
-
+  `CREATETIME`：系统时间
 
 ### (四)、搜索引擎
 
@@ -135,6 +140,7 @@
   `TASKID` 
   `SOURCEURL`：源url
   `CHARSET`：编码
+  `CREATETIME`：系统时间
 
 
 
@@ -145,6 +151,7 @@
   `SEED_ID`：序号
   `SEED_URL`：采集地址
   `SEED_TITLE`：标题
+  `SEED_APPC`：带样式的内容
   `SEED_CONTENT`：内容
   `SEED_DATE`：时间
   `TASK_ID`：任务id
@@ -171,6 +178,19 @@
   `BLOG_KEY`：标签
   `SYSTIME`：系统时间
 
+
+有内容格式的表：
+`DA_SEED`、`DA_BBSARTICLE`、`DA_WEIXIN`、`DA_WEIBO`、`DA_WEIBO_COMMENTS`
+
+没有内容格式的表：
+`DA_BLOG`、`DA_BAIDUARTICLE`、`DA_BBSCOMMENT`
+
+
+有原网链接的表：
+`DA_BLOG`、`DA_SEED`、`DA_BAIDUARTICLE`、`DA_BBSARTICLE`、`DA_WEIXIN`
+
+没有原网链接的表：
+`DA_BBSCOMMENT`、`DA_WEIBO`、`DA_WEIBO_COMMENTS`
 
 
 
