@@ -90,7 +90,7 @@
   `WX_TASK`：微信采集id
   `WX_IMG`
   `WX_ZT`：主题
-  `CREATE_TIME`
+  `CREATE_TIME`：系统时间
   `DEL_FLAG`
 
 
@@ -149,7 +149,7 @@
   `SEED_DATE`：时间
   `TASK_ID`：任务id
   `CREATE_BY`：创建人
-  `CREATE_TIME`：创建时间
+  `CREATE_TIME`：创建时间（系统时间）
   `UPDATE_BY`：修改人
   `UPDATE_TIME`：修改时间
   `DEL_FLAG`：删除标记 1:正常  2:删除
@@ -316,4 +316,28 @@
   `TIME`：文章发表时间
   `SYSTIME`：分析时间
  `IS_COMMENT`：是否是评论 0：否 1：是 
+
+弃用`SUMMARYARTICLE`表。
+
+
+`yq_article`
+  `id`：主键
+  `articleId`：文章(评论)id
+  `glArticleId`：评论关联的文章id
+  `title`：标题
+  `source`：来源
+  `sourceurl`：原网页地址
+  `keyword`：标签:台湾  扶贫
+  `score`：分值
+  `label`：标签：正类、负类、中性、严重
+  `time`：发表时间
+  `systime`：分析时间
+  `is_comment`：是否是评论 0：否 1：是
+
+
+
+`yq_content` 
+  `articleId`：文章id
+  `content`：正文
+
 
