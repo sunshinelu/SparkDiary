@@ -17,11 +17,11 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Row, SparkSession}
 
 /**
- * Created by sunlu on 17/7/12.
- * 读取yilan-total_webpage表中数据，进行如下操作：
- * 1.删除manuallabel中标签为“内蒙古师范大学”、“政府”、“通讯电子”和“师大概况”的全部数据
- * 2.将manuallabel中“科学”替换成“科技”
- */
+  * Created by sunlu on 17/7/12.
+  * 读取yilan-total_webpage表中数据，进行如下操作：
+  * 1.删除manuallabel中标签为“内蒙古师范大学”、“政府”、“通讯电子”和“师大概况”的全部数据
+  * 2.将manuallabel中“科学”替换成“科技”
+  */
 object deleteHbaseData {
 
   def convertScanToString(scan: Scan) = {

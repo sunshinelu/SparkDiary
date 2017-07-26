@@ -1,11 +1,11 @@
 package com.evayInfo.Inglory.Project.sentiment
 
 /**
- * Created by sunlu on 17/7/18.
- * 参考链接：
- * https://www.zhihu.com/question/19816153
- * http://blog.csdn.net/wqs1028/article/details/50388393
- */
+  * Created by sunlu on 17/7/18.
+  * 参考链接：
+  * https://www.zhihu.com/question/19816153
+  * http://blog.csdn.net/wqs1028/article/details/50388393
+  */
 object regTest {
   def main(args: Array[String]) {
     val s = "今晚派个有点儿帅的你何陪你。@快乐大本营 @快乐大本营2 #快本二十正青春##变形金刚5#"

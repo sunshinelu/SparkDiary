@@ -5,8 +5,8 @@ import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
 /**
- * Created by sunlu on 17/7/26.
- */
+  * Created by sunlu on 17/7/26.
+  */
 object exceptDemo {
 
   def SetLogger = {
@@ -32,7 +32,6 @@ object exceptDemo {
     val df2 = sc.parallelize(Seq((1, "a", "a"), (2, "b", "b"))).toDF(df2ColumnsName: _*)
     df2.show()
     df1.except(df2).show()
-
 
 
     val df3ColumnsName = Seq("id")

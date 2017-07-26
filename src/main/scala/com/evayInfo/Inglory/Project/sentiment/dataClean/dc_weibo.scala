@@ -8,57 +8,57 @@ import org.apache.spark.sql.functions._
 import org.jsoup.Jsoup
 
 /**
- * Created by sunlu on 17/7/25.
- *
- *
- * `DA_WEIBO`：
-  `ID`：微博ID
-  `TEXT`：微博内容
-  `REPOSTSCOUNT`：转发数
-  `COMMENTSCOUNT`：评论数
-  `CREATEDAT`：发表时间
-  `UID`：微博作者ID
-  `TITLE`：标题
-  `WEIBO_KEY`：关键字
- *
- * 修改为：
- *
-1) `DA_WEIBO`中获取的数据为：
-  `ID`（微博ID）
-   `TITLE`（标题）
-   `TEXT`（微博内容）
-   `CREATEDAT`（发表时间）
-   `WEIBO_KEY`（关键字）
-   新增一列`SOURCE`（来源）列：来源为`WEIBO`
-   新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
- *
- *
- * ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
- *
- * `DA_WEIBO_COMMENTS`：
-  `ID`：评论ID
-  `TEXT`：评论内容
-  `WEIBO_ID`：微博ID
-  `CREATED_AT`： 发表时间
-  `UID`： 评论人ID
-  `SCREEN_NAME`：评论人昵称
-  `SOURCE`：来源设备
-
- *
- *
- * 修改为：
- *
-2) `DA_WEIBO_COMMENTS`中获取的数据为：
-  `ID`（评论ID）
-  `WEIBO_ID`：微博ID
-  `TITLE`（标题）：通过`WEIBO_ID`从`DA_WEIBO`表中`TITLE`列获取。
-  `TEXT`（评论内容）
-  `CREATED_AT`： 发表时间
-  `WEIBO_KEY`（关键字）：通过`WEIBO_ID`从`DA_WEIBO`表中`WEIBO_KEY`列获取。
-   新增一列`SOURCE`（来源）列：来源为`WEIBO`
-   新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
- *
- */
+  * Created by sunlu on 17/7/25.
+  *
+  *
+  * `DA_WEIBO`：
+  * `ID`：微博ID
+  * `TEXT`：微博内容
+  * `REPOSTSCOUNT`：转发数
+  * `COMMENTSCOUNT`：评论数
+  * `CREATEDAT`：发表时间
+  * `UID`：微博作者ID
+  * `TITLE`：标题
+  * `WEIBO_KEY`：关键字
+  *
+  * 修改为：
+  *
+  * 1) `DA_WEIBO`中获取的数据为：
+  * `ID`（微博ID）
+  * `TITLE`（标题）
+  * `TEXT`（微博内容）
+  * `CREATEDAT`（发表时间）
+  * `WEIBO_KEY`（关键字）
+  * 新增一列`SOURCE`（来源）列：来源为`WEIBO`
+  * 新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
+  *
+  *
+  * ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+  *
+  * `DA_WEIBO_COMMENTS`：
+  * `ID`：评论ID
+  * `TEXT`：评论内容
+  * `WEIBO_ID`：微博ID
+  * `CREATED_AT`： 发表时间
+  * `UID`： 评论人ID
+  * `SCREEN_NAME`：评论人昵称
+  * `SOURCE`：来源设备
+  *
+  *
+  *
+  * 修改为：
+  *
+  * 2) `DA_WEIBO_COMMENTS`中获取的数据为：
+  * `ID`（评论ID）
+  * `WEIBO_ID`：微博ID
+  * `TITLE`（标题）：通过`WEIBO_ID`从`DA_WEIBO`表中`TITLE`列获取。
+  * `TEXT`（评论内容）
+  * `CREATED_AT`： 发表时间
+  * `WEIBO_KEY`（关键字）：通过`WEIBO_ID`从`DA_WEIBO`表中`WEIBO_KEY`列获取。
+  * 新增一列`SOURCE`（来源）列：来源为`WEIBO`
+  * 新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
+  *
+  */
 object dc_weibo {
 
   def SetLogger = {

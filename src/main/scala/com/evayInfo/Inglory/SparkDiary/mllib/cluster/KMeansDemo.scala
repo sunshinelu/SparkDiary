@@ -6,8 +6,8 @@ import org.apache.spark.{SparkContext, SparkConf}
 import org.apache.spark.mllib.clustering.{KMeansModel, KMeans}
 
 /**
- * Created by sunlu on 17/6/23.
- */
+  * Created by sunlu on 17/6/23.
+  */
 object KMeansDemo {
   def main(args: Array[String]) {
     //1 构建Spark对象
@@ -37,11 +37,11 @@ object KMeansDemo {
     // 误差计算
     val WSSSE = model.computeCost(parsedData)
     println("Within Set Sum of Squared Errors = " + WSSSE)
-/*
-    //保存模型
-    val ModelPath = "result/KMeans_Model"
-    model.save(sc, ModelPath)
-    val sameModel = KMeansModel.load(sc, ModelPath)
-    */
+    /*
+        //保存模型
+        val ModelPath = "result/KMeans_Model"
+        model.save(sc, ModelPath)
+        val sameModel = KMeansModel.load(sc, ModelPath)
+        */
   }
 }

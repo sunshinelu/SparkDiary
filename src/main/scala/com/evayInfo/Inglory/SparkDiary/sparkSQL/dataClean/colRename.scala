@@ -4,9 +4,9 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
 
 /**
- * Created by sunlu on 17/7/19.
- * 对spark中的dataset和dataframe中的列重命名
- */
+  * Created by sunlu on 17/7/19.
+  * 对spark中的dataset和dataframe中的列重命名
+  */
 object colRename {
 
   def SetLogger = {

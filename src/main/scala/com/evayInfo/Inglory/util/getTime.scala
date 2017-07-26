@@ -4,8 +4,8 @@ import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 
 /**
- * Created by sunlu on 17/7/14.
- */
+  * Created by sunlu on 17/7/14.
+  */
 object getTime extends Serializable {
 
   /*

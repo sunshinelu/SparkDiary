@@ -7,35 +7,35 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
 /**
- * Created by sunlu on 17/7/19.
- *
- * `DA_BAIDUARTICLE`
-  `ID`：文章ID
-  `CONTENT`：正文
-  `TITLE`：标题
-  `TIME`：时间
-  `KEYWORD`：关键词
-  `SOURCE`：源
-  `TASKID`
-  `SOURCEURL`：源url
-  `CHARSET`：编码
- *
- *
- *
- * 改为：
- *
-
-6) `DA_BAIDUARTICLE`
-  `ID`：文章ID
-  `CONTENT`：正文
-  `TITLE`：标题
-  `TIME`：时间
-  `KEYWORD`：关键词
-  `SOURCEURL`：源url
-   新增一列`SOURCE`（来源）列：来源为`SEARCH`
-   新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
- *
- */
+  * Created by sunlu on 17/7/19.
+  *
+  * `DA_BAIDUARTICLE`
+  * `ID`：文章ID
+  * `CONTENT`：正文
+  * `TITLE`：标题
+  * `TIME`：时间
+  * `KEYWORD`：关键词
+  * `SOURCE`：源
+  * `TASKID`
+  * `SOURCEURL`：源url
+  * `CHARSET`：编码
+  *
+  *
+  *
+  * 改为：
+  *
+  * *
+  * 6) `DA_BAIDUARTICLE`
+  * `ID`：文章ID
+  * `CONTENT`：正文
+  * `TITLE`：标题
+  * `TIME`：时间
+  * `KEYWORD`：关键词
+  * `SOURCEURL`：源url
+  * 新增一列`SOURCE`（来源）列：来源为`SEARCH`
+  * 新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
+  *
+  */
 object dc_search {
 
   def SetLogger = {

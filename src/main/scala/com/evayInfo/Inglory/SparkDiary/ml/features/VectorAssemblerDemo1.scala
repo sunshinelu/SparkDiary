@@ -6,12 +6,12 @@ import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.sql.SparkSession
 
 /**
- * Created by sunlu on 17/6/23.
- * 将dataframe中的某几列拼接成features
- *
- * 参考链接：https://stackoverflow.com/questions/31028806/how-to-create-correct-data-frame-for-classification-in-spark-ml
- * https://spark.apache.org/docs/latest/ml-features.html#vectorassembler
- */
+  * Created by sunlu on 17/6/23.
+  * 将dataframe中的某几列拼接成features
+  *
+  * 参考链接：https://stackoverflow.com/questions/31028806/how-to-create-correct-data-frame-for-classification-in-spark-ml
+  * https://spark.apache.org/docs/latest/ml-features.html#vectorassembler
+  */
 object VectorAssemblerDemo1 {
   def main(args: Array[String]) {
 

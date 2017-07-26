@@ -10,8 +10,8 @@ import org.apache.spark.sql.functions._
 import scala.collection.mutable.ArrayBuffer
 
 /**
- * Created by sunlu on 17/6/9.
- */
+  * Created by sunlu on 17/6/9.
+  */
 object timeSeries extends Serializable {
 
   def main(args: Array[String]) {

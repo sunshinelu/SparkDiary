@@ -4,11 +4,11 @@ import java.sql.{DriverManager, SQLException}
 
 
 /**
- * Created by sunlu on 17/6/8.
- * 参考链接：http://database.51cto.com/art/201006/204217.htm
- * http://www.cnblogs.com/hongten/archive/2011/03/29/1998311.html
- * https://examples.javacodegeeks.com/core-java/sql/delete-all-table-rows-example/
- */
+  * Created by sunlu on 17/6/8.
+  * 参考链接：http://database.51cto.com/art/201006/204217.htm
+  * http://www.cnblogs.com/hongten/archive/2011/03/29/1998311.html
+  * https://examples.javacodegeeks.com/core-java/sql/delete-all-table-rows-example/
+  */
 object truncateMysql {
   def main(args: Array[String]) {
     /*

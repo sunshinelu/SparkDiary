@@ -9,23 +9,23 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Row, SparkSession}
 
 /**
- * Created by sunlu on 17/7/19.
- * 获取微博、微信、论坛贴吧、博客、搜索引擎、网站门户
- *
- *
- * 结果保存在SUMMARYARTICLE表中：
- * `SUMMARYARTICLE`
-  `ARTICLEID`：文章id
-  `TITLE`：文章标题
-  `CONTENT`：文章内容
-  `SOURCE`：文章来源
-  `KEYWORD`：标签:台湾  扶贫
-  `SCORE` ：文章得分
-  `LABEL`：标签：正类、负类、中性、严重
-  `TIME`：文章发表时间
-  `SYSTIME`：分析时间
- `IS_COMMENT`：是否是评论 0：否 1：是
- */
+  * Created by sunlu on 17/7/19.
+  * 获取微博、微信、论坛贴吧、博客、搜索引擎、网站门户
+  *
+  *
+  * 结果保存在SUMMARYARTICLE表中：
+  * `SUMMARYARTICLE`
+  * `ARTICLEID`：文章id
+  * `TITLE`：文章标题
+  * `CONTENT`：文章内容
+  * `SOURCE`：文章来源
+  * `KEYWORD`：标签:台湾  扶贫
+  * `SCORE` ：文章得分
+  * `LABEL`：标签：正类、负类、中性、严重
+  * `TIME`：文章发表时间
+  * `SYSTIME`：分析时间
+  * `IS_COMMENT`：是否是评论 0：否 1：是
+  */
 object sentimentTrend {
 
   def SetLogger = {
@@ -39,7 +39,7 @@ object sentimentTrend {
 
     SetLogger
 
-    val conf = new SparkConf().setAppName(s"sentimentTrend").setMaster("local[*]") //.set("spark.executor.memory", "2g")
+    val conf = new SparkConf().setAppName(s"sentimentTrend").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(conf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
@@ -134,7 +134,7 @@ root
     val df4 = df3.groupBy("articleId").agg(sum("weight")).withColumnRenamed("sum(weight)", "score")
 
     val df5 = df4.join(df, Seq("articleId"), "left").drop("contentPre").
-//      withColumn("IS_COMMENT", col("IS_COMMENT").cast("string")).
+      //      withColumn("IS_COMMENT", col("IS_COMMENT").cast("string")).
       withColumn("systime", current_timestamp()).withColumn("systime", date_format($"systime", "yyyy-MM-dd HH:mm:ss"))
 
     val mainDF = df5.drop("content")
@@ -142,14 +142,14 @@ root
 
     //    df4.printSchema()
     //        df5.printSchema()
-
+    println("全部数据数目为：" + df5.count())
     //    df5.show(5)
     // truncate Mysql Table
     //    mysqlUtil.truncateMysql(url, user, password, masterTable)
 
     // save Mysql Data
-    mysqlUtil.saveMysqlData(mainDF, url, user, password, masterTable, "append")
-    mysqlUtil.saveMysqlData(slaveDF, url, user, password, slaveTable, "append")
+    //    mysqlUtil.saveMysqlData(mainDF, url, user, password, masterTable, "append")
+    //    mysqlUtil.saveMysqlData(slaveDF, url, user, password, slaveTable, "append")
 
 
     sc.stop()

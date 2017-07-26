@@ -9,35 +9,35 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.jsoup.Jsoup
 
 /**
- * Created by sunlu on 17/7/14.
- *
-DA_WEIBO:
-  ID: 微博ID
-  TEXT: 微博内容
-  REPOSTSCOUNT: 转发数
-  COMMENTSCOUNT: 评论数
-  CREATEDAT: 发表时间
-  UID: 微博作者ID
-
-DA_WEIBO_COMMENTS:
-  ID: 评论ID
-  TEXT: 评论内容
-  WEIBO_ID: 微博ID
-  CREATED_AT: 发表时间
-  UID: 评论人ID
-  SCREEN_NAME: 评论人昵称
-  SOURCE: 来源设备
-
-DA_WEIBO_USER
-  ID: 微博ID
-  SCREENNAME: 微博昵称
-  REMARKS: 备注
-  CREATE_TIME: 创建时间,
-  DEL_FLAG: 0:未删除   1:删除'
-
- *
- *
- */
+  * Created by sunlu on 17/7/14.
+  *
+  * DA_WEIBO:
+  * ID: 微博ID
+  * TEXT: 微博内容
+  * REPOSTSCOUNT: 转发数
+  * COMMENTSCOUNT: 评论数
+  * CREATEDAT: 发表时间
+  * UID: 微博作者ID
+  * *
+  * DA_WEIBO_COMMENTS:
+  * ID: 评论ID
+  * TEXT: 评论内容
+  * WEIBO_ID: 微博ID
+  * CREATED_AT: 发表时间
+  * UID: 评论人ID
+  * SCREEN_NAME: 评论人昵称
+  * SOURCE: 来源设备
+  * *
+  * DA_WEIBO_USER
+  * ID: 微博ID
+  * SCREENNAME: 微博昵称
+  * REMARKS: 备注
+  * CREATE_TIME: 创建时间,
+  * DEL_FLAG: 0:未删除   1:删除'
+  *
+  *
+  *
+  */
 object wHotTopic {
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)
@@ -64,7 +64,7 @@ object wHotTopic {
     val sc = spark.sparkContext
 
 
-//    val url = "jdbc:mysql://localhost:3306/bbs"
+    //    val url = "jdbc:mysql://localhost:3306/bbs"
     val url = "jdbc:mysql://localhost:3306/bbs?useUnicode=true&characterEncoding=UTF-8&" +
       "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
     val user = "root"
@@ -96,6 +96,7 @@ object wHotTopic {
       val userNames = userPatten.findAllMatchIn(content).mkString(";")
       userNames
     }
+
     val getUserFunc2 = udf((arg: String) => getUsers(arg))
 
     val getUserFunc = udf((content: String) => {
@@ -107,7 +108,6 @@ object wHotTopic {
     df3.select("userNames").take(15).foreach(println)
     val df3_2 = df1.withColumn("userNames", getUserFunc2(col("content")))
     df3_2.select("userNames").take(15).foreach(println)
-
 
 
     // 获取"#话题#"

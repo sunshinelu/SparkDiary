@@ -8,8 +8,8 @@ import org.apache.spark.sql.functions._
 import org.jsoup.Jsoup
 
 /**
- * Created by sunlu on 17/7/20.
- */
+  * Created by sunlu on 17/7/20.
+  */
 object dc_weiboT1 {
 
   def SetLogger = {
@@ -39,10 +39,6 @@ object dc_weiboT1 {
     val df_c = mysqlUtil.getMysqlData(spark, url, user, password, "DA_WEIBO_COMMENTS")
 
 
-
-
-
-
     //使用Jsoup进行字符串处理
     val replaceString = udf((content: String) => {
       Jsoup.parse(content).body().text()
@@ -61,7 +57,6 @@ object dc_weiboT1 {
     df2.select("content").take(15).foreach(println)
 
 
-
     // 获取"@用户名"
 
     val userPatten = "@[\\u4e00-\\u9fa5a-zA-Z0-9_-]{4,30}".r
@@ -71,6 +66,7 @@ object dc_weiboT1 {
       val userNames = userPatten.findAllMatchIn(content).mkString(";")
       userNames
     }
+
     val getUserFunc2 = udf((arg: String) => getUsers(arg))
 
     val getUserFunc = udf((content: String) => {

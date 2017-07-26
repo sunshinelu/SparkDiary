@@ -26,13 +26,13 @@ object connHBaseWin {
   def main(args: Array[String]): Unit = {
 
     // 不显示日志
-//    SetLogger
+    //    SetLogger
 
     // 创建SparkContext
     val sparkConf = new SparkConf().setAppName("connHBaseWin").setMaster("local[*]")
     val sc = new SparkContext(sparkConf)
 
-//    System.setProperty("hadoop.home.dir", "D:\\Program Files\\Apache\\hadoop")
+    //    System.setProperty("hadoop.home.dir", "D:\\Program Files\\Apache\\hadoop")
 
     val tableName = "t_hbaseFilter"
     // 设置hbase configure

@@ -9,9 +9,9 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
 
 /**
- * Created by sunlu on 17/7/21.
- * check the data in ylzx_cnxh
- */
+  * Created by sunlu on 17/7/21.
+  * check the data in ylzx_cnxh
+  */
 object checkCnxhData {
 
   def SetLogger = {

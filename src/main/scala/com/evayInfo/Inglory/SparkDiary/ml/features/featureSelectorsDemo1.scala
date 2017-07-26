@@ -9,11 +9,11 @@ import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{Row, SparkSession}
 
 /**
- * Created by sunlu on 17/6/23.
- * Feature Selectors: VectorSlicer, RFormula, ChiSqSelector
- *
- * 参考链接：https://spark.apache.org/docs/latest/ml-features.html#rformula
- */
+  * Created by sunlu on 17/6/23.
+  * Feature Selectors: VectorSlicer, RFormula, ChiSqSelector
+  *
+  * 参考链接：https://spark.apache.org/docs/latest/ml-features.html#rformula
+  */
 object featureSelectorsDemo1 {
   def main(args: Array[String]) {
     /*
