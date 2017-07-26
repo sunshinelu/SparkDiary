@@ -29,12 +29,14 @@ import org.apache.spark.sql.functions._
  *
  * 修改为：
  *
- * 7) `DA_SEED`
+7) `DA_SEED`
      `SEED_ID`：序号
      `SEED_TITLE`：标题
      `SEED_CONTENT`：内容
+     `SEED_APPC`：带样式的内容
      `SEED_DATE`：时间
      `MANUALLABEL`：标签
+     `SOURCEURL`：源网页地址
      新增一列`SOURCE`（来源）列：来源为`MENHU`
      新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
  *
@@ -54,7 +56,6 @@ object dc_menhu {
     val conf = new SparkConf().setAppName(s"dc_menhu").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(conf).getOrCreate()
     val sc = spark.sparkContext
-    import spark.implicits._
 
     // get data from mysql database
     val url = "jdbc:mysql://localhost:3306/bbs?useUnicode=true&characterEncoding=UTF-8&" +
@@ -62,27 +63,32 @@ object dc_menhu {
     val user = "root"
     val password = "root"
     val df1 = mysqlUtil.getMysqlData(spark, url, user, password, "DA_SEED").
-      select("SEED_ID", "SEED_TITLE", "SEED_CONTENT", "SEED_DATE", "MANUALLABEL")
+      select("SEED_ID", "SEED_TITLE", "SEED_CONTENT", "SEED_APPC", "SEED_DATE", "MANUALLABEL", "SOURCEURL")
 
     // add source column and IS_COMMENT column
-    val df2 = df1.withColumn("SOURCE", lit("MENHU")).withColumn("IS_COMMENT", lit(0))
+    val df2 = df1.withColumn("SOURCE", lit("MENHU")).withColumn("IS_COMMENT", lit(0)).withColumn("glArticleId", lit(null))
 
     df2.printSchema()
     // change all columns name
-    val colRenamed = Seq("ARTICLEID", "TITLE", "TEXT", "TIME", "KEYWORD", "SOURCE", "IS_COMMENT")
-    val df3 = df2.toDF(colRenamed: _*).withColumn("CONTENT", $"TEXT").na.drop(Array("CONTENT"))
+    val colRenamed = Seq("articleId", "glArticleId", "title", "content", "keyword", "time", "is_comment",
+      "source", "sourceUrl")
+    val df3 = df2.select("SEED_ID", "glArticleId", "SEED_TITLE", "SEED_CONTENT", "MANUALLABEL", "SEED_DATE",
+      "IS_COMMENT", "SOURCE", "SOURCEURL").
+      toDF(colRenamed: _*).withColumn("contentPre", col("content")).na.drop(Array("content"))
     df3.printSchema()
-    df3.select("SOURCE", "IS_COMMENT").show(3)
+    df3.select("source", "is_comment").show(3)
     /*
 root
- |-- ARTICLEID: string (nullable = false)
- |-- TITLE: string (nullable = true)
- |-- TEXT: string (nullable = true)
- |-- TIME: string (nullable = true)
- |-- KEYWORD: string (nullable = true)
- |-- SOURCE: string (nullable = false)
- |-- IS_COMMENT: integer (nullable = false)
- |-- CONTENT: string (nullable = true)
+ |-- articleId: string (nullable = false)
+ |-- glArticleId: null (nullable = true)
+ |-- title: string (nullable = true)
+ |-- content: string (nullable = true)
+ |-- keyword: string (nullable = true)
+ |-- time: string (nullable = true)
+ |-- is_comment: integer (nullable = false)
+ |-- source: string (nullable = false)
+ |-- sourceUrl: string (nullable = true)
+ |-- contentPre: string (nullable = true)
      */
 
 
@@ -95,15 +101,18 @@ getMenhuData：获取清洗后的门户网站数据
   def getMenhuData(spark: SparkSession, url: String, user: String, password: String,
                    TableName: String): DataFrame = {
     val df1 = mysqlUtil.getMysqlData(spark, url, user, password, TableName).
-      select("SEED_ID", "SEED_TITLE", "SEED_CONTENT", "SEED_DATE", "MANUALLABEL")
+      select("SEED_ID", "SEED_TITLE", "SEED_CONTENT", "SEED_APPC", "SEED_DATE", "MANUALLABEL", "SOURCEURL")
 
     // add source column and IS_COMMENT column
-    val df2 = df1.withColumn("IS_COMMENT", lit(0)).withColumn("SOURCE", lit("MENHU"))
+    val df2 = df1.withColumn("SOURCE", lit("MENHU")).withColumn("IS_COMMENT", lit(0)).withColumn("glArticleId", lit(null))
 
     // change all columns name
-    val colRenamed = Seq("ARTICLEID", "TITLE", "TEXT", "TIME", "KEYWORD", "IS_COMMENT", "SOURCE")
-    val df3 = df2.toDF(colRenamed: _*).withColumn("CONTENT", col("TEXT")).na.drop(Array("CONTENT")).
-      filter(length(col("CONTENT")) >= 1)
+    val colRenamed = Seq("articleId", "glArticleId", "title", "content", "keyword", "time", "is_comment",
+      "source", "sourceUrl")
+    val df3 = df2.select("SEED_ID", "glArticleId", "SEED_TITLE", "SEED_CONTENT", "MANUALLABEL", "SEED_DATE",
+      "IS_COMMENT", "SOURCE", "SOURCEURL").
+      toDF(colRenamed: _*).withColumn("contentPre", col("content")).na.drop(Array("content")).
+      filter(length(col("contentPre")) >= 1)
     df3
   }
 

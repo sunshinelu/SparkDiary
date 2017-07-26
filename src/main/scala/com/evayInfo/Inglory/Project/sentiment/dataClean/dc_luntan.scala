@@ -24,10 +24,12 @@ import org.apache.spark.sql.functions._
  *
  * 修改为：
  *
- * 4) `DA_BBSARTICLE`文章表中获取的数据为：
+4) `DA_BBSARTICLE`文章表中获取的数据为：
   `ID`（文章ID）
   `TITLE`（标题）
   `CONTENT`（内容）
+  `APPC`：带样式的正文
+  `URL`：源网页地址
   `TIME`（发布时间）
   `KEYWORD`（主题）
    新增一列`SOURCE`（来源）列：来源为`LUNTAN`
@@ -76,7 +78,6 @@ object dc_luntan {
     val conf = new SparkConf().setAppName(s"dc_luntan").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(conf).getOrCreate()
     val sc = spark.sparkContext
-    import spark.implicits._
 
     //    val url = "jdbc:mysql://localhost:3306/bbs"
     val url = "jdbc:mysql://localhost:3306/bbs?useUnicode=true&characterEncoding=UTF-8&" +
@@ -88,35 +89,40 @@ object dc_luntan {
     // get DA_BBSCOMMENT
     val df_c = mysqlUtil.getMysqlData(spark, url, user, password, "DA_BBSCOMMENT")
     // select columns
-    val df_a_1 = df_a.select("ID", "TITLE", "CONTENT", "TIME", "KEYWORD").withColumn("ARTICLEID", col("ID"))
+    val df_a_1 = df_a.select("ID", "TITLE", "CONTENT", "APPC", "URL", "TIME", "KEYWORD").withColumn("ARTICLEID", col("ID"))
     val df_c_1 = df_c.select("ID", "ARTICLEID", "BBSCONTENT", "JSRESTIME")
     // `KEYWORD`和`TITLE`通过`ARTICLEID`从`DA_BBSARTICLE`表中`KEYWORD`和`TITLE`列获取。
-    val keyLib = df_a_1.select("ARTICLEID", "TITLE", "KEYWORD")
-    val df_c_2 = df_c_1.join(keyLib, Seq("ARTICLEID"), "left").select("ID", "TITLE", "BBSCONTENT", "JSRESTIME", "KEYWORD")
-    val df_a_2 = df_a_1.drop("ARTICLEID")
+    val keyLib = df_a_1.select("ARTICLEID", "TITLE", "KEYWORD", "URL")
+    val df_c_2 = df_c_1.join(keyLib, Seq("ARTICLEID"), "left").withColumn("APPC", lit(null))
+    val df_a_2 = df_a_1.withColumn("ARTICLEID", lit(null))
+
     // add IS_COMMENT column
-    val df_a_3 = df_a_2.withColumn("IS_COMMENT", lit(0))
-    val df_c_3 = df_c_2.withColumn("IS_COMMENT", lit(1))
+    val df_a_3 = df_a_2.withColumn("IS_COMMENT", lit(0)).withColumn("SOURCE", lit("LUNTAN"))
+    val df_c_3 = df_c_2.withColumn("IS_COMMENT", lit(1)).withColumn("SOURCE", lit("LUNTAN"))
+
 
     // change all columns name
-    val colRenamed = Seq("ARTICLEID", "TITLE", "TEXT", "TIME", "KEYWORD", "IS_COMMENT")
-    val df_a_4 = df_a_3.toDF(colRenamed: _*)
-    val df_c_4 = df_c_3.toDF(colRenamed: _*)
+    val colRenamed = Seq("articleId", "glArticleId", "title", "content", "keyword", "time", "is_comment", "source", "sourceUrl", "contentPre")
+    val df_a_4 = df_a_3.select("ID", "ARTICLEID", "TITLE", "APPC", "KEYWORD", "TIME", "IS_COMMENT", "SOURCE", "URL", "CONTENT").toDF(colRenamed: _*)
+    val df_c_4 = df_c_3.select("ID", "ARTICLEID", "TITLE", "APPC", "KEYWORD", "JSRESTIME", "IS_COMMENT", "SOURCE", "URL", "BBSCONTENT") toDF (colRenamed: _*)
 
-    val df = df_a_4.union(df_c_4).withColumn("SOURCE", lit("LUNTAN")).withColumn("CONTENT", $"TEXT").
-      na.drop(Array("CONTENT"))
+    val df = df_a_4.union(df_c_4).na.drop(Array("contentPre")).filter(length(col("contentPre")) >= 1)
 
     df.printSchema()
+
+
     /*
     root
- |-- ARTICLEID: string (nullable = true)
- |-- TITLE: string (nullable = true)
- |-- TEXT: string (nullable = true)
- |-- TIME: string (nullable = true)
- |-- KEYWORD: string (nullable = true)
- |-- IS_COMMENT: integer (nullable = false)
- |-- SOURCE: string (nullable = false)
- |-- CONTENT: string (nullable = true)
+ |-- articleId: string (nullable = true)
+ |-- glArticleId: string (nullable = true)
+ |-- title: string (nullable = true)
+ |-- content: string (nullable = true)
+ |-- keyword: string (nullable = true)
+ |-- time: string (nullable = true)
+ |-- is_comment: integer (nullable = false)
+ |-- source: string (nullable = false)
+ |-- sourceUrl: string (nullable = true)
+ |-- contentPre: string (nullable = true)
      */
 
     sc.stop()
@@ -134,23 +140,24 @@ getLuntanData：获取清洗后的论坛数据
     // get DA_BBSCOMMENT
     val df_c = mysqlUtil.getMysqlData(spark, url, user, password, commentTable)
     // select columns
-    val df_a_1 = df_a.select("ID", "TITLE", "CONTENT", "TIME", "KEYWORD").withColumn("ARTICLEID", col("ID"))
+    val df_a_1 = df_a.select("ID", "TITLE", "CONTENT", "APPC", "URL", "TIME", "KEYWORD").withColumn("ARTICLEID", col("ID"))
     val df_c_1 = df_c.select("ID", "ARTICLEID", "BBSCONTENT", "JSRESTIME")
     // `KEYWORD`和`TITLE`通过`ARTICLEID`从`DA_BBSARTICLE`表中`KEYWORD`和`TITLE`列获取。
-    val keyLib = df_a_1.select("ARTICLEID", "TITLE", "KEYWORD")
-    val df_c_2 = df_c_1.join(keyLib, Seq("ARTICLEID"), "left").select("ID", "TITLE", "BBSCONTENT", "JSRESTIME", "KEYWORD")
-    val df_a_2 = df_a_1.drop("ARTICLEID")
+    val keyLib = df_a_1.select("ARTICLEID", "TITLE", "KEYWORD", "URL")
+    val df_c_2 = df_c_1.join(keyLib, Seq("ARTICLEID"), "left").withColumn("APPC", lit(null))
+    val df_a_2 = df_a_1.withColumn("ARTICLEID", lit(null))
+
     // add IS_COMMENT column
-    val df_a_3 = df_a_2.withColumn("IS_COMMENT", lit(0))
-    val df_c_3 = df_c_2.withColumn("IS_COMMENT", lit(1))
+    val df_a_3 = df_a_2.withColumn("IS_COMMENT", lit(0)).withColumn("SOURCE", lit("LUNTAN"))
+    val df_c_3 = df_c_2.withColumn("IS_COMMENT", lit(1)).withColumn("SOURCE", lit("LUNTAN"))
+
 
     // change all columns name
-    val colRenamed = Seq("ARTICLEID", "TITLE", "TEXT", "TIME", "KEYWORD", "IS_COMMENT")
-    val df_a_4 = df_a_3.toDF(colRenamed: _*)
-    val df_c_4 = df_c_3.toDF(colRenamed: _*)
+    val colRenamed = Seq("articleId", "glArticleId", "title", "content", "keyword", "time", "is_comment", "source", "sourceUrl", "contentPre")
+    val df_a_4 = df_a_3.select("ID", "ARTICLEID", "TITLE", "APPC", "KEYWORD", "TIME", "IS_COMMENT", "SOURCE", "URL", "CONTENT").toDF(colRenamed: _*)
+    val df_c_4 = df_c_3.select("ID", "ARTICLEID", "TITLE", "APPC", "KEYWORD", "JSRESTIME", "IS_COMMENT", "SOURCE", "URL", "BBSCONTENT") toDF (colRenamed: _*)
 
-    val df = df_a_4.union(df_c_4).withColumn("SOURCE", lit("LUNTAN")).withColumn("CONTENT", col("TEXT")).
-      na.drop(Array("CONTENT")).filter(length(col("CONTENT")) >= 1)
+    val df = df_a_4.union(df_c_4).na.drop(Array("contentPre")).filter(length(col("contentPre")) >= 1)
     df
 
   }

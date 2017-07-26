@@ -58,7 +58,8 @@ object sentimentTrend {
     val searchTable = "DA_BAIDUARTICLE"
     val menhuTable = "DA_SEED"
     val blogTable = "DA_BLOG"
-    val savedTable = "SUMMARYARTICLE"
+    val masterTable = "yq_article"
+    val slaveTable = "yq_content"
 
     val df_weibo = dc_weibo.getWeiboData(spark, url, user, password, weiboAtable, weiboCtable)
     val df_weixin = dc_weixin.getWeixinData(spark, url, user, password, weixinTable)
@@ -85,15 +86,17 @@ object sentimentTrend {
 
     df.printSchema()
     /*
-    root
- |-- ARTICLEID: string (nullable = true)
- |-- TITLE: string (nullable = true)
- |-- TEXT: string (nullable = true)
- |-- TIME: string (nullable = true)
- |-- KEYWORD: string (nullable = true)
- |-- IS_COMMENT: string (nullable = true)
- |-- SOURCE: string (nullable = false)
- |-- CONTENT: string (nullable = true)
+root
+ |-- articleId: string (nullable = true)
+ |-- glArticleId: string (nullable = true)
+ |-- title: string (nullable = true)
+ |-- content: string (nullable = true)
+ |-- keyword: string (nullable = true)
+ |-- time: string (nullable = true)
+ |-- is_comment: integer (nullable = true)
+ |-- source: string (nullable = true)
+ |-- sourceUrl: string (nullable = true)
+ |-- contentPre: string (nullable = true)
      */
     /*
     println("count weibo data: " + df_weibo.count()) // error ==> success
@@ -102,7 +105,7 @@ object sentimentTrend {
     println("count search data: " + df_search.count()) // success
     println("count menhu data: " + df_menhu.count()) // success
     println("count total data: " + df.count()) // ERROR ==> success
-*/
+    */
 
     //获取正类、负类词典。posnegDF在join时使用；posnegList在词过滤时使用。
     val posnegDF = spark.read.format("CSV").option("header", "true").load("data/posneg.csv")
@@ -121,27 +124,33 @@ object sentimentTrend {
         .toSeq.mkString(" ")
     })
 
-    val df1 = df.na.drop(Array("CONTENT")).select("ARTICLEID", "CONTENT").
-      withColumn("segWords", segWorsd(column("content")))
+    val df1 = df.na.drop(Array("contentPre")).select("articleId", "contentPre").
+      withColumn("segWords", segWorsd(column("contentPre")))
 
     val df2 = df1.explode("segWords", "tokens") { segWords: String => segWords.split(" ") }
     //    df2.printSchema()
 
     val df3 = df2.join(posnegDF, df2("tokens") === posnegDF("term"), "left").na.drop()
-    val df4 = df3.groupBy("ARTICLEID").agg(sum("weight")).withColumnRenamed("sum(weight)", "SCORE")
+    val df4 = df3.groupBy("articleId").agg(sum("weight")).withColumnRenamed("sum(weight)", "score")
 
-    val df5 = df4.join(df, Seq("ARTICLEID"), "left").drop("CONTENT").withColumnRenamed("TEXT", "CONTENT").
-      withColumn("IS_COMMENT", col("IS_COMMENT").cast("string")).
-      withColumn("SYSTIME", current_timestamp()).withColumn("SYSTIME", date_format($"SYSTIME", "yyyy-MM-dd HH:mm:ss"))
+    val df5 = df4.join(df, Seq("articleId"), "left").drop("contentPre").
+//      withColumn("IS_COMMENT", col("IS_COMMENT").cast("string")).
+      withColumn("systime", current_timestamp()).withColumn("systime", date_format($"systime", "yyyy-MM-dd HH:mm:ss"))
+
+    val mainDF = df5.drop("content")
+    val slaveDF = df.select("articleId", "content")
 
     //    df4.printSchema()
-    //    df5.printSchema()
+    //        df5.printSchema()
 
     //    df5.show(5)
     // truncate Mysql Table
-    mysqlUtil.truncateMysql(url, user, password, savedTable)
+    //    mysqlUtil.truncateMysql(url, user, password, masterTable)
+
     // save Mysql Data
-    mysqlUtil.saveMysqlData(df5, url, user, password, savedTable, "append")
+    mysqlUtil.saveMysqlData(mainDF, url, user, password, masterTable, "append")
+    mysqlUtil.saveMysqlData(slaveDF, url, user, password, slaveTable, "append")
+
 
     sc.stop()
     spark.stop()

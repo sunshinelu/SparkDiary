@@ -75,15 +75,17 @@ object dc_weixin {
     df3.printSchema()
 
     /*
-    root
-     |-- ARTICLEID: string (nullable = false)
-     |-- TITLE: string (nullable = true)
-     |-- TEXT: string (nullable = true)
-     |-- KEYWORD: string (nullable = true)
-     |-- TIME: string (nullable = true)
-     |-- SOURCE: string (nullable = true)
-     |-- IS_COMMENT: integer (nullable = false)
-     |-- CONTENT: string (nullable = true)
+root
+ |-- articleId: string (nullable = false)
+ |-- glArticleId: null (nullable = true)
+ |-- title: string (nullable = true)
+ |-- content: string (nullable = true)
+ |-- keyword: string (nullable = true)
+ |-- time: string (nullable = true)
+ |-- is_comment: integer (nullable = false)
+ |-- source: string (nullable = true)
+ |-- sourceUrl: string (nullable = true)
+ |-- contentPre: string (nullable = true)
      */
 
 
