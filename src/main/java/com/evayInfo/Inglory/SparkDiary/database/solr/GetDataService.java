@@ -15,8 +15,6 @@ import java.util.List;
 
 /**
  * Created by sunlu on 17/6/21.
- *
- *
  */
 public class GetDataService {
 
@@ -60,6 +58,7 @@ public class GetDataService {
         params.add(filterQuery);
         return params;
     }
+
     public static void main(String[] args) throws IOException {
 
         FileOutputStream fos = new FileOutputStream("D:\\result.txt");

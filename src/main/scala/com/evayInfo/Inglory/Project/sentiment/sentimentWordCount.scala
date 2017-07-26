@@ -11,39 +11,39 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Row, SparkSession}
 
 /**
- * Created by sunlu on 17/7/14.
- * * Created by sunlu on 17/6/5.
- * 使用word count的方法统计正类、负类情感词的个数
- *
- * article(文章表):
-  id varchar(50) CHARACTER SET utf8 DEFAULT NULL,
-  title: 标题
-  content: 内容
-  author: 作者
-  time: 发布时间
-  clicknum: 点击数
-  reply: 回复数
- *
- *
- * comment(评论表):
-  id varchar(50) CHARACTER SET utf8 DEFAULT NULL,
-  articleid: 对应文章表中的文章id',
-  jsusername: 评论作者
-  jsrestime: 评论时间
-  floorid: 楼
-  bbscontent: 评论的内容
- *
- * replycomment(对评论的回复):
-  id varchar(50) CHARACTER SET utf8 DEFAULT NULL,
-  commentid: 对应评论表中的id
-  username: 回复的作者
-  replytime: 回复的时间
-  ircontent: 回复的内容
-
- *
- *
- * 本地运行成功
- */
+  * Created by sunlu on 17/7/14.
+  * * Created by sunlu on 17/6/5.
+  * 使用word count的方法统计正类、负类情感词的个数
+  *
+  * article(文章表):
+  * id varchar(50) CHARACTER SET utf8 DEFAULT NULL,
+  * title: 标题
+  * content: 内容
+  * author: 作者
+  * time: 发布时间
+  * clicknum: 点击数
+  * reply: 回复数
+  *
+  *
+  * comment(评论表):
+  * id varchar(50) CHARACTER SET utf8 DEFAULT NULL,
+  * articleid: 对应文章表中的文章id',
+  * jsusername: 评论作者
+  * jsrestime: 评论时间
+  * floorid: 楼
+  * bbscontent: 评论的内容
+  *
+  * replycomment(对评论的回复):
+  * id varchar(50) CHARACTER SET utf8 DEFAULT NULL,
+  * commentid: 对应评论表中的id
+  * username: 回复的作者
+  * replytime: 回复的时间
+  * ircontent: 回复的内容
+  *
+  *
+  *
+  * 本地运行成功
+  */
 object sentimentWordCount {
 
   def SetLogger = {

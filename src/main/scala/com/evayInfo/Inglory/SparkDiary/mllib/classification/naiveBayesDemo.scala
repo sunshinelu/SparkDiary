@@ -7,8 +7,8 @@ import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
- * Created by sunlu on 17/6/23.
- */
+  * Created by sunlu on 17/6/23.
+  */
 object naiveBayesDemo {
   def main(args: Array[String]) {
     //1 构建Spark对象

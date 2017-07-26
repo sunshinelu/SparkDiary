@@ -6,12 +6,12 @@ import java.util.Properties
 import org.apache.spark.sql._
 
 /**
- * Created by sunlu on 17/7/19.
- * 对mysql数据的操作：
- * getMysqlData：获取mysql数据中某表的全部数据
- * deleteMysqlData：根据时间列，删除mysql数据库中的部分数据
- * truncateMysql:清空（truncate）mysql表
- */
+  * Created by sunlu on 17/7/19.
+  * 对mysql数据的操作：
+  * getMysqlData：获取mysql数据中某表的全部数据
+  * deleteMysqlData：根据时间列，删除mysql数据库中的部分数据
+  * truncateMysql:清空（truncate）mysql表
+  */
 class mysqlUtil {
 
 }

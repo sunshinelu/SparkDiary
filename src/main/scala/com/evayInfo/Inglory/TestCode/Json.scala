@@ -3,10 +3,10 @@ package com.evayInfo.Inglory.TestCode
 import com.alibaba.fastjson.JSON
 
 /**
- * Created by sunlu on 17/7/24.
- * http://blog.csdn.net/u013983450/article/details/52514456
- * http://blog.csdn.net/dkcgx/article/details/46802591
- */
+  * Created by sunlu on 17/7/24.
+  * http://blog.csdn.net/u013983450/article/details/52514456
+  * http://blog.csdn.net/dkcgx/article/details/46802591
+  */
 object Json {
   def main(args: Array[String]) {
     val str2 = "{\"et\":\"kanqiu_client_join\",\"vtm\":1435898329434,\"body\":{\"client\":\"866963024862254\",\"client_type\":\"android\",\"room\":\"NBA_HOME\",\"gid\":\"\",\"type\":\"\",\"roomid\":\"\"},\"time\":1435898329}"

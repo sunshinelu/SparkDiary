@@ -6,10 +6,10 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.elasticsearch.spark.sql._
 
 /**
- * Created by sunlu on 17/3/13.
- * http://blog.csdn.net/myproudcodelife/article/details/50985057
- * 读取elasticsearch中的数据
- */
+  * Created by sunlu on 17/3/13.
+  * http://blog.csdn.net/myproudcodelife/article/details/50985057
+  * 读取elasticsearch中的数据
+  */
 object esDemo2 {
   def main(args: Array[String]) {
     //屏蔽日志
@@ -27,7 +27,7 @@ object esDemo2 {
     println(people.schema.treeString)
     people.show()
 
-    val wangs = sqlContext.esDF("spark/people","?q=wang")
+    val wangs = sqlContext.esDF("spark/people", "?q=wang")
     wangs.show()
   }
 }

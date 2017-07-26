@@ -7,9 +7,9 @@ import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
 /**
- * Created by sunlu on 17/6/23.
- * 对mysql数据库进行读写操作
- */
+  * Created by sunlu on 17/6/23.
+  * 对mysql数据库进行读写操作
+  */
 object readWriteMysql {
 
 
@@ -44,7 +44,7 @@ object readWriteMysql {
     prop2.setProperty("password", "root")
 
     //将结果保存到数据框中
-    ds1.write.mode("append").jdbc(url2, "testTable2", prop2)//overwrite
+    ds1.write.mode("append").jdbc(url2, "testTable2", prop2) //overwrite
 
     sc.stop()
     spark.stop()

@@ -8,10 +8,10 @@ import scala.util.parsing.json.JSON
 
 
 /**
- * Created by sunlu on 17/7/24.
- * https://www.iteblog.com/archives/1246.html
- * https://stackoverflow.com/questions/39619782/how-to-read-in-memory-json-string-into-spark-dataframe?noredirect=1&lq=1
- */
+  * Created by sunlu on 17/7/24.
+  * https://www.iteblog.com/archives/1246.html
+  * https://stackoverflow.com/questions/39619782/how-to-read-in-memory-json-string-into-spark-dataframe?noredirect=1&lq=1
+  */
 object jsonToJson {
 
   def SetLogger = {
@@ -66,7 +66,6 @@ object jsonToJson {
       case None => println("Parsing failed")
       case other => println("Unknown data structure: " + other)
     }
-
 
 
     val jsonStr = """{ "metadata": { "key": 84896, "value": 54 }}"""

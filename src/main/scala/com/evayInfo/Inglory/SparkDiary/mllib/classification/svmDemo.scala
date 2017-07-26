@@ -6,8 +6,8 @@ import org.apache.spark.{SparkContext, SparkConf}
 import org.apache.spark.mllib.classification.{SVMWithSGD, SVMModel}
 
 /**
- * Created by sunlu on 17/6/23.
- */
+  * Created by sunlu on 17/6/23.
+  */
 object svmDemo {
   def main(args: Array[String]) {
     //1 构建Spark对象
@@ -41,11 +41,11 @@ object svmDemo {
     // 误差计算
     val accuracy = 1.0 * predictionAndLabel.filter(x => x._1 == x._2).count() / test.count()
     println("Area under ROC = " + accuracy)
-/*
-    //保存模型
-    val ModelPath = "result/svm_model"
-    model.save(sc, ModelPath)
-    val sameModel = SVMModel.load(sc, ModelPath)
-*/
+    /*
+        //保存模型
+        val ModelPath = "result/svm_model"
+        model.save(sc, ModelPath)
+        val sameModel = SVMModel.load(sc, ModelPath)
+    */
   }
 }

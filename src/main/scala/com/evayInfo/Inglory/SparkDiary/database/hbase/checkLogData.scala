@@ -15,13 +15,13 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
 /**
- * Created by sunlu on 17/7/13.
- * 查看t_hbaseSink表中是否有标签为“双创”的数据
- *
- * //LOG_ID, TYPE, TITLE, CREATE_BY, CREATE_BY_ID, CREATE_TIME, REMOTE_ADDR, USER_AGENT, REQUEST_URI, METHOD, PARAMS
-  //编号, 日志类型(1：接入日志；2：错误日志), 日志标题, 创建者, 登录人ID, 创建时间, 操作IP地址, 用户代理, 请求URI, 操作方式, 操作提交的数据
-
- */
+  * Created by sunlu on 17/7/13.
+  * 查看t_hbaseSink表中是否有标签为“双创”的数据
+  *
+  * //LOG_ID, TYPE, TITLE, CREATE_BY, CREATE_BY_ID, CREATE_TIME, REMOTE_ADDR, USER_AGENT, REQUEST_URI, METHOD, PARAMS
+  * //编号, 日志类型(1：接入日志；2：错误日志), 日志标题, 创建者, 登录人ID, 创建时间, 操作IP地址, 用户代理, 请求URI, 操作方式, 操作提交的数据
+  *
+  */
 object checkLogData {
   def main(args: Array[String]) {
     //bulid environment

@@ -7,63 +7,63 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
 /**
- * Created by sunlu on 17/7/21.
- *
- * `DA_BBSARTICLE`文章表：
-  `ID`：文章ID
-  `TITLE`：标题
-  `CONTENT`：内容
-  `AUTHOR`：作者
-  `TIME`：发布时间
-  `CLICKNUM`：点击数
-  `REPLY`：回复数
-  `KEYWORD`：主题
-  `BZ`：备注
-  `TASKID`
-
- *
- * 修改为：
- *
-4) `DA_BBSARTICLE`文章表中获取的数据为：
-  `ID`（文章ID）
-  `TITLE`（标题）
-  `CONTENT`（内容）
-  `APPC`：带样式的正文
-  `URL`：源网页地址
-  `TIME`（发布时间）
-  `KEYWORD`（主题）
-   新增一列`SOURCE`（来源）列：来源为`LUNTAN`
-   新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
-
- *
- * ========================
- *
-
-`DA_BBSCOMMENT`评论表：
-  `ID`：评论ID
-  `ARTICLEID`：对应文章表中的文章id
-  `JSUSERNAME`：评论作者
-  `JSRESTIME`：评论时间
-  `FLOORID`：楼
-  `BBSCONTENT`：评论的内容
-
- *
- * 修改为
- *
-5) `DA_BBSCOMMENT`评论表中获取的数据为：
-  `ID`（评论ID）
-  `ARTICLEID`（对应文章表中的文章id）
-  `TITLE`（标题）：通过`ARTICLEID`从`DA_BBSARTICLE`表中`TITLE`列获取
-  `JSRESTIME`（评论时间）
-  对`BBSCONTENT`（评论的内容）进行数据清洗后结果
-   新增一列`KEYWORD`（主题）：通过`ARTICLEID`从`DA_BBSARTICLE`表中`KEYWORD`列获取。
-   新增一列`SOURCE`（来源）列：来源为`LUNTAN`
-   新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
-
- *
- *
- *
- */
+  * Created by sunlu on 17/7/21.
+  *
+  * `DA_BBSARTICLE`文章表：
+  * `ID`：文章ID
+  * `TITLE`：标题
+  * `CONTENT`：内容
+  * `AUTHOR`：作者
+  * `TIME`：发布时间
+  * `CLICKNUM`：点击数
+  * `REPLY`：回复数
+  * `KEYWORD`：主题
+  * `BZ`：备注
+  * `TASKID`
+  *
+  *
+  * 修改为：
+  *
+  * 4) `DA_BBSARTICLE`文章表中获取的数据为：
+  * `ID`（文章ID）
+  * `TITLE`（标题）
+  * `CONTENT`（内容）
+  * `APPC`：带样式的正文
+  * `URL`：源网页地址
+  * `TIME`（发布时间）
+  * `KEYWORD`（主题）
+  * 新增一列`SOURCE`（来源）列：来源为`LUNTAN`
+  * 新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
+  *
+  *
+  * ========================
+  *
+  * *
+  * `DA_BBSCOMMENT`评论表：
+  * `ID`：评论ID
+  * `ARTICLEID`：对应文章表中的文章id
+  * `JSUSERNAME`：评论作者
+  * `JSRESTIME`：评论时间
+  * `FLOORID`：楼
+  * `BBSCONTENT`：评论的内容
+  *
+  *
+  * 修改为
+  *
+  * 5) `DA_BBSCOMMENT`评论表中获取的数据为：
+  * `ID`（评论ID）
+  * `ARTICLEID`（对应文章表中的文章id）
+  * `TITLE`（标题）：通过`ARTICLEID`从`DA_BBSARTICLE`表中`TITLE`列获取
+  * `JSRESTIME`（评论时间）
+  * 对`BBSCONTENT`（评论的内容）进行数据清洗后结果
+  * 新增一列`KEYWORD`（主题）：通过`ARTICLEID`从`DA_BBSARTICLE`表中`KEYWORD`列获取。
+  * 新增一列`SOURCE`（来源）列：来源为`LUNTAN`
+  * 新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
+  *
+  *
+  *
+  *
+  */
 object dc_luntan {
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)

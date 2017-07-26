@@ -7,41 +7,41 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
 /**
- * Created by sunlu on 17/7/19.
- *
- * `DA_SEED`
-  `SEED_ID`：序号
-  `SEED_URL`：采集地址
-  `SEED_TITLE`：标题
-  `SEED_CONTENT`：内容
-  `SEED_DATE`：时间
-  `TASK_ID`：任务id
-  `CREATE_BY`：创建人
-  `CREATE_TIME`：创建时间
-  `UPDATE_BY`：修改人
-  `UPDATE_TIME`：修改时间
-  `DEL_FLAG`：删除标记 1:正常  2:删除
-  `MANUALLABEL`：标签
-  `TYPE`：区分网站、微信、微博
-  `FJFLAG`：标注是否为附件
-  `SOURCEURL`：源网页地址
- *
- *
- * 修改为：
- *
-7) `DA_SEED`
-     `SEED_ID`：序号
-     `SEED_TITLE`：标题
-     `SEED_CONTENT`：内容
-     `SEED_APPC`：带样式的内容
-     `SEED_DATE`：时间
-     `MANUALLABEL`：标签
-     `SOURCEURL`：源网页地址
-     新增一列`SOURCE`（来源）列：来源为`MENHU`
-     新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
- *
- *
- */
+  * Created by sunlu on 17/7/19.
+  *
+  * `DA_SEED`
+  * `SEED_ID`：序号
+  * `SEED_URL`：采集地址
+  * `SEED_TITLE`：标题
+  * `SEED_CONTENT`：内容
+  * `SEED_DATE`：时间
+  * `TASK_ID`：任务id
+  * `CREATE_BY`：创建人
+  * `CREATE_TIME`：创建时间
+  * `UPDATE_BY`：修改人
+  * `UPDATE_TIME`：修改时间
+  * `DEL_FLAG`：删除标记 1:正常  2:删除
+  * `MANUALLABEL`：标签
+  * `TYPE`：区分网站、微信、微博
+  * `FJFLAG`：标注是否为附件
+  * `SOURCEURL`：源网页地址
+  *
+  *
+  * 修改为：
+  *
+  * 7) `DA_SEED`
+  * `SEED_ID`：序号
+  * `SEED_TITLE`：标题
+  * `SEED_CONTENT`：内容
+  * `SEED_APPC`：带样式的内容
+  * `SEED_DATE`：时间
+  * `MANUALLABEL`：标签
+  * `SOURCEURL`：源网页地址
+  * 新增一列`SOURCE`（来源）列：来源为`MENHU`
+  * 新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
+  *
+  *
+  */
 object dc_menhu {
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)

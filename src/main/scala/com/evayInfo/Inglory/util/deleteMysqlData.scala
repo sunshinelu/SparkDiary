@@ -3,8 +3,8 @@ package com.evayInfo.Inglory.util
 import java.sql.{DriverManager, SQLException}
 
 /**
- * Created by sunlu on 17/6/26.
- */
+  * Created by sunlu on 17/6/26.
+  */
 object deleteMysqlData {
 
   def deleteMysqlData(url: String, user: String, password: String, tableName: String, timeString: String): Unit = {

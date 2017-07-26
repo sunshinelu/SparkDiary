@@ -4,11 +4,11 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
 
 /**
- * Created by sunlu on 17/6/23.
- * 读取CSV文件
- * 参考链接：http://blog.csdn.net/u014046115/article/details/70142610
- * https://stackoverflow.com/questions/37271474/spark-scala-read-in-csv-file-as-dataframe-dataset
- */
+  * Created by sunlu on 17/6/23.
+  * 读取CSV文件
+  * 参考链接：http://blog.csdn.net/u014046115/article/details/70142610
+  * https://stackoverflow.com/questions/37271474/spark-scala-read-in-csv-file-as-dataframe-dataset
+  */
 object readCSV {
 
   def main(args: Array[String]) {
