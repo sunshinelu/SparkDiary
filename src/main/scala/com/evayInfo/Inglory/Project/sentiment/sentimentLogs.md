@@ -11,7 +11,16 @@
 
 
 
+
 ## 二、数据清洗方案：
+
+各表所在数据库：
+
+ycIngloryBDP:`DA_BBSARTICLE`、`DA_BBSCOMMENT`、`DA_BAIDUARTICLE`
+
+
+IngloryBDP:`DA_WEIBO`、`DA_WEIBO_COMMENTS`、`DA_WEIXIN`、`DA_SEED`、`DA_BLOG`
+
 
 ### (一)、微博：
 
@@ -172,11 +181,13 @@
   `ID`：文章ID
   `TITLE`：标题
   `CONTENT`：正文
+  `CONTENT_HTML`:带格式的正文
   `URL`：链接地址
   `CREATEDAT`：发表时间
   `AUTHOR`：博主
   `BLOG_KEY`：标签
   `SYSTIME`：系统时间
+  `TASK_ID`：任务ID
 
 
 有内容格式的表：
@@ -198,7 +209,7 @@
 
 # 1. 数据获取
 
-情感分析所需数据为：ID、内容、时间、来源、主题
+情感分析所需数据为：ID、关联I、标题、内容、来源、来源UR、关键词、打分、时间、是否是评论
 
 1) `DA_WEIBO`中获取的数据为：
   `ID`（微博ID）
@@ -208,6 +219,7 @@
    `WEIBO_KEY`（关键字）
    新增一列`SOURCE`（来源）列：来源为`WEIBO`
    新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
+   
 
 2) `DA_WEIBO_COMMENTS`中获取的数据为：
   `ID`（评论ID）
@@ -219,14 +231,18 @@
    新增一列`SOURCE`（来源）列：来源为`WEIBO`
    新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
 
+
 3) `DA_WEIXIN`中获取数据为：
   `WX_ID`（文章唯一标识）
    `WX_TITLE`（微信文章标题）
   `WX_DATE`（微信文章时间）
   `WX_CONTENT`（微信文章内容）
+  `WX_APPC`：带样式的内容
   `WX_ZT`（主题）
+  `WX_URL`：微信文章地址
    新增一列`SOURCE`（来源）列：来源为`WEIXIN`
    新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
+ 
  
 4) `DA_BBSARTICLE`文章表中获取的数据为：
   `ID`（文章ID）
@@ -276,11 +292,12 @@
   `ID`：文章ID
   `TITLE`：标题
   `CONTENT`：正文
+  `CONTENT_HTML`:带格式的正文
   `CREATEDAT`：发表时间
   `BLOG_KEY`：标签
+  `URL`：链接地址
    新增一列`SOURCE`（来源）列：来源为`BLOG`
    新增一列`IS_COMMENT`：是否是评论, 0：否 1：是
-
 
 
 ## 四、情感分析结果：

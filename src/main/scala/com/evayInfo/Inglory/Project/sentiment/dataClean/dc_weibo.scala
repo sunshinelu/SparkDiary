@@ -8,7 +8,7 @@ import org.apache.spark.sql.functions._
 import org.jsoup.Jsoup
 
 /**
- * Created by sunlu on 17/7/21.
+ * Created by sunlu on 17/7/25.
  *
  *
  * `DA_WEIBO`：
@@ -90,16 +90,17 @@ object dc_weibo {
     val df_c_1 = df_c.select("ID", "WEIBO_ID", "TEXT", "CREATED_AT")
     // 通过`WEIBO_ID`从`DA_WEIBO`表中`WEIBO_KEY`列获取。
     val keyLib = df_w_1.select("WEIBO_ID", "TITLE", "WEIBO_KEY")
-    val df_c_2 = df_c_1.join(keyLib, Seq("WEIBO_ID"), "left").select("ID", "TITLE", "TEXT", "CREATED_AT", "WEIBO_KEY")
-    val df_w_2 = df_w_1.drop("WEIBO_ID")
+    val df_c_2 = df_c_1.join(keyLib, Seq("WEIBO_ID"), "left").select("ID", "WEIBO_ID", "TITLE", "TEXT", "WEIBO_KEY", "CREATED_AT")
+    val df_w_2 = df_w_1.select("ID", "WEIBO_ID", "TITLE", "TEXT", "WEIBO_KEY", "CREATEDAT").withColumn("WEIBO_ID", lit(null))
 
     // add IS_COMMENT column
     val addIsComm = udf((arg: Int) => arg)
     val df_w_3 = df_w_2.withColumn("IS_COMMENT", addIsComm(lit(0)))
     val df_c_3 = df_c_2.withColumn("IS_COMMENT", lit(1))
 
+
     // change all columns name
-    val colRenamed = Seq("ARTICLEID", "TITLE", "TEXT", "TIME", "KEYWORD", "IS_COMMENT")
+    val colRenamed = Seq("articleId", "glArticleId", "title", "content", "keyword", "time", "is_comment")
     val df_w_4 = df_w_3.toDF(colRenamed: _*)
     val df_c_4 = df_c_3.toDF(colRenamed: _*)
 
@@ -108,13 +109,14 @@ object dc_weibo {
 
     // add source column
     val addSource = udf((arg: String) => "WEIBO")
-    val df1 = df.withColumn("SOURCE", addSource($"ARTICLEID")).na.drop(Array("TEXT")).filter(length(col("TEXT")) >= 15)
+    val df1 = df.withColumn("source", addSource($"articleId")).withColumn("sourceUrl", lit(null)).
+      na.drop(Array("content")).filter(length(col("content")) >= 1)
 
     //使用Jsoup进行字符串处理
     val jsoupExtFunc = udf((content: String) => {
       Jsoup.parse(content).body().text()
     })
-    val df2 = df1.withColumn("JsoupExt", jsoupExtFunc(col("TEXT")))
+    val df2 = df1.withColumn("JsoupExt", jsoupExtFunc(col("content")))
     //df2.select("JsoupExt").take(5).foreach(println)
 
     // 表情符号的替换
@@ -122,27 +124,30 @@ object dc_weibo {
     val rmEmtionFunc = udf((arg: String) => {
       emoticonPatten.replaceAllIn(arg, "").mkString("")
     })
-    val df3 = df2.withColumn("TEXT_pre", rmEmtionFunc(col("JsoupExt"))).drop("JsoupExt")
+    val df3 = df2.withColumn("contentRmEmo", rmEmtionFunc(col("JsoupExt"))).drop("JsoupExt")
 
     // 提取微博中的正文，并添加系统时间列
     val contentPatten = "//@[\\u4e00-\\u9fa5a-zA-Z0-9_-]+[\\u4e00-\\u9fa5a-zA-Z0-9_：【】,.?:;'\"!，。！“”；？]+|@[^,，：:\\s@]+|#[^#]+#".r
     val getContentFunc = udf((arg: String) => {
       contentPatten.replaceAllIn(arg, "").mkString("")
     })
-    val df4 = df3.withColumn("CONTENT", getContentFunc(col("TEXT_pre"))).drop("TEXT_pre").na.drop(Array("CONTENT")) //.
+    val df4 = df3.withColumn("contentPre", getContentFunc(col("contentRmEmo"))).drop("contentRmEmo").na.drop(Array("contentPre")) //.
     //      withColumn("SYSTIME", current_timestamp()).withColumn("SYSTIME", date_format($"SYSTIME", "yyyy-MM-dd HH:mm:ss"))
 
     df4.printSchema()
     println(df4.count())
     /*
- |-- ARTICLEID: string (nullable = false)
- |-- TITLE: string (nullable = true)
- |-- TEXT: string (nullable = true)
- |-- TIME: string (nullable = true)
- |-- KEYWORD: string (nullable = true)
- |-- IS_COMMENT: integer (nullable = true)
- |-- SOURCE: string (nullable = true)
- |-- CONTENT: string (nullable = true)
+root
+ |-- articleId: string (nullable = false)
+ |-- glArticleId: string (nullable = true)
+ |-- title: string (nullable = true)
+ |-- content: string (nullable = true)
+ |-- keyword: string (nullable = true)
+ |-- time: string (nullable = true)
+ |-- is_comment: integer (nullable = true)
+ |-- source: string (nullable = true)
+ |-- sourceUrl: null (nullable = true)
+ |-- contentPre: string (nullable = true)
      */
 
     //    df4.select("CONTENT", "SysTime").take(5).foreach(println)
@@ -153,6 +158,7 @@ object dc_weibo {
         }
         val jsoupExtUdf = udf((arg: String) => jsoupExtFunc2(arg))
      */
+
 
     sc.stop()
     spark.stop()
@@ -172,16 +178,17 @@ getWeiboData：获取清洗后的微博数据全部数据
     val df_c_1 = df_c.select("ID", "WEIBO_ID", "TEXT", "CREATED_AT")
     // 通过`WEIBO_ID`从`DA_WEIBO`表中`WEIBO_KEY`列获取。
     val keyLib = df_w_1.select("WEIBO_ID", "TITLE", "WEIBO_KEY")
-    val df_c_2 = df_c_1.join(keyLib, Seq("WEIBO_ID"), "left").select("ID", "TITLE", "TEXT", "CREATED_AT", "WEIBO_KEY")
-    val df_w_2 = df_w_1.drop("WEIBO_ID")
+    val df_c_2 = df_c_1.join(keyLib, Seq("WEIBO_ID"), "left").select("ID", "WEIBO_ID", "TITLE", "TEXT", "WEIBO_KEY", "CREATED_AT")
+    val df_w_2 = df_w_1.select("ID", "WEIBO_ID", "TITLE", "TEXT", "WEIBO_KEY", "CREATEDAT").withColumn("WEIBO_ID", lit(null))
 
     // add IS_COMMENT column
     val addIsComm = udf((arg: Int) => arg)
     val df_w_3 = df_w_2.withColumn("IS_COMMENT", addIsComm(lit(0)))
     val df_c_3 = df_c_2.withColumn("IS_COMMENT", lit(1))
 
+
     // change all columns name
-    val colRenamed = Seq("ARTICLEID", "TITLE", "TEXT", "TIME", "KEYWORD", "IS_COMMENT")
+    val colRenamed = Seq("articleId", "glArticleId", "title", "content", "keyword", "time", "is_comment")
     val df_w_4 = df_w_3.toDF(colRenamed: _*)
     val df_c_4 = df_c_3.toDF(colRenamed: _*)
 
@@ -190,14 +197,14 @@ getWeiboData：获取清洗后的微博数据全部数据
 
     // add source column
     val addSource = udf((arg: String) => "WEIBO")
-    val df1 = df.withColumn("SOURCE", addSource(col("ARTICLEID"))).
-      na.drop(Array("TEXT")).filter(length(col("TEXT")) >= 1)
+    val df1 = df.withColumn("source", addSource(col("articleId"))).withColumn("sourceUrl", lit(null)).
+      na.drop(Array("content")).filter(length(col("content")) >= 1)
 
     //使用Jsoup进行字符串处理
     val jsoupExtFunc = udf((content: String) => {
       Jsoup.parse(content).body().text()
     })
-    val df2 = df1.withColumn("JsoupExt", jsoupExtFunc(col("TEXT")))
+    val df2 = df1.withColumn("JsoupExt", jsoupExtFunc(col("content")))
     //df2.select("JsoupExt").take(5).foreach(println)
 
     // 表情符号的替换
@@ -205,14 +212,14 @@ getWeiboData：获取清洗后的微博数据全部数据
     val rmEmtionFunc = udf((arg: String) => {
       emoticonPatten.replaceAllIn(arg, "").mkString("")
     })
-    val df3 = df2.withColumn("TEXT_pre", rmEmtionFunc(col("JsoupExt"))).drop("JsoupExt")
+    val df3 = df2.withColumn("contentRmEmo", rmEmtionFunc(col("JsoupExt"))).drop("JsoupExt")
 
     // 提取微博中的正文，并添加系统时间列
     val contentPatten = "//@[\\u4e00-\\u9fa5a-zA-Z0-9_-]+[\\u4e00-\\u9fa5a-zA-Z0-9_：【】,.?:;'\"!，。！“”；？]+|@[^,，：:\\s@]+|#[^#]+#".r
     val getContentFunc = udf((arg: String) => {
       contentPatten.replaceAllIn(arg, "").mkString("")
     })
-    val df4 = df3.withColumn("CONTENT", getContentFunc(col("TEXT_pre"))).drop("TEXT_pre").na.drop(Array("CONTENT"))
+    val df4 = df3.withColumn("contentPre", getContentFunc(col("contentRmEmo"))).drop("contentRmEmo").na.drop(Array("contentPre"))
     df4
   }
 
