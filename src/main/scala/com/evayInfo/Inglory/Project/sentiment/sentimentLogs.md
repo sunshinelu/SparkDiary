@@ -383,3 +383,6 @@ IngloryBDP:`DA_WEIBO`、`DA_WEIBO_COMMENTS`、`DA_WEIXIN`、`DA_SEED`、`DA_BLOG
   `content`：正文
 
 
+微博和论坛的评论中的内容没有格式，那么微博和论坛的评论的APPC列为NUL，在yq_content中则会出现content列为null的情况。
+
+`yq_article`表中的`articleId`列只有微博和论坛的评论有数据，其它均为null。
