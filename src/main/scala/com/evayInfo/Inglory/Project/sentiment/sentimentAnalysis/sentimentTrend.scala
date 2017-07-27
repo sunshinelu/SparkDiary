@@ -1,7 +1,6 @@
 package com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis
 
 import com.evayInfo.Inglory.Project.sentiment.dataClean._
-import com.evayInfo.Inglory.util.mysqlUtil
 import org.ansj.splitWord.analysis.ToAnalysis
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
@@ -124,7 +123,7 @@ root
         .toSeq.mkString(" ")
     })
 
-    val df1 = df.na.drop(Array("contentPre")).select("articleId", "contentPre").
+    val df1 = df.select("articleId", "contentPre").
       withColumn("segWords", segWorsd(column("contentPre")))
 
     val df2 = df1.explode("segWords", "tokens") { segWords: String => segWords.split(" ") }
@@ -137,8 +136,8 @@ root
       //      withColumn("IS_COMMENT", col("IS_COMMENT").cast("string")).
       withColumn("systime", current_timestamp()).withColumn("systime", date_format($"systime", "yyyy-MM-dd HH:mm:ss"))
 
-    val mainDF = df5.drop("content")
-    val slaveDF = df.select("articleId", "content")
+    val mainDF = df5.na.drop(Array("title")).drop("content")
+    val slaveDF = df.na.drop(Array("content")).select("articleId", "content")
 
     //    df4.printSchema()
     //        df5.printSchema()
@@ -148,8 +147,8 @@ root
     //    mysqlUtil.truncateMysql(url, user, password, masterTable)
 
     // save Mysql Data
-    //    mysqlUtil.saveMysqlData(mainDF, url, user, password, masterTable, "append")
-    //    mysqlUtil.saveMysqlData(slaveDF, url, user, password, slaveTable, "append")
+    //        mysqlUtil.saveMysqlData(mainDF, url, user, password, masterTable, "append")
+    //        mysqlUtil.saveMysqlData(slaveDF, url, user, password, slaveTable, "append")
 
 
     sc.stop()
