@@ -13,9 +13,9 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
-import org.springframework.stereotype.Service;
 
-@Service
+
+
 public class AddIndex {
 
     // 声明hbase静态配置
