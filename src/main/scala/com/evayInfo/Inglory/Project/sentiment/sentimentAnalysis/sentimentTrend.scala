@@ -1,6 +1,7 @@
 package com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis
 
 import com.evayInfo.Inglory.Project.sentiment.dataClean._
+import com.evayInfo.Inglory.util.mysqlUtil
 import org.ansj.splitWord.analysis.ToAnalysis
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
@@ -8,23 +9,23 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Row, SparkSession}
 
 /**
-  * Created by sunlu on 17/7/19.
-  * 获取微博、微信、论坛贴吧、博客、搜索引擎、网站门户
-  *
-  *
-  * 结果保存在SUMMARYARTICLE表中：
-  * `SUMMARYARTICLE`
-  * `ARTICLEID`：文章id
-  * `TITLE`：文章标题
-  * `CONTENT`：文章内容
-  * `SOURCE`：文章来源
-  * `KEYWORD`：标签:台湾  扶贫
-  * `SCORE` ：文章得分
-  * `LABEL`：标签：正类、负类、中性、严重
-  * `TIME`：文章发表时间
-  * `SYSTIME`：分析时间
-  * `IS_COMMENT`：是否是评论 0：否 1：是
-  */
+ * Created by sunlu on 17/7/19.
+ * 获取微博、微信、论坛贴吧、博客、搜索引擎、网站门户
+ *
+ *
+ * 结果保存在SUMMARYARTICLE表中：
+ * `SUMMARYARTICLE`
+ * `ARTICLEID`：文章id
+ * `TITLE`：文章标题
+ * `CONTENT`：文章内容
+ * `SOURCE`：文章来源
+ * `KEYWORD`：标签:台湾  扶贫
+ * `SCORE` ：文章得分
+ * `LABEL`：标签：正类、负类、中性、严重
+ * `TIME`：文章发表时间
+ * `SYSTIME`：分析时间
+ * `IS_COMMENT`：是否是评论 0：否 1：是
+ */
 object sentimentTrend {
 
   def SetLogger = {
@@ -79,7 +80,8 @@ object sentimentTrend {
     println("df_menhu")
     df_menhu.printSchema()
 */
-    val df = df_weibo.union(df_weixin).union(df_luntan).union(df_search).union(df_menhu).union(df_bolg)
+    val df = df_weibo.union(df_weixin).union(df_luntan).union(df_search).union(df_menhu).union(df_bolg).
+      filter(length(col("time")) === 19)
 
     //    println(df.select("IS_COMMENT").distinct().show())
 
@@ -140,15 +142,16 @@ root
     val slaveDF = df.na.drop(Array("content")).select("articleId", "content")
 
     //    df4.printSchema()
-    //        df5.printSchema()
-    println("全部数据数目为：" + df5.count())
+    //    df5.printSchema()
+    //    println("全部数据数目为：" + df5.count())
     //    df5.show(5)
     // truncate Mysql Table
-    //    mysqlUtil.truncateMysql(url, user, password, masterTable)
+    mysqlUtil.truncateMysql(url, user, password, masterTable)
+    mysqlUtil.truncateMysql(url, user, password, slaveTable)
 
     // save Mysql Data
-    //        mysqlUtil.saveMysqlData(mainDF, url, user, password, masterTable, "append")
-    //        mysqlUtil.saveMysqlData(slaveDF, url, user, password, slaveTable, "append")
+    mysqlUtil.saveMysqlData(mainDF, url, user, password, masterTable, "append")
+    mysqlUtil.saveMysqlData(slaveDF, url, user, password, slaveTable, "append")
 
 
     sc.stop()
