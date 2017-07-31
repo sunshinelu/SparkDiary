@@ -145,6 +145,7 @@ root
     //    df5.printSchema()
     //    println("全部数据数目为：" + df5.count())
     //    df5.show(5)
+
     // truncate Mysql Table
     mysqlUtil.truncateMysql(url, user, password, masterTable)
     mysqlUtil.truncateMysql(url, user, password, slaveTable)
