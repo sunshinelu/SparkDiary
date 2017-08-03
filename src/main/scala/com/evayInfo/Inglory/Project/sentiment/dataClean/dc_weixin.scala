@@ -64,7 +64,7 @@ object dc_weixin {
       select("WX_ID", "WX_TITLE", "WX_CONTENT", "WX_APPC", "WX_ZT", "WX_DATE", "WX_URL")
 
     // add source column and IS_COMMENT column
-    val addSource = udf((arg: String) => "WEIXIIN")
+    val addSource = udf((arg: String) => "WEIXIN")
     val df2 = df1.withColumn("SOURCE", addSource($"WX_ID")).withColumn("IS_COMMENT", lit(0)).withColumn("glArticleId", lit(null))
 
     // change all columns name
@@ -110,7 +110,7 @@ getWeixinData：获取清洗后的微信数据
       select("WX_ID", "WX_TITLE", "WX_CONTENT", "WX_APPC", "WX_ZT", "WX_DATE", "WX_URL")
 
     // add source column and IS_COMMENT column
-    val addSource = udf((arg: String) => "WEIXIIN")
+    val addSource = udf((arg: String) => "WEIXIN")
     val df2 = df1.withColumn("SOURCE", addSource(col("WX_ID"))).withColumn("IS_COMMENT", lit(0)).withColumn("glArticleId", lit(null))
 
     // change all columns name

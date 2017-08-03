@@ -36,7 +36,7 @@ object createHBaseTabel {
 
     //创建job
     /*
-    val job = new Job(conf)
+    val job = new Job(conf) # Job方法已经过时
     job.setOutputKeyClass(classOf[ImmutableBytesWritable])
     job.setOutputValueClass(classOf[Result])
     job.setOutputFormatClass(classOf[TableOutputFormat[ImmutableBytesWritable]])
