@@ -386,3 +386,89 @@ IngloryBDP:`DA_WEIBO`、`DA_WEIBO_COMMENTS`、`DA_WEIXIN`、`DA_SEED`、`DA_BLOG
 微博和论坛的评论中的内容没有格式，那么微博和论坛的评论的APPC列为NUL，所以在yq_content中则会出现content列为null的情况。
 
 `yq_article`表中的`articleId`列只有微博和论坛的评论有数据，其它均为null。
+
+
+## 八、任务提交
+
+     spark-submit \
+     --class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV1 \
+     --master yarn \
+     --num-executors 2 \
+     --executor-cores 2 \
+     --executor-memory 2g \
+     --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+     /root/lulu/Progect/sentiment/SparkDiary-1.0-SNAPSHOT.jar
+     
+报错：
+
+    Exception in thread "main" java.sql.SQLException: No suitable driver
+ 
+解决方法：
+
+
+     
+     spark-submit \
+     --class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV1 \
+     --master yarn \
+     --num-executors 2 \
+     --executor-cores 2 \
+     --executor-memory 2g \
+     --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/software/extraClass/mysql-connector-java-5.1.17.jar \
+     /root/lulu/Progect/sentiment/SparkDiary-1.0-SNAPSHOT.jar
+     
+     spark-submit \
+     --class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV1 \
+     --master yarn \
+     --num-executors 2 \
+     --executor-cores 2 \
+     --executor-memory 2g \
+     SparkDiary-1.0-SNAPSHOT-jar-with-dependencies.jar 
+
+     spark-submit \
+     --class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV1 \
+     --master yarn \
+     --num-executors 2 \
+     --executor-cores 2 \
+     --executor-memory 2g \
+     --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/software/extraClass/mysql-connector-java-5.1.17.jar \
+     /root/lulu/Progect/sentiment/SparkDiary.jar
+     
+     
+          spark-submit \
+          --class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV1 \
+          --master yarn \
+          --num-executors 2 \
+          --executor-cores 2 \
+          --executor-memory 2g \
+          --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+          /root/lulu/Progect/sentiment/SparkDiary.jar
+          
+          spark-submit \
+          --class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV1 \
+          --master yarn \
+          --num-executors 2 \
+          --executor-cores 2 \
+          --executor-memory 2g \
+          /root/lulu/Progect/sentiment/SparkDiary.jar
+          
+ 成功：
+ 
+           spark-submit \
+           --class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV1 \
+           --master yarn \
+           --num-executors 2 \
+           --executor-cores 2 \
+           --executor-memory 2g \
+           --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/software/extraClass/mysql-connector-java-5.1.17.jar \
+           /root/lulu/Progect/sentiment/SparkDiary.jar
+ 
+ 
+     spark-submit \
+     --class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV1 \
+     --master yarn \
+     --num-executors 2 \
+     --executor-cores 2 \
+     --executor-memory 2g \
+     --driver-class-path /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/software/extraClass/mysql-connector-java-5.1.17.jar \
+     /root/lulu/Progect/sentiment/SparkDiary-1.0-SNAPSHOT.jar
+          

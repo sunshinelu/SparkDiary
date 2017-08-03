@@ -9,8 +9,8 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Row, SparkSession}
 
 /**
- * Created by sunlu on 17/7/19.
- * 获取微博、微信、论坛贴吧、博客、搜索引擎、网站门户
+ * Created by sunlu on 17/8/3.
+ * * 获取微博、微信、论坛贴吧、博客、搜索引擎、网站门户
  *
  *
  * 结果保存在SUMMARYARTICLE表中：
@@ -26,7 +26,7 @@ import org.apache.spark.sql.{Row, SparkSession}
  * `SYSTIME`：分析时间
  * `IS_COMMENT`：是否是评论 0：否 1：是
  */
-object sentimentTrend {
+object sentimentTrendV1 {
 
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)
@@ -39,16 +39,17 @@ object sentimentTrend {
 
     //    SetLogger
 
-    val conf = new SparkConf().setAppName(s"sentimentTrend").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val conf = new SparkConf().setAppName(s"sentimentTrendV1") //.setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(conf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
 
     //    val url = "jdbc:mysql://localhost:3306/bbs"
-    val url = "jdbc:mysql://localhost:3306/bbs?useUnicode=true&characterEncoding=UTF-8&" +
-      "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
-    val user = "root"
-    val password = "root"
+    val url1 = "jdbc:mysql://192.168.37.18:3306/IngloryBDP?useUnicode=true&characterEncoding=UTF-8"
+    //    val url1 = "jdbc:mysql://192.168.37.18:3306/IngloryBDP?useUnicode=true&characterEncoding=UTF-8&" +
+    //      "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+    val user1 = "root"
+    val password1 = "root"
 
     val weiboAtable = "DA_WEIBO"
     val weiboCtable = "DA_WEIBO_COMMENTS"
@@ -58,28 +59,24 @@ object sentimentTrend {
     val searchTable = "DA_BAIDUARTICLE"
     val menhuTable = "DA_SEED"
     val blogTable = "DA_BLOG"
+
+
+    //    val url2 = "jdbc:mysql://192.168.37.18:3306/bbs?useUnicode=true&characterEncoding=UTF-8&" +
+    //      "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+    val url2 = "jdbc:mysql://192.168.37.18:3306/bbs?useUnicode=true&characterEncoding=UTF-8"
+    val user2 = "root"
+    val password2 = "root"
     val masterTable = "yq_article"
     val slaveTable = "yq_content"
 
-    val df_weibo = dc_weibo.getWeiboData(spark, url, user, password, weiboAtable, weiboCtable)
-    val df_weixin = dc_weixin.getWeixinData(spark, url, user, password, weixinTable)
-    val df_luntan = dc_luntan.getLuntanData(spark, url, user, password, luntanAtable, luntanCtable)
-    val df_search = dc_search.getSearchData(spark, url, user, password, searchTable)
-    val df_menhu = dc_menhu.getMenhuData(spark, url, user, password, menhuTable)
-    val df_bolg = dc_blog.getBlogData(spark, url, user, password, blogTable)
-    val id_df = mysqlUtil.getMysqlData(spark, url, user, password, masterTable).select("ARTICLEID")
-    /*
-    println("df_weibo")
-    df_weibo.printSchema()
-    println("df_weixin")
-    df_weixin.printSchema()
-    println("df_luntan")
-    df_luntan.printSchema()
-    println("df_search")
-    df_search.printSchema()
-    println("df_menhu")
-    df_menhu.printSchema()
-*/
+    val df_weibo = dc_weibo.getWeiboData(spark, url1, user1, password1, weiboAtable, weiboCtable)
+    val df_weixin = dc_weixin.getWeixinData(spark, url1, user1, password1, weixinTable)
+    val df_luntan = dc_luntan.getLuntanData(spark, url1, user1, password1, luntanAtable, luntanCtable)
+    val df_search = dc_search.getSearchData(spark, url1, user1, password1, searchTable)
+    val df_menhu = dc_menhu.getMenhuData(spark, url1, user1, password1, menhuTable)
+    val df_bolg = dc_blog.getBlogData(spark, url1, user1, password1, blogTable)
+    val id_df = mysqlUtil.getMysqlData(spark, url2, user2, password2, masterTable).select("ARTICLEID")
+
     val df = df_weibo.union(df_weixin).union(df_luntan).union(df_search).union(df_menhu).union(df_bolg).
       filter(length(col("time")) === 19).join(id_df, Seq("ARTICLEID"), "leftanti")
 
@@ -87,37 +84,12 @@ object sentimentTrend {
 
     if (x > 0) {
 
-      //    println(df.select("IS_COMMENT").distinct().show())
-
-      df.printSchema()
-      /*
-root
- |-- articleId: string (nullable = true)
- |-- glArticleId: string (nullable = true)
- |-- title: string (nullable = true)
- |-- content: string (nullable = true)
- |-- keyword: string (nullable = true)
- |-- time: string (nullable = true)
- |-- is_comment: integer (nullable = true)
- |-- source: string (nullable = true)
- |-- sourceUrl: string (nullable = true)
- |-- contentPre: string (nullable = true)
-     */
-      /*
-    println("count weibo data: " + df_weibo.count()) // error ==> success
-    println("count weixin data: " + df_weixin.count()) // success
-    println("count luntan data: " + df_luntan.count()) // success
-    println("count search data: " + df_search.count()) // success
-    println("count menhu data: " + df_menhu.count()) // success
-    println("count total data: " + df.count()) // ERROR ==> success
-    */
-
       //获取正类、负类词典。posnegDF在join时使用；posnegList在词过滤时使用。
-      val posnegDF = spark.read.format("CSV").option("header", "true").load("data/posneg.csv")
+      val posnegDF = spark.read.format("CSV").option("header", "true").load("/personal/sunlu/Project/sentiment/posneg.csv")
       val posnegList = posnegDF.select("term").dropDuplicates().rdd.map { case Row(term: String) => term }.collect().toList
 
       //load stopwords file
-      val stopwordsFile = "data/Stopwords.dic"
+      val stopwordsFile = "/personal/sunlu/Project/sentiment/Stopwords.dic"
       val stopwords = sc.textFile(stopwordsFile).collect().toList
 
       //定义UDF
@@ -145,18 +117,13 @@ root
       val mainDF = df5.na.drop(Array("title")).drop("content")
       val slaveDF = df.na.drop(Array("content")).select("articleId", "content")
 
-      //    df4.printSchema()
-      //    df5.printSchema()
-      //    println("全部数据数目为：" + df5.count())
-      //    df5.show(5)
-
       // truncate Mysql Table
-      //      mysqlUtil.truncateMysql(url, user, password, masterTable)
-      //      mysqlUtil.truncateMysql(url, user, password, slaveTable)
+      //    mysqlUtil.truncateMysql(url2, user2, password2, masterTable)
+      //    mysqlUtil.truncateMysql(url2, user2, password2, slaveTable)
 
       // save Mysql Data
-      mysqlUtil.saveMysqlData(mainDF, url, user, password, masterTable, "append")
-      mysqlUtil.saveMysqlData(slaveDF, url, user, password, slaveTable, "append")
+      mysqlUtil.saveMysqlData(mainDF, url2, user2, password2, masterTable, "append")
+      mysqlUtil.saveMysqlData(slaveDF, url2, user2, password2, slaveTable, "append")
     }
 
     sc.stop()
@@ -164,5 +131,4 @@ root
 
 
   }
-
 }
