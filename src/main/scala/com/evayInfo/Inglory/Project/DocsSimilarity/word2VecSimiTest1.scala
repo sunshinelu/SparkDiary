@@ -67,8 +67,7 @@ object word2VecSimiTest1 {
     val segWorsd = udf((content: String) => {
       ToAnalysis.parse(content).toArray.map(_.toString.split("/")).
         filter(_.length >= 2).map(_ (0)).toList.
-        filter(word => word.length >= 1 & !stopwords.contains(word))
-        .toSeq
+        filter(word => word.length >= 1 & !stopwords.contains(word)).toSeq
     })
 
     val segDF = indexed.withColumn("segWords", segWorsd(column("content")))
