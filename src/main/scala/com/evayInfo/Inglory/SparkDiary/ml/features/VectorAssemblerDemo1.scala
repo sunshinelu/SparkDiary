@@ -27,6 +27,13 @@ object VectorAssemblerDemo1 {
     ).toDF("id", "hour", "mobile", "userFeatures", "clicked")
 
     dataset.show()
+    /*
++---+----+------+--------------+-------+
+| id|hour|mobile|  userFeatures|clicked|
++---+----+------+--------------+-------+
+|  0|  18|   1.0|[0.0,10.0,0.5]|    1.0|
++---+----+------+--------------+-------+
+     */
 
     val assembler = new VectorAssembler()
       .setInputCols(Array("hour", "mobile", "userFeatures"))
@@ -34,8 +41,26 @@ object VectorAssemblerDemo1 {
 
     val output = assembler.transform(dataset)
     output.printSchema()
+    /*
+    root
+ |-- id: integer (nullable = false)
+ |-- hour: integer (nullable = false)
+ |-- mobile: double (nullable = false)
+ |-- userFeatures: vector (nullable = true)
+ |-- clicked: double (nullable = false)
+ |-- features: vector (nullable = true)
+     */
+
     println("Assembled columns 'hour', 'mobile', 'userFeatures' to vector column 'features'")
     output.select("features", "clicked").show(false)
+    /*
+    +-----------------------+-------+
+    |features               |clicked|
+    +-----------------------+-------+
+    |[18.0,1.0,0.0,10.0,0.5]|1.0    |
+    +-----------------------+-------+
+
+     */
 
   }
 }
