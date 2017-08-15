@@ -124,6 +124,9 @@ object dc_luntan {
  |-- sourceUrl: string (nullable = true)
  |-- contentPre: string (nullable = true)
      */
+    println("数据总数为：" + df.count)
+    println("除重后数据总数为：" + df.dropDuplicates().count)
+    println("articleId除重后数据总数为：" + df.dropDuplicates(Array("articleId")).count)
 
     sc.stop()
     spark.stop()

@@ -135,7 +135,7 @@ object dc_weibo {
     //      withColumn("SYSTIME", current_timestamp()).withColumn("SYSTIME", date_format($"SYSTIME", "yyyy-MM-dd HH:mm:ss"))
 
     df4.printSchema()
-    println(df4.count())
+
     /*
 root
  |-- articleId: string (nullable = false)
@@ -158,7 +158,9 @@ root
         }
         val jsoupExtUdf = udf((arg: String) => jsoupExtFunc2(arg))
      */
-
+    println("数据总数为：" + df4.count)
+    println("除重后数据总数为：" + df4.dropDuplicates().count)
+    println("articleId除重后数据总数为：" + df4.dropDuplicates(Array("articleId")).count)
 
     sc.stop()
     spark.stop()

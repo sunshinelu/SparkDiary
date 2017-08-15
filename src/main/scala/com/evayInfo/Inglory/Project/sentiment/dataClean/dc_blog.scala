@@ -83,6 +83,10 @@ root
  |-- contentPre: string (nullable = true)
      */
 
+    println("数据总数为：" + df3.count)
+    println("除重后数据总数为：" + df3.dropDuplicates().count)
+    println("articleId除重后数据总数为：" + df3.dropDuplicates(Array("articleId")).count)
+
   }
 
   /*

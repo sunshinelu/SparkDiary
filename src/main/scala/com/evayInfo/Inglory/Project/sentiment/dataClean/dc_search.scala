@@ -85,7 +85,9 @@ root
  |-- sourceUrl: string (nullable = true)
  |-- contentPre: string (nullable = true)
      */
-
+    println("数据总数为：" + df3.count)
+    println("除重后数据总数为：" + df3.dropDuplicates().count)
+    println("articleId除重后数据总数为：" + df3.dropDuplicates(Array("articleId")).count)
 
   }
 
@@ -106,7 +108,7 @@ getSearchData：获取清洗后的搜索引擎数据
       "source", "sourceUrl")
     val df3 = df2.select("ID", "glArticleId", "TITLE", "CONTENT", "KEYWORD", "TIME", "IS_COMMENT", "SOURCE", "SOURCEURL").
       toDF(colRenamed: _*).withColumn("contentPre", col("content")).na.drop(Array("contentPre")).
-      filter(length(col("CONTENT")) >= 1)
+      filter(length(col("CONTENT")) >= 2)
     df3
   }
 

@@ -93,6 +93,9 @@ root
 
     //    mysqlUtil.saveMysqlData(df3, url, user, password, "DC_WEIXIN", "overwrite") // save mode: overwrite OR append
 
+    println("数据总数为：" + df3.count)
+    println("除重后数据总数为：" + df3.dropDuplicates().count)
+    println("articleId除重后数据总数为：" + df3.dropDuplicates(Array("articleId")).count)
 
     sc.stop()
     spark.stop()
