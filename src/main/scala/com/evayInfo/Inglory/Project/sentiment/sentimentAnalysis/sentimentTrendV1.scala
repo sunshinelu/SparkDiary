@@ -78,7 +78,8 @@ object sentimentTrendV1 {
     val id_df = mysqlUtil.getMysqlData(spark, url2, user2, password2, masterTable).select("ARTICLEID")
 
     val df = df_weibo.union(df_weixin).union(df_luntan).union(df_search).union(df_menhu).union(df_bolg).
-      filter(length(col("time")) === 19).join(id_df, Seq("ARTICLEID"), "leftanti")
+      filter(length(col("time")) === 19).join(id_df, Seq("ARTICLEID"), "leftanti").filter(length(col("title")) >= 2).
+      filter(length(col("contentPre")) >= 2)
 
     val x = df.count()
 
@@ -114,8 +115,12 @@ object sentimentTrendV1 {
       //      withColumn("IS_COMMENT", col("IS_COMMENT").cast("string")).
       withColumn("systime", current_timestamp()).withColumn("systime", date_format($"systime", "yyyy-MM-dd HH:mm:ss"))
 
-      val mainDF = df5.na.drop(Array("title")).drop("content")
-      val slaveDF = df.na.drop(Array("content")).select("articleId", "content")
+      //      val mainDF = df5.na.drop(Array("title", "content")).drop("content")
+      //      val slaveDF = df5.na.drop(Array("title", "content")).select("articleId", "content")
+
+      val mainDF = df5.drop("content")
+      val slaveDF = df5.select("articleId", "content")
+
 
       // truncate Mysql Table
       //    mysqlUtil.truncateMysql(url2, user2, password2, masterTable)

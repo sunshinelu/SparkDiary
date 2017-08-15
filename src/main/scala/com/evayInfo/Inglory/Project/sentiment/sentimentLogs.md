@@ -461,7 +461,8 @@ IngloryBDP:`DA_WEIBO`、`DA_WEIBO_COMMENTS`、`DA_WEIXIN`、`DA_SEED`、`DA_BLOG
            --executor-memory 2g \
            --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/software/extraClass/mysql-connector-java-5.1.17.jar \
            /root/lulu/Progect/sentiment/SparkDiary.jar
- 
+
+运行时间： 
  
      spark-submit \
      --class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV1 \
@@ -471,4 +472,17 @@ IngloryBDP:`DA_WEIBO`、`DA_WEIBO_COMMENTS`、`DA_WEIXIN`、`DA_SEED`、`DA_BLOG
      --executor-memory 2g \
      --driver-class-path /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/software/extraClass/mysql-connector-java-5.1.17.jar \
      /root/lulu/Progect/sentiment/SparkDiary-1.0-SNAPSHOT.jar
+       
           
+时间：2017年8月15日
+
+           spark-submit \
+           --class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV1 \
+           --master yarn \
+           --num-executors 2 \
+           --executor-cores 2 \
+           --executor-memory 2g \
+           --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/software/extraClass/mysql-connector-java-5.1.17.jar \
+           /root/lulu/Progect/sentiment/SparkDiary.jar
+
+运行时间：

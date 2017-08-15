@@ -1,8 +1,5 @@
 package com.evayInfo.Inglory.Project.DocsSimilarity
 
-import java.text.SimpleDateFormat
-import java.util.{Calendar, Date}
-
 import org.ansj.splitWord.analysis.ToAnalysis
 import org.ansj.util.MyStaticValue
 import org.apache.hadoop.hbase.HBaseConfiguration
@@ -13,9 +10,9 @@ import org.apache.hadoop.hbase.util.{Base64, Bytes}
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.ml.feature.Word2Vec
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.{column, udf}
+import org.apache.spark.{SparkConf, SparkContext}
 
 
 /**
@@ -111,7 +108,7 @@ object bulidWord2VecModel {
       .setVectorSize(10) // 1000
       .setMinCount(0)
     val word2VecModel = word2Vec.fit(segDF)
-    word2VecModel.write.overwrite().save("")
+    word2VecModel.write.overwrite().save("/personal/sunlu/Project/bulidWord2VecModel")
 
 
     sc.stop()
