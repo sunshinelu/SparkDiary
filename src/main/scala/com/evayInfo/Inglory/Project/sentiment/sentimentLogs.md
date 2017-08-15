@@ -485,14 +485,22 @@ IngloryBDP:`DA_WEIBO`、`DA_WEIBO_COMMENTS`、`DA_WEIXIN`、`DA_SEED`、`DA_BLOG
            --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/software/extraClass/mysql-connector-java-5.1.17.jar \
            /root/lulu/Progect/sentiment/SparkDiary.jar
 
-运行时间：
+运行时间：1hrs, 17mins, 47sec
 
 
-spark-submit \
---class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV1 \
---master yarn \
---num-executors 4 \
---executor-cores 4 \
---executor-memory 2g \
---jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/software/extraClass/mysql-connector-java-5.1.17.jar \
-/root/lulu/Progect/sentiment/SparkDiary.jar
+    spark-submit \
+    --class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV1 \
+    --master yarn \
+    --num-executors 4 \
+    --executor-cores 4 \
+    --executor-memory 2g \
+    --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/software/extraClass/mysql-connector-java-5.1.17.jar \
+    /root/lulu/Progect/sentiment/SparkDiary.jar
+
+查看数据保存情况：
+
+    select COUNT(*) from t_yq_article
+    select COUNT(1) from t_yq_content
+
+    SELECT * FROM t_yq_article WHERE articleId='3b27c1f9-d501-4a7b-b77b-0bec7afa6170'
+    SELECT * FROM DA_SEED WHERE articleId='3b27c1f9-d501-4a7b-b77b-0bec7afa6170'

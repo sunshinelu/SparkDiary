@@ -37,7 +37,7 @@ object sentimentTrendV1 {
 
   def main(args: Array[String]) {
 
-    // SetLogger
+     SetLogger
 
     val conf = new SparkConf().setAppName(s"sentimentTrendV1") //.setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(conf).getOrCreate()
@@ -68,6 +68,7 @@ object sentimentTrendV1 {
     val password2 = "root"
     val masterTable = "t_yq_article"
     val slaveTable = "t_yq_content"
+    val allTable = "t_yq_all"
 
     val df_weibo = dc_weibo.getWeiboData(spark, url1, user1, password1, weiboAtable, weiboCtable)
     val df_weixin = dc_weixin.getWeixinData(spark, url1, user1, password1, weixinTable)
@@ -117,20 +118,23 @@ object sentimentTrendV1 {
     //      val mainDF = df5.na.drop(Array("title", "content")).drop("content")
     //      val slaveDF = df5.na.drop(Array("title", "content")).select("articleId", "content")
 
-    val df6 = df5.filter(length(col("title")) >= 2).filter(length(col("content")) >= 2)
-    val masterDF = df6.drop("content").dropDuplicates(Array("articleId"))
-    val slaveDF = df6.//filter(length(col("title")) >= 2).filter(length(col("content")) >= 2).
-      select("articleId", "content").dropDuplicates(Array("articleId"))
+    val df6 = df5.filter(length(col("title")) >= 2).filter(length(col("content")) >= 2).dropDuplicates(Array("articleId"))
+    val masterDF = df6.drop("content")
+    val slaveDF = df6.select("articleId", "content")
+
+//    println("df6的数量为：" + df6.count)
+//    println("masterDF的数量为：" + masterDF.count)
+//    println("slaveDF的数量为：" + slaveDF.count)
 
 
     // truncate Mysql Table
     mysqlUtil.truncateMysql(url2, user2, password2, masterTable)
     mysqlUtil.truncateMysql(url2, user2, password2, slaveTable)
-
+    mysqlUtil.truncateMysql(url2, user2, password2, allTable)
     // save Mysql Data
     mysqlUtil.saveMysqlData(slaveDF, url2, user2, password2, slaveTable, "append")
     mysqlUtil.saveMysqlData(masterDF, url2, user2, password2, masterTable, "append")
-
+    mysqlUtil.saveMysqlData(masterDF, url2, user2, password2, allTable, "append")
     //    }
 
     sc.stop()
