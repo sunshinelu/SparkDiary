@@ -9,23 +9,23 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Row, SaveMode, SparkSession}
 
 /**
- * Created by sunlu on 17/8/3.
- * * 获取微博、微信、论坛贴吧、博客、搜索引擎、网站门户
- *
- *
- * 结果保存在SUMMARYARTICLE表中：
- * `SUMMARYARTICLE`
- * `ARTICLEID`：文章id
- * `TITLE`：文章标题
- * `CONTENT`：文章内容
- * `SOURCE`：文章来源
- * `KEYWORD`：标签:台湾  扶贫
- * `SCORE` ：文章得分
- * `LABEL`：标签：正类、负类、中性、严重
- * `TIME`：文章发表时间
- * `SYSTIME`：分析时间
- * `IS_COMMENT`：是否是评论 0：否 1：是
- */
+  * Created by sunlu on 17/8/3.
+  * * 获取微博、微信、论坛贴吧、博客、搜索引擎、网站门户
+  *
+  *
+  * 结果保存在SUMMARYARTICLE表中：
+  * `SUMMARYARTICLE`
+  * `ARTICLEID`：文章id
+  * `TITLE`：文章标题
+  * `CONTENT`：文章内容
+  * `SOURCE`：文章来源
+  * `KEYWORD`：标签:台湾  扶贫
+  * `SCORE` ：文章得分
+  * `LABEL`：标签：正类、负类、中性、严重
+  * `TIME`：文章发表时间
+  * `SYSTIME`：分析时间
+  * `IS_COMMENT`：是否是评论 0：否 1：是
+  */
 object sentimentTrendV1 {
 
   def SetLogger = {
@@ -37,7 +37,7 @@ object sentimentTrendV1 {
 
   def main(args: Array[String]) {
 
-     SetLogger
+    SetLogger
 
     val conf = new SparkConf().setAppName(s"sentimentTrendV1") //.setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(conf).getOrCreate()
@@ -66,8 +66,8 @@ object sentimentTrendV1 {
     val url2 = "jdbc:mysql://192.168.37.18:3306/bbs?useUnicode=true&characterEncoding=UTF-8"
     val user2 = "root"
     val password2 = "root"
-    val masterTable = "t_yq_article"
-    val slaveTable = "t_yq_content"
+    val masterTable = "yq_article"
+    val slaveTable = "yq_content"
     val allTable = "t_yq_all"
 
     val df_weibo = dc_weibo.getWeiboData(spark, url1, user1, password1, weiboAtable, weiboCtable)
@@ -119,8 +119,8 @@ object sentimentTrendV1 {
     //      val slaveDF = df5.na.drop(Array("title", "content")).select("articleId", "content")
 
     val df6 = df5.filter(length(col("title")) >= 2).filter(length(col("content")) >= 2).dropDuplicates(Array("articleId"))
-    val masterDF = df6.drop("content").dropDuplicates(Array("articleId"))
-    val slaveDF = df6.select("articleId", "content").dropDuplicates(Array("articleId"))
+    //    df6.persist()
+
 
     /*
     println("df6的数量为：" + df6.count)
@@ -140,38 +140,49 @@ object sentimentTrendV1 {
     // save Mysql Data
     //    mysqlUtil.saveMysqlData(slaveDF, url2, user2, password2, slaveTable, "append")
     //    mysqlUtil.saveMysqlData(masterDF, url2, user2, password2, masterTable, "append")
-    //    mysqlUtil.saveMysqlData(df6, url2, user2, password2, allTable, "append")
+    mysqlUtil.saveMysqlData(df6, url2, user2, password2, allTable, "append")
 
+    val all_df = mysqlUtil.getMysqlData(spark, url2, user2, password2, allTable)
 
-    df6.write.format("jdbc")
-      .mode(SaveMode.Append)
-      .option("dbtable", allTable)
-      .option("url", url2)
-      .option("user", user2)
-      .option("password", password2)
-      .option("numPartitions", 10)
-      .save()
+    val masterDF = all_df.drop("content")
+    val slaveDF = all_df.select("articleId", "content")
+    mysqlUtil.saveMysqlData(slaveDF, url2, user2, password2, slaveTable, "append")
+    mysqlUtil.saveMysqlData(masterDF, url2, user2, password2, masterTable, "append")
 
+    /*
+        df6.write.format("jdbc")
+          .mode(SaveMode.Append)
+          .option("dbtable", allTable)
+          .option("url", url2)
+          .option("user", user2)
+          .option("password", password2)
+          .option("numPartitions", 10)
+          .save()
 
-    masterDF.write.format("jdbc")
-      .mode(SaveMode.Append)
-      .option("dbtable", masterTable)
-      .option("url", url2)
-      .option("user", user2)
-      .option("password", password2)
-      .option("numPartitions", 10)
-      .save()
+        val all_df = mysqlUtil.getMysqlData(spark, url2, user2, password2, allTable)
 
-    slaveDF.write.format("jdbc")
-      .mode(SaveMode.Append)
-      .option("dbtable", slaveTable)
-      .option("url", url2)
-      .option("user", user2)
-      .option("password", password2)
-      .option("numPartitions", 10)
-      .save()
+        val masterDF = all_df.drop("content")//.dropDuplicates(Array("articleId"))
+        val slaveDF = all_df.select("articleId", "content")//.dropDuplicates(Array("articleId"))
 
+        masterDF.write.format("jdbc")
+          .mode(SaveMode.Append)
+          .option("dbtable", masterTable)
+          .option("url", url2)
+          .option("user", user2)
+          .option("password", password2)
+          .option("numPartitions", "5")
+          .save()
 
+        slaveDF.write.format("jdbc")
+          .mode(SaveMode.Append)
+          .option("dbtable", slaveTable)
+          .option("url", url2)
+          .option("user", user2)
+          .option("password", password2)
+          .option("numPartitions", "5")
+          .save()
+
+    */
     //    }
 
     sc.stop()

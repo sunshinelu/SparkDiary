@@ -218,3 +218,18 @@ Caused by: org.apache.spark.SparkException: Failed to execute user defined funct
     val df4 = df3.withColumn("CONTENT", getContentFunc(col("TEXT_pre"))).drop("TEXT_pre").na.drop(Array("CONTENT"))
     
 后，代码不报错。原因上不明确。
+
+## 4. 报错“java.nio.channels.ClosedByInterruptException”
+
+    java.nio.channels.ClosedByInterruptException
+        at java.nio.channels.spi.AbstractInterruptibleChannel.end(AbstractInterruptibleChannel.java:202)
+        at sun.nio.ch.FileChannelImpl.position(FileChannelImpl.java:266)
+        at org.apache.spark.storage.DiskBlockObjectWriter.commitAndGet(DiskBlockObjectWriter.scala:179)
+        at org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter.write(BypassMergeSortShuffleWriter.java:157)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:96)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:53)
+        at org.apache.spark.scheduler.Task.run(Task.scala:99)
+        at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:282)
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)
+        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)
+        at java.lang.Thread.run(Thread.java:745)
