@@ -504,3 +504,15 @@ IngloryBDP:`DA_WEIBO`、`DA_WEIBO_COMMENTS`、`DA_WEIXIN`、`DA_SEED`、`DA_BLOG
 
     SELECT * FROM t_yq_article WHERE articleId='3b27c1f9-d501-4a7b-b77b-0bec7afa6170'
     SELECT * FROM DA_SEED WHERE articleId='3b27c1f9-d501-4a7b-b77b-0bec7afa6170'
+    
+ 时间：2017年08月16日：
+ 
+在slave6中运行
+    
+    spark-submit \
+    --class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV1 \
+    --master yarn \
+    --num-executors 4 \
+    --executor-cores 4 \
+    --executor-memory 2g \
+    /root/lulu/Progect/sentiment/SparkDiary-1.0-SNAPSHOT-jar-with-dependencies.jar

@@ -6,7 +6,7 @@ import org.ansj.splitWord.analysis.ToAnalysis
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.{Row, SaveMode, SparkSession}
 
 /**
  * Created by sunlu on 17/8/3.
@@ -119,22 +119,59 @@ object sentimentTrendV1 {
     //      val slaveDF = df5.na.drop(Array("title", "content")).select("articleId", "content")
 
     val df6 = df5.filter(length(col("title")) >= 2).filter(length(col("content")) >= 2).dropDuplicates(Array("articleId"))
-    val masterDF = df6.drop("content")
-    val slaveDF = df6.select("articleId", "content")
+    val masterDF = df6.drop("content").dropDuplicates(Array("articleId"))
+    val slaveDF = df6.select("articleId", "content").dropDuplicates(Array("articleId"))
 
-//    println("df6的数量为：" + df6.count)
-//    println("masterDF的数量为：" + masterDF.count)
-//    println("slaveDF的数量为：" + slaveDF.count)
+    /*
+    println("df6的数量为：" + df6.count)
+    println("masterDF的数量为：" + masterDF.count)
+    println("slaveDF的数量为：" + slaveDF.count)
 
+    println("df6的分区数为：" + df6.rdd.partitions.size)
+    println("masterDF的分区数为：" + masterDF.rdd.partitions.size)
+    println("slaveDF的分区数为：" + slaveDF.rdd.partitions.size)
+
+*/
 
     // truncate Mysql Table
     mysqlUtil.truncateMysql(url2, user2, password2, masterTable)
     mysqlUtil.truncateMysql(url2, user2, password2, slaveTable)
     mysqlUtil.truncateMysql(url2, user2, password2, allTable)
     // save Mysql Data
-    mysqlUtil.saveMysqlData(slaveDF, url2, user2, password2, slaveTable, "append")
-    mysqlUtil.saveMysqlData(masterDF, url2, user2, password2, masterTable, "append")
-    mysqlUtil.saveMysqlData(masterDF, url2, user2, password2, allTable, "append")
+    //    mysqlUtil.saveMysqlData(slaveDF, url2, user2, password2, slaveTable, "append")
+    //    mysqlUtil.saveMysqlData(masterDF, url2, user2, password2, masterTable, "append")
+    //    mysqlUtil.saveMysqlData(df6, url2, user2, password2, allTable, "append")
+
+
+    df6.write.format("jdbc")
+      .mode(SaveMode.Append)
+      .option("dbtable", allTable)
+      .option("url", url2)
+      .option("user", user2)
+      .option("password", password2)
+      .option("numPartitions", 10)
+      .save()
+
+
+    masterDF.write.format("jdbc")
+      .mode(SaveMode.Append)
+      .option("dbtable", masterTable)
+      .option("url", url2)
+      .option("user", user2)
+      .option("password", password2)
+      .option("numPartitions", 10)
+      .save()
+
+    slaveDF.write.format("jdbc")
+      .mode(SaveMode.Append)
+      .option("dbtable", slaveTable)
+      .option("url", url2)
+      .option("user", user2)
+      .option("password", password2)
+      .option("numPartitions", 10)
+      .save()
+
+
     //    }
 
     sc.stop()
