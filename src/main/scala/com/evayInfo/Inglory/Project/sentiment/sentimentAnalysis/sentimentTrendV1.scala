@@ -137,6 +137,7 @@ object sentimentTrendV1 {
     mysqlUtil.truncateMysql(url2, user2, password2, masterTable)
     mysqlUtil.truncateMysql(url2, user2, password2, slaveTable)
     mysqlUtil.truncateMysql(url2, user2, password2, allTable)
+   /*
     // save Mysql Data
     //    mysqlUtil.saveMysqlData(slaveDF, url2, user2, password2, slaveTable, "append")
     //    mysqlUtil.saveMysqlData(masterDF, url2, user2, password2, masterTable, "append")
@@ -149,7 +150,7 @@ object sentimentTrendV1 {
     mysqlUtil.saveMysqlData(slaveDF, url2, user2, password2, slaveTable, "append")
     mysqlUtil.saveMysqlData(masterDF, url2, user2, password2, masterTable, "append")
 
-    /*
+*/
         df6.write.format("jdbc")
           .mode(SaveMode.Append)
           .option("dbtable", allTable)
@@ -182,7 +183,7 @@ object sentimentTrendV1 {
           .option("numPartitions", "5")
           .save()
 
-    */
+
     //    }
 
     sc.stop()
