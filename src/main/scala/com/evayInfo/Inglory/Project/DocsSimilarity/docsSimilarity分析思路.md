@@ -113,3 +113,30 @@ spark版本：2.1.0
 任务运行时间：16mins, 18sec
 
 查看结果：
+
+执行任务docsSimilarity：计算文章相似性
+
+    spark-submit \
+    --class com.evayInfo.Inglory.Project.DocsSimilarity.docsSimilarity \
+    --master yarn \
+    --num-executors 8 \
+    --executor-cores 8 \
+    --executor-memory 6g \
+    --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+    /root/lulu/Progect/docsSimi/SparkDiary.jar \
+    yilan-total_webpage docsSimi_word2vec
+
+
+
+任务报错：
+
+1.
+
+	ExecutorLostFailure (executor 4 exited caused by one of the running tasks) Reason:
+	 Container killed by YARN for exceeding memory limits. 4.5 GB of 4.5 GB physical memory used.
+	 Consider boosting spark.yarn.executor.memoryOverhead.
+
+2.
+
+	 	TaskKilled (killed intentionally)
+

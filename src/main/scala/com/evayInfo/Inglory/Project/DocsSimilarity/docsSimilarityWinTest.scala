@@ -24,9 +24,11 @@ import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
- * Created by sunlu on 17/8/17.
- */
-object docsSimilarity {
+  * Created by sunlu on 17/8/17.
+  * win下运行成功！
+  */
+
+object docsSimilarityWinTest {
 
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)
@@ -35,110 +37,27 @@ object docsSimilarity {
     Logger.getRootLogger().setLevel(Level.OFF)
   }
 
-  def convertScanToString(scan: Scan) = {
-    val proto = ProtobufUtil.toScan(scan)
-    Base64.encodeBytes(proto.toByteArray)
-  }
-
-  case class YlzxSchema(urlID: String, title: String, content: String, label: String, time: String, websitename: String)
-
-  case class docSimsSchema(doc1: String, doc2: String, sims: Double)
-
-
-  def getYlzxRDD(ylzxTable: String, sc: SparkContext): RDD[YlzxSchema] = {
-    //定义时间格式
-    // val dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss z", Locale.ENGLISH)
-    val dateFormat = new SimpleDateFormat("yyyy-MM-dd") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
-
-    //获取当前时间
-    val now: Date = new Date()
-    //对时间格式尽心格式化
-    val today = dateFormat.format(now)
-    //把时间转换成long类型
-    val todayL = dateFormat.parse(today).getTime
-    //获取N天的时间，并把时间转换成long类型
-    val cal: Calendar = Calendar.getInstance()
-    val N = 5
-    //  cal.add(Calendar.DATE, -N)//获取N天前或N天后的时间，-2为2天前
-    cal.add(Calendar.YEAR, -N) //获取N年或N年后的时间，-2为2年前
-    //    cal.add(Calendar.MONTH, -N) //获取N月或N月后的时间，-2为2月前
-
-    val nDaysAgo = dateFormat.format(cal.getTime())
-    val nDaysAgoL = dateFormat.parse(nDaysAgo).getTime
-
-    val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
-    //设置查询的表名
-    conf.set(TableInputFormat.INPUT_TABLE, ylzxTable) //设置输入表名 第一个参数yeeso-test-ywk_webpage
-
-    //扫描整个表
-    val scan = new Scan()
-    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("t")) //title
-    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("c")) //content
-    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("manuallabel")) //label
-    scan.addColumn(Bytes.toBytes("f"), Bytes.toBytes("mod")) //time
-    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("websitename")) //
-    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("appc"))
-
-    // scan.setTimeRange(1400468400000L, 1400472000000L)
-    conf.set(TableInputFormat.SCAN, convertScanToString(scan))
-    val hBaseRDD = sc.newAPIHadoopRDD(conf, classOf[TableInputFormat],
-      classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
-      classOf[org.apache.hadoop.hbase.client.Result])
-    //提取亿搜数据，并对数据进行过滤
-    val hbaseRDD = hBaseRDD.map { case (k, v) => {
-      val urlID = k.get()
-      val title = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("t")) //标题列
-      val content = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("c")) //内容列
-      val label = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("manuallabel")) //标签列
-      val time = v.getValue(Bytes.toBytes("f"), Bytes.toBytes("mod")) //时间列
-      val webName = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("websitename")) //网站名列
-      val appc = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("appc")) //appc
-      (urlID, title, content, label, time, webName, appc)
-    }
-    }.filter(x => null != x._2 & null != x._3 & null != x._5 & null != x._6 & null != x._7).
-      map { x => {
-        val urlID_1 = Bytes.toString(x._1)
-        val title_1 = Bytes.toString(x._2)
-        val content_1 = Bytes.toString(x._3)
-        val label_1 = Bytes.toString(x._4)
-        //时间格式转化
-        val time_1 = Bytes.toLong(x._5)
-        val websitename_1 = Bytes.toString(x._6)
-
-        (urlID_1, title_1, content_1, label_1, time_1, websitename_1)
-      }
-      }.filter(x => x._2.length > 1 & x._3.length > 50).filter(x => x._5 <= todayL & x._5 >= nDaysAgoL).
-      map(x => {
-        val date: Date = new Date(x._5)
-        val time = dateFormat.format(date)
-        YlzxSchema(x._1, x._2, x._3, x._4, time, x._6)
-      })
-
-    hbaseRDD
-
-  }
-
-
   def main(args: Array[String]) {
 
-//    SetLogger
+    SetLogger
 
-    val sparkConf = new SparkConf().setAppName(s"docsSimilarity") //.setMaster("local[*]").set("spark.executor.memory", "2g")
+    val sparkConf = new SparkConf().setAppName(s"docsSimilarity").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
 
     // load word2Vec model
-    val word2VecModel = Word2VecModel.load("/personal/sunlu/Project/docsSimi/Word2VecModelDF_dic")
+    val word2VecModel = Word2VecModel.load("D:\\Workspace\\Others\\Word2VecModelDF_dic")
     //load stopwords file
-    val stopwordsFile = "/personal/sunlu/lulu/yeeso/Stopwords.dic"
-//    val stopwords = sc.textFile(stopwordsFile).collect().toList
-    val stopwords = sc.broadcast(sc.textFile(stopwordsFile).collect().toList)
+    val stopwordsFile = "data/Stopwords.dic"
+    val stopwords = sc.textFile(stopwordsFile).collect().toList
 
-    val ylzxTable = args(0)
-    val docSimiTable = args(1)
+    val ylzxTable = "yilan-total_webpage"
+    val docSimiTable = "docsSimi_word2vec_t"
     val ylzxRDD = getYlzxRDD(ylzxTable, sc)
     val ylzxDS = spark.createDataset(ylzxRDD)
+//    println("ylzxDS行数为：" + ylzxDS.count())
+//    ylzxDS行数为：38185
 
     val indexer = new StringIndexer()
       .setInputCol("urlID")
@@ -151,7 +70,7 @@ object docsSimilarity {
     val segWorsd = udf((content: String) => {
       ToAnalysis.parse(content).toArray.map(_.toString.split("/")).
         filter(_.length >= 2).map(_ (0)).toList.
-        filter(word => word.length >= 1 & !stopwords.value.contains(word)).toSeq
+        filter(word => word.length >= 1 & !stopwords.contains(word)).toSeq
     })
 
     val segDF = indexedDF.withColumn("segWords", segWorsd(column("content")))
@@ -159,22 +78,22 @@ object docsSimilarity {
     val word2VecDF = word2VecModel.transform(segDF)
     val document = word2VecDF.select("id", "features").na.drop.rdd.map {
       case Row(id: Double, features: MLVector) => (id.toLong, Vectors.fromML(features))
-    }.filter(_._2.size >= 2).repartition(300)
+    }.filter(_._2.size >= 2).distinct
 
-    val tfidf = document.map { case (i, v) => new IndexedRow(i, v) }.repartition(350)
+    val tfidf = document.map { case (i, v) => new IndexedRow(i, v) }
     val mat = new IndexedRowMatrix(tfidf)
 
 
     val transposed_matrix = mat.toCoordinateMatrix.transpose()
 
     /* The minimum cosine similarity threshold for each document pair */
-    val threshhold = 0.7.toDouble
+    val threshhold = 0.3.toDouble
     val upper = 1.0
 
     val sim = transposed_matrix.toRowMatrix.columnSimilarities(threshhold)
     val exact = transposed_matrix.toRowMatrix.columnSimilarities()
 
-    val sim_threshhold = sim.entries.filter { case MatrixEntry(i, j, u) => u >= threshhold && u <= upper }.repartition(400)
+    val sim_threshhold = sim.entries.filter { case MatrixEntry(i, j, u) => u >= threshhold && u <= upper }
 
 
     val docSimsRDD = sim_threshhold.map { x => {
@@ -187,7 +106,7 @@ object docsSimilarity {
     }
     }
 
-    val docSimsDS = spark.createDataset(docSimsRDD).repartition(450)
+    val docSimsDS = spark.createDataset(docSimsRDD)
 
     //对dataframe进行分组排序，并取每组的前5个
     //计算两个向量的余弦相似度，值越大就表示越相似。
@@ -212,6 +131,10 @@ object docsSimilarity {
     hbaseConf.set(TableInputFormat.INPUT_TABLE, ylzxTable) //设置输入表名
     //指定输出格式和输出表名
     hbaseConf.set(TableOutputFormat.OUTPUT_TABLE, docSimiTable) //设置输出表名
+
+    hbaseConf.set("hbase.zookeeper.quorum", "192.168.37.21,192.168.37.22,192.168.37.23")
+    hbaseConf.set("hbase.zookeeper.property.clientPort", "2181")
+    hbaseConf.set("hbase.master", "192.168.37.22:60000", "192.168.37.23:60000")
 
     /*
     //如果outputTable存在则不做任何操作，如果HBASE表不存在则新建表
@@ -244,7 +167,7 @@ object docsSimilarity {
     jobConf.set("mapreduce.job.outputformat.class", classOf[TableOutputFormat[Text]].getName)
 
 
-    ds7.repartition(500).rdd.map(row => (row(2), row(3), row(4), row(5), row(6), row(7), row(8), row(9))).
+    ds7.rdd.map(row => (row(2), row(3), row(4), row(5), row(6), row(7), row(8), row(9))).repartition(5).
       map { x => {
         //sims, rn, url2id,  title, label, time, websitename, urlID
         val paste = x._8 + "::score=" + x._2.toString
@@ -262,7 +185,95 @@ object docsSimilarity {
       }
       }.saveAsNewAPIHadoopDataset(jobConf)
 
+
     sc.stop()
     spark.stop()
   }
+
+  def getYlzxRDD(ylzxTable: String, sc: SparkContext): RDD[YlzxSchema] = {
+    //定义时间格式
+    // val dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss z", Locale.ENGLISH)
+    val dateFormat = new SimpleDateFormat("yyyy-MM-dd") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
+
+    //获取当前时间
+    val now: Date = new Date()
+    //对时间格式尽心格式化
+    val today = dateFormat.format(now)
+    //把时间转换成long类型
+    val todayL = dateFormat.parse(today).getTime
+    //获取N天的时间，并把时间转换成long类型
+    val cal: Calendar = Calendar.getInstance()
+    val N = 1
+    //  cal.add(Calendar.DATE, -N)//获取N天前或N天后的时间，-2为2天前
+    cal.add(Calendar.YEAR, -N) //获取N年或N年后的时间，-2为2年前
+    //    cal.add(Calendar.MONTH, -N) //获取N月或N月后的时间，-2为2月前
+
+    val nDaysAgo = dateFormat.format(cal.getTime())
+    val nDaysAgoL = dateFormat.parse(nDaysAgo).getTime
+
+    val hbaseConf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
+    //设置查询的表名
+    hbaseConf.set(TableInputFormat.INPUT_TABLE, ylzxTable) //设置输入表名 第一个参数yeeso-test-ywk_webpage
+
+    hbaseConf.set("hbase.zookeeper.quorum", "192.168.37.21,192.168.37.22,192.168.37.23")
+    hbaseConf.set("hbase.zookeeper.property.clientPort", "2181")
+    hbaseConf.set("hbase.master", "192.168.37.22:60000", "192.168.37.23:60000")
+
+    //扫描整个表
+    val scan = new Scan()
+    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("t")) //title
+    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("c")) //content
+    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("manuallabel")) //label
+    scan.addColumn(Bytes.toBytes("f"), Bytes.toBytes("mod")) //time
+    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("websitename")) //
+    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("appc"))
+
+    // scan.setTimeRange(1400468400000L, 1400472000000L)
+    hbaseConf.set(TableInputFormat.SCAN, convertScanToString(scan))
+    val hBaseRDD = sc.newAPIHadoopRDD(hbaseConf, classOf[TableInputFormat],
+      classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
+      classOf[org.apache.hadoop.hbase.client.Result])
+    //提取亿搜数据，并对数据进行过滤
+    val hbaseRDD = hBaseRDD.map { case (k, v) => {
+      val urlID = k.get()
+      val title = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("t")) //标题列
+      val content = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("c")) //内容列
+      val label = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("manuallabel")) //标签列
+      val time = v.getValue(Bytes.toBytes("f"), Bytes.toBytes("mod")) //时间列
+      val webName = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("websitename")) //网站名列
+      val appc = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("appc")) //appc
+      (urlID, title, content, label, time, webName, appc)
+    }
+    }.filter(x => null != x._2 & null != x._3 & null != x._5 & null != x._6 & null != x._7).
+      map { x => {
+        val urlID_1 = Bytes.toString(x._1)
+        val title_1 = Bytes.toString(x._2)
+        val content_1 = Bytes.toString(x._3)
+        val label_1 = Bytes.toString(x._4)
+        //时间格式转化
+        val time_1 = Bytes.toLong(x._5)
+        val websitename_1 = Bytes.toString(x._6)
+
+        (urlID_1, title_1, content_1, label_1, time_1, websitename_1)
+      }
+      }.filter(x => x._2.length > 1 & x._3.length > 50).filter(x => x._5 <= todayL & x._5 >= nDaysAgoL).
+      map(x => {
+        val date: Date = new Date(x._5)
+        val time = dateFormat.format(date)
+        YlzxSchema(x._1, x._2, x._3, x._4, time, x._6)
+      }).randomSplit(Array(0.1, 0.9), 12345)(0)
+
+    hbaseRDD
+
+  }
+
+  def convertScanToString(scan: Scan) = {
+    val proto = ProtobufUtil.toScan(scan)
+    Base64.encodeBytes(proto.toByteArray)
+  }
+
+  case class YlzxSchema(urlID: String, title: String, content: String, label: String, time: String, websitename: String)
+
+  case class docSimsSchema(doc1: String, doc2: String, sims: Double)
+
 }
