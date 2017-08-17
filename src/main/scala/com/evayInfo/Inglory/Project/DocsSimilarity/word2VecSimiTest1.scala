@@ -83,10 +83,10 @@ object word2VecSimiTest1 {
 
 
     // save word2vec Model
-    model.write.overwrite().save("result/word2vevModel")
+    model.write.overwrite().save("result/word2vecModel")
 
     // reload word2vec Model
-    val model2 = Word2VecModel.load("result/word2vevModel")
+    val model2 = Word2VecModel.load("result/word2vecModel")
     //   val modelRDD = Word2VecModelRDD.load(sc, "result/word2vevModel")
     /*
     Exception in thread "main" org.json4s.package$MappingException: Did not find value which can be converted into java.lang.String

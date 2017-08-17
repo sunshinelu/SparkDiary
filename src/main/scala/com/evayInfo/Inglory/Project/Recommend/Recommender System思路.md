@@ -15,6 +15,16 @@ ALS Model、Content-Based Model、User-based Model和Item-based Model
 
 结果：ALS Model的结果保存在`Recommender_als` 表中。
 
+任务提交代码：
+
+spark-submit --class com.ecloud.Inglory.RatingSys.RatingSysV5 \
+--master yarn \
+--num-executors 8 \
+--executor-cores 8 \
+--executor-memory 4g \
+--jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/lulu/Program/jarLibs/spark-streaming-kafka_2.11-1.6.3.jar,/root/lulu/Program/jarLibs/spark-streaming-flume_2.11-2.1.0.jar,/root/lulu/Program/jarLibs/kafka_2.11-0.10.0.1.jar,/root/lulu/Program/jarLibs/zkclient-0.8.jar,/root/lulu/Program/jarLibs/metrics-core-2.2.0.jar,/root/lulu/Program/jarLibs/metrics-annotation-2.2.0.jar,/root/lulu/Program/jarLibs/kafka-clients-0.10.0.1.jar \
+/root/lulu/Workspace/spark/yeeso/RecommendSys/RecommendSysV1.jar \
+yilan-total_webpage t_hbaseSink  Recommender_als
 
 ### 2. Content-Based Model
 
@@ -34,7 +44,26 @@ ALS Model、Content-Based Model、User-based Model和Item-based Model
 
 结果：Item-Based Model的结果保存在`Recommender_IB` 表中。
 
+
+
+任务提交代码：
+
+spark-submit --class com.ecloud.Inglory.RatingSys.RatingSysV5 \
+--master yarn \
+--num-executors 8 \
+--executor-cores 8 \
+--executor-memory 4g \
+--jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/lulu/Program/jarLibs/spark-streaming-kafka_2.11-1.6.3.jar,/root/lulu/Program/jarLibs/spark-streaming-flume_2.11-2.1.0.jar,/root/lulu/Program/jarLibs/kafka_2.11-0.10.0.1.jar,/root/lulu/Program/jarLibs/zkclient-0.8.jar,/root/lulu/Program/jarLibs/metrics-core-2.2.0.jar,/root/lulu/Program/jarLibs/metrics-annotation-2.2.0.jar,/root/lulu/Program/jarLibs/kafka-clients-0.10.0.1.jar \
+/root/lulu/Workspace/spark/yeeso/RecommendSys/RecommendSysV1.jar \
+yilan-total_webpage t_hbaseSink  Recommender_als
+
+
 **注意**：Content-Based Model和Item-based Model均生成item-item similarity矩阵，后期过滤流程一致。
+
+
+### 5. Combined Model
+
+通过整合ALS Model、Content-Based Model、User-based Model和Item-based Model模型构建Combined Model。
 
 ## 2、HBase表的设计
 

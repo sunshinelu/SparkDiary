@@ -6,7 +6,7 @@ import org.ansj.splitWord.analysis.ToAnalysis
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.{Row, SaveMode, SparkSession}
 
 /**
  * Created by sunlu on 17/8/15.
@@ -42,8 +42,8 @@ object sentimentTrendV2 {
     val menhuTable = "DA_SEED"
     val blogTable = "DA_BLOG"
 
-    val masterTable = "t_yq_article"
-    val slaveTable = "t_yq_content"
+    val masterTable = "yq_article"
+    val slaveTable = "yq_content"
 
     val df_weibo = dc_weibo.getWeiboData(spark, url1, user1, password1, weiboAtable, weiboCtable)
     val df_weixin = dc_weixin.getWeixinData(spark, url1, user1, password1, weixinTable)
@@ -55,13 +55,14 @@ object sentimentTrendV2 {
 
     val df = df_weibo.union(df_weixin).union(df_luntan).union(df_search).union(df_menhu).union(df_bolg).
       filter(length(col("time")) === 19).filter(length(col("title")) >= 2).filter(length(col("content")) >= 1)
-    //      .join(id_df, Seq("ARTICLEID"), "leftanti").na.drop(Array("ARTICLEID")).dropDuplicates()
-    println("df的数量为：" + df.count) //df的数量为：29106
-    println("df除重后的数量为：" + df.dropDuplicates().count) //df除重后的数量为：29106
-    println("df中ARTICLEID列除重后的数量为：" + df.dropDuplicates(Array("ARTICLEID")).count) //df中ARTICLEID列除重后的数量为：29106
+      .join(id_df, Seq("ARTICLEID"), "leftanti").na.drop(Array("ARTICLEID")).dropDuplicates()
 
-    //     val df_1 =  df.filter(length(col("title")) >= 2).filter(length(col("content")) >= 2)
-    //    println("df_1的数量为：" + df_1.count)//df_1的数量为：29106
+    //    println("df的数量为：" + df.count) //df的数量为：29106
+    //    println("df除重后的数量为：" + df.dropDuplicates().count) //df除重后的数量为：29106
+    //    println("df中ARTICLEID列除重后的数量为：" + df.dropDuplicates(Array("ARTICLEID")).count) //df中ARTICLEID列除重后的数量为：29106
+
+    //    df.printSchema()
+
 
     //获取正类、负类词典。posnegDF在join时使用；posnegList在词过滤时使用。
     val posnegDF = spark.read.format("CSV").option("header", "true").load("data/posneg.csv")
@@ -92,26 +93,52 @@ object sentimentTrendV2 {
     val df5 = df4.join(df, Seq("articleId"), "left").drop("contentPre").
       withColumn("systime", current_timestamp()).withColumn("systime", date_format($"systime", "yyyy-MM-dd HH:mm:ss"))
 
-    //      val mainDF = df5.na.drop(Array("title", "content")).drop("content")
-    //      val slaveDF = df5.na.drop(Array("title", "content")).select("articleId", "content")
+    val df6 = df5.filter(length(col("title")) >= 2).filter(length(col("content")) >= 2).dropDuplicates(Array("articleId"))
+    val allTable = "t_yq_all"
+
+    mysqlUtil.truncateMysql(url1, user1, password1, allTable)
+
+    println("df6的数量为：" + df6.count)
+
+    val x = df6.count.toInt
+
+    if (x > 0) {
+
+      df6.write.format("jdbc")
+        .mode(SaveMode.Append)
+        .option("dbtable", allTable)
+        .option("url", url1)
+        .option("user", user1)
+        .option("password", password1)
+        .option("numPartitions", "1")
+        .save()
+
+      val masterDF = df6.drop("content").drop("id")
+      val slaveDF = df6.select("articleId", "content")
+
+      //      println("slaveDF表数量为：" + slaveDF.count)
+      //      println("masterDF表数量为：" + masterDF.count)
 
 
-    val masterDF = df5.drop("content").dropDuplicates(Array("articleId"))
-    val slaveDF = df.filter(length(col("content")) >= 1).select("articleId", "content").dropDuplicates(Array("articleId"))
+      masterDF.write.format("jdbc")
+        .mode(SaveMode.Append)
+        .option("dbtable", masterTable)
+        .option("url", url1)
+        .option("user", user1)
+        .option("password", password1)
+        .option("numPartitions", "5")
+        .save()
 
-    println("slaveDF表数量为：" + slaveDF.count)
-    println("masterDF表数量为：" + masterDF.count)
+      slaveDF.write.format("jdbc")
+        .mode(SaveMode.Append)
+        .option("dbtable", slaveTable)
+        .option("url", url1)
+        .option("user", user1)
+        .option("password", password1)
+        .option("numPartitions", "5")
+        .save()
 
-
-    // truncate Mysql Table
-    //    mysqlUtil.truncateMysql(url2, user2, password2, masterTable)
-    //    mysqlUtil.truncateMysql(url2, user2, password2, slaveTable)
-
-    // save Mysql Data
-    //    mysqlUtil.saveMysqlData(slaveDF, url1, user1, password1, slaveTable, "append")
-    //    mysqlUtil.saveMysqlData(masterDF, url1, user1, password1, masterTable, "append")
-
-
+    }
     sc.stop()
     spark.stop()
 

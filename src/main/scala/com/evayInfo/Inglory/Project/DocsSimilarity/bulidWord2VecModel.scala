@@ -72,9 +72,11 @@ object bulidWord2VecModel {
 
 
   def main(args: Array[String]): Unit = {
-    SetLogger
+
+    //    SetLogger
+
     // build spark environment
-    val conf = new SparkConf().setAppName(s"word2VecSimiTest1").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val conf = new SparkConf().setAppName(s"bulidWord2VecModel") //.setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(conf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
@@ -108,7 +110,7 @@ object bulidWord2VecModel {
       .setVectorSize(10) // 1000
       .setMinCount(0)
     val word2VecModel = word2Vec.fit(segDF)
-    word2VecModel.write.overwrite().save("/personal/sunlu/Project/bulidWord2VecModel")
+    word2VecModel.write.overwrite().save("/personal/sunlu/Project/docsSimi/Word2VecModelDF_dic")
 
 
     sc.stop()

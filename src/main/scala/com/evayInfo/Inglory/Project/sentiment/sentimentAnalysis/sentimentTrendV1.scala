@@ -157,7 +157,7 @@ object sentimentTrendV1 {
           .option("url", url2)
           .option("user", user2)
           .option("password", password2)
-          .option("numPartitions", 10)
+          .option("numPartitions", "10")
           .save()
 
         val all_df = mysqlUtil.getMysqlData(spark, url2, user2, password2, allTable)
