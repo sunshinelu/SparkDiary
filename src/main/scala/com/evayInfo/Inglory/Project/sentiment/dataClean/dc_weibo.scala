@@ -225,5 +225,45 @@ getWeiboData：获取清洗后的微博数据全部数据
     df4
   }
 
+  /*
+getWeiboData2：获取清洗后的微博数据全部数据,不使用Jsoup进行字符串处理，不对符号进行替换，不提取微博正文
+*/
+  def getWeiboData2(spark: SparkSession, url: String, user: String, password: String,
+                    wTable: String, wCommentTable: String): DataFrame = {
+    // get DA_WEIBO
+    val df_w = mysqlUtil.getMysqlData(spark, url, user, password, wTable)
+    // get DA_WEIBO_COMMENTS
+    val df_c = mysqlUtil.getMysqlData(spark, url, user, password, wCommentTable)
+    // select columns
+    val df_w_1 = df_w.select("ID", "TITLE", "TEXT", "CREATEDAT", "WEIBO_KEY").withColumn("WEIBO_ID", col("ID"))
+    val df_c_1 = df_c.select("ID", "WEIBO_ID", "TEXT", "CREATED_AT")
+    // 通过`WEIBO_ID`从`DA_WEIBO`表中`WEIBO_KEY`列获取。
+    val keyLib = df_w_1.select("WEIBO_ID", "TITLE", "WEIBO_KEY")
+    val df_c_2 = df_c_1.join(keyLib, Seq("WEIBO_ID"), "left").select("ID", "WEIBO_ID", "TITLE", "TEXT", "WEIBO_KEY", "CREATED_AT")
+    val df_w_2 = df_w_1.select("ID", "WEIBO_ID", "TITLE", "TEXT", "WEIBO_KEY", "CREATEDAT").withColumn("WEIBO_ID", lit(null))
+
+    // add IS_COMMENT column
+    val addIsComm = udf((arg: Int) => arg)
+    val df_w_3 = df_w_2.withColumn("IS_COMMENT", addIsComm(lit(0)))
+    val df_c_3 = df_c_2.withColumn("IS_COMMENT", lit(1))
+
+
+    // change all columns name
+    val colRenamed = Seq("articleId", "glArticleId", "title", "content", "keyword", "time", "is_comment")
+    val df_w_4 = df_w_3.toDF(colRenamed: _*)
+    val df_c_4 = df_c_3.toDF(colRenamed: _*)
+
+    // 合并 df_w_4 和 df_c_4
+    val df = df_w_4.union(df_c_4)
+
+    // add source column
+    val addSource = udf((arg: String) => "WEIBO")
+    val df1 = df.withColumn("source", addSource(col("articleId"))).withColumn("sourceUrl", lit(null)).
+      na.drop(Array("content")).filter(length(col("content")) >= 1)
+
+
+    val df4 = df1.withColumn("contentPre", col("content"))
+    df4
+  }
 
 }

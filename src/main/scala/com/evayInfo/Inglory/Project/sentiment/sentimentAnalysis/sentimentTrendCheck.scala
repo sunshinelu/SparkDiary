@@ -9,10 +9,9 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Row, SaveMode, SparkSession}
 
 /**
- * Created by sunlu on 17/8/15.
+ * Created by sunlu on 17/8/18.
  */
-object sentimentTrendV2 {
-
+object sentimentTrendCheck {
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)
     Logger.getLogger("com").setLevel(Level.OFF)
@@ -21,10 +20,9 @@ object sentimentTrendV2 {
   }
 
   def main(args: Array[String]) {
-
     SetLogger
 
-    val conf = new SparkConf().setAppName(s"sentimentTrendV2").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val conf = new SparkConf().setAppName(s"sentimentTrendCheck").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(conf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
@@ -42,8 +40,9 @@ object sentimentTrendV2 {
     val menhuTable = "DA_SEED"
     val blogTable = "DA_BLOG"
 
-    val masterTable = "yq_article"
-    val slaveTable = "yq_content"
+    val allTable = "t_yq_all"
+    val masterTable = "t_yq_article"
+    val slaveTable = "t_yq_content"
 
     val df_weibo = dc_weibo.getWeiboData(spark, url1, user1, password1, weiboAtable, weiboCtable)
     val df_weixin = dc_weixin.getWeixinData(spark, url1, user1, password1, weixinTable)
@@ -51,18 +50,9 @@ object sentimentTrendV2 {
     val df_search = dc_search.getSearchData(spark, url1, user1, password1, searchTable)
     val df_menhu = dc_menhu.getMenhuData(spark, url1, user1, password1, menhuTable)
     val df_bolg = dc_blog.getBlogData(spark, url1, user1, password1, blogTable)
-    val id_df = mysqlUtil.getMysqlData(spark, url1, user1, password1, masterTable).select("ARTICLEID")
 
-    //    val df = df_weibo.union(df_weixin).union(df_luntan).union(df_search).union(df_menhu).union(df_bolg).
-    //      filter(length(col("time")) === 19).filter(length(col("title")) >= 2).filter(length(col("content")) >= 1)
-    //      .join(id_df, Seq("ARTICLEID"), "leftanti").na.drop(Array("ARTICLEID")).dropDuplicates()
+
     val df = df_menhu
-
-    //    println("df的数量为：" + df.count) //df的数量为：29106
-    //    println("df除重后的数量为：" + df.dropDuplicates().count) //df除重后的数量为：29106
-    //    println("df中ARTICLEID列除重后的数量为：" + df.dropDuplicates(Array("ARTICLEID")).count) //df中ARTICLEID列除重后的数量为：29106
-
-    //    df.printSchema()
 
 
     //获取正类、负类词典。posnegDF在join时使用；posnegList在词过滤时使用。
@@ -72,6 +62,7 @@ object sentimentTrendV2 {
     //load stopwords file
     val stopwordsFile = "data/Stopwords.dic"
     val stopwords = sc.textFile(stopwordsFile).collect().toList
+
 
     //定义UDF
     //分词、停用词过滤、正类、负类词过滤
@@ -95,54 +86,45 @@ object sentimentTrendV2 {
       withColumn("systime", current_timestamp()).withColumn("systime", date_format($"systime", "yyyy-MM-dd HH:mm:ss"))
 
     val df6 = df5.filter(length(col("title")) >= 2).filter(length(col("content")) >= 2).dropDuplicates(Array("articleId"))
-    val allTable = "t_yq_all"
+
 
     mysqlUtil.truncateMysql(url1, user1, password1, allTable)
+    mysqlUtil.truncateMysql(url1, user1, password1, masterTable)
+    mysqlUtil.truncateMysql(url1, user1, password1, slaveTable)
 
-    println("df6的数量为：" + df6.count)
+    /*
+    df6.write.format("jdbc")
+      .mode(SaveMode.Append)
+      .option("dbtable", allTable)
+      .option("url", url1)
+      .option("user", user1)
+      .option("password", password1)
+      .option("numPartitions", "1")
+      .save()
+*/
+    mysqlUtil.saveMysqlData(df6, url1, user1, password1, allTable, "append")
+    val masterDF = df6.drop("content").drop("id")
+    val slaveDF = df6.select("articleId", "content")
 
-    val x = df6.count.toInt
+    masterDF.write.format("jdbc")
+      .mode(SaveMode.Append)
+      .option("dbtable", masterTable)
+      .option("url", url1)
+      .option("user", user1)
+      .option("password", password1)
+      .option("numPartitions", "5")
+      .save()
 
-    if (x > 0) {
+    slaveDF.write.format("jdbc")
+      .mode(SaveMode.Append)
+      .option("dbtable", slaveTable)
+      .option("url", url1)
+      .option("user", user1)
+      .option("password", password1)
+      .option("numPartitions", "5")
+      .save()
 
-      df6.write.format("jdbc")
-        .mode(SaveMode.Append)
-        .option("dbtable", allTable)
-        .option("url", url1)
-        .option("user", user1)
-        .option("password", password1)
-        .option("numPartitions", "1")
-        .save()
-
-      val masterDF = df6.drop("content").drop("id")
-      val slaveDF = df6.select("articleId", "content")
-
-      //      println("slaveDF表数量为：" + slaveDF.count)
-      //      println("masterDF表数量为：" + masterDF.count)
-
-
-      masterDF.write.format("jdbc")
-        .mode(SaveMode.Append)
-        .option("dbtable", masterTable)
-        .option("url", url1)
-        .option("user", user1)
-        .option("password", password1)
-        .option("numPartitions", "5")
-        .save()
-
-      slaveDF.write.format("jdbc")
-        .mode(SaveMode.Append)
-        .option("dbtable", slaveTable)
-        .option("url", url1)
-        .option("user", user1)
-        .option("password", password1)
-        .option("numPartitions", "5")
-        .save()
-
-    }
     sc.stop()
     spark.stop()
-
   }
-
 }

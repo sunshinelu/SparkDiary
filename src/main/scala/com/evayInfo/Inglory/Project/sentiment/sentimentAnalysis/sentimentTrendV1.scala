@@ -70,7 +70,7 @@ object sentimentTrendV1 {
     val slaveTable = "yq_content"
     val allTable = "t_yq_all"
 
-    val df_weibo = dc_weibo.getWeiboData(spark, url1, user1, password1, weiboAtable, weiboCtable)
+    val df_weibo = dc_weibo.getWeiboData2(spark, url1, user1, password1, weiboAtable, weiboCtable)
     val df_weixin = dc_weixin.getWeixinData(spark, url1, user1, password1, weixinTable)
     val df_luntan = dc_luntan.getLuntanData(spark, url1, user1, password1, luntanAtable, luntanCtable)
     val df_search = dc_search.getSearchData(spark, url1, user1, password1, searchTable)
@@ -102,7 +102,7 @@ object sentimentTrendV1 {
         .toSeq.mkString(" ")
     })
 
-    val df1 = df.select("articleId", "contentPre").
+    val df1 = df.select("articleId", "contentPre").na.drop().
       withColumn("segWords", segWorsd(column("contentPre")))
 
     val df2 = df1.explode("segWords", "tokens") { segWords: String => segWords.split(" ") }

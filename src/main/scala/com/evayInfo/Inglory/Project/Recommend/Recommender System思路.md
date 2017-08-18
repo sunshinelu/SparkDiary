@@ -116,3 +116,45 @@ yilan-total_webpage t_hbaseSink  Recommender_als
         }
 
 2.
+
+
+# Recommender System思路
+
+## 1、组合模型的构建：
+
+组合模型组成：
+
+ALS Model、Content-Based Model、User-based Model和Item-based Model
+（暂定，吴子宾生成推荐模型可作为子模型）
+
+根据不同的业务需求对子模型赋予不同的权重，例如，当没有明显业务倾向时，这4个模型的权重均为0.25.
+
+### 1. ALS Model
+
+思路：使用ALS算法构建ALS推荐模型。
+
+结果：ALS Model的结果保存在`Recommender_als` 表中。
+
+### 2. Content-Based Model
+
+思路：计算文章的相似性，得出文章相似性矩阵，然后根据用户的历史浏览记录想用户推荐未浏览过，但相似性打分较高的文章。
+
+结果：Content-Based Model的结果保存在`Recommender_CB` 表中。
+
+### 3. User-based Model
+
+思路：使用用户日志数据，计算用户之间的相似，想用户推荐与其相似用户浏览过且自身未浏览过的文章。
+
+结果：User-Based Model的结果保存在`Recommender_UB` 表中。
+
+### 4. Item-based Model
+
+思路：使用用户日志数据，计算文章之间的相似，然后根据用户的历史浏览记录想用户推荐未浏览过，但相似性打分较高的文章。
+
+结果：Item-Based Model的结果保存在`Recommender_IB` 表中。
+
+**注意**：Content-Based Model和Item-based Model均生成item-item similarity矩阵，后期过滤流程一致。
+
+### 5. Combined Model
+
+通过整合ALS Model、Content-Based Model、User-based Model和Item-based Model模型构建Combined Model。

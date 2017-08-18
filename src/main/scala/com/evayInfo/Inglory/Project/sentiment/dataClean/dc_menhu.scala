@@ -71,14 +71,16 @@ object dc_menhu {
     df2.printSchema()
     // change all columns name
     val colRenamed = Seq("articleId", "glArticleId", "title", "content", "keyword", "time", "is_comment",
-      "source", "sourceUrl")
-    val df3 = df2.select("SEED_ID", "glArticleId", "SEED_TITLE", "SEED_CONTENT", "MANUALLABEL", "SEED_DATE",
-      "IS_COMMENT", "SOURCE", "SOURCEURL").
-      toDF(colRenamed: _*).withColumn("contentPre", col("content")).na.drop(Array("content"))
+      "source", "sourceUrl", "contentPre")
+    val df3 = df2.select("SEED_ID", "glArticleId", "SEED_TITLE", "SEED_APPC", "MANUALLABEL", "SEED_DATE",
+      "IS_COMMENT", "SOURCE", "SOURCEURL", "SEED_CONTENT").
+      toDF(colRenamed: _*) //.withColumn("contentPre", col("content")).na.drop(Array("content"))
     df3.printSchema()
     df3.select("source", "is_comment").show(3)
+
+
     /*
-root
+    root
  |-- articleId: string (nullable = false)
  |-- glArticleId: null (nullable = true)
  |-- title: string (nullable = true)
@@ -110,11 +112,11 @@ getMenhuData：获取清洗后的门户网站数据
 
     // change all columns name
     val colRenamed = Seq("articleId", "glArticleId", "title", "content", "keyword", "time", "is_comment",
-      "source", "sourceUrl")
-    val df3 = df2.select("SEED_ID", "glArticleId", "SEED_TITLE", "SEED_CONTENT", "MANUALLABEL", "SEED_DATE",
-      "IS_COMMENT", "SOURCE", "SOURCEURL").
-      toDF(colRenamed: _*).withColumn("contentPre", col("content")).na.drop(Array("content")).
-      filter(length(col("contentPre")) >= 1)
+      "source", "sourceUrl", "contentPre")
+    val df3 = df2.select("SEED_ID", "glArticleId", "SEED_TITLE", "SEED_APPC", "MANUALLABEL", "SEED_DATE",
+      "IS_COMMENT", "SOURCE", "SOURCEURL","SEED_CONTENT").
+      toDF(colRenamed: _*)//.withColumn("contentPre", col("content")).na.drop(Array("content")).
+      .filter(length(col("contentPre")) >= 1)
     df3
   }
 

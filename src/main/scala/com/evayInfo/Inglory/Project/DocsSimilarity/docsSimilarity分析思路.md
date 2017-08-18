@@ -10,6 +10,8 @@
 
 * 构建LDA主题模型，使用主题词构建词典
 
+* 人工干预
+
 
 ## 2. 构建Word2Vec模型
 
@@ -17,7 +19,10 @@
 
 ## 3. 计算文章相似性
 
-使用Word2Vec模型生成的features计算文章的相似性
+* 使用Word2Vec模型生成的features计算文章的相似性
+
+* 使用item-based方法计算item-item similarity
+
 
 
 提交任务代码：（参考）
