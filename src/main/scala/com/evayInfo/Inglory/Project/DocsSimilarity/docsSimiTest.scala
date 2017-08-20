@@ -13,7 +13,7 @@ import org.apache.hadoop.hbase.util.{Base64, Bytes}
 import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDescriptor, TableName}
 import org.apache.hadoop.io.Text
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.ml.feature.{StringIndexer, Word2VecModel}
+import org.apache.spark.ml.feature.{StringIndexer, Word2Vec}
 import org.apache.spark.ml.linalg.{Vector => MLVector}
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.linalg.distributed.{IndexedRow, IndexedRowMatrix, MatrixEntry}
@@ -25,9 +25,9 @@ import org.apache.spark.storage.StorageLevel
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
- * Created by sunlu on 17/8/17.
+ * Created by sunlu on 17/8/20.
  */
-object docsSimilarity {
+object docsSimiTest {
 
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)
@@ -41,12 +41,18 @@ object docsSimilarity {
     Base64.encodeBytes(proto.toByteArray)
   }
 
-  case class YlzxSchema(urlID: String, title: String, content: String, label: String, time: String, websitename: String)
+  case class YlzxSchema(urlID: String, title: String, content: String, label: String, time: String, websitename: String,
+                        segWords: Seq[String])
 
   case class docSimsSchema(doc1: String, doc2: String, sims: Double)
 
-
   def getYlzxRDD(ylzxTable: String, sc: SparkContext): RDD[YlzxSchema] = {
+
+    //load stopwords file
+    val stopwordsFile = "/personal/sunlu/lulu/yeeso/Stopwords.dic"
+    //    val stopwords = sc.textFile(stopwordsFile).collect().toList
+    val stopwords = sc.broadcast(sc.textFile(stopwordsFile).collect().toList)
+
     //定义时间格式
     // val dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss z", Locale.ENGLISH)
     val dateFormat = new SimpleDateFormat("yyyy-MM-dd") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
@@ -59,7 +65,7 @@ object docsSimilarity {
     val todayL = dateFormat.parse(today).getTime
     //获取N天的时间，并把时间转换成long类型
     val cal: Calendar = Calendar.getInstance()
-    val N = 1
+    val N = 10
     //  cal.add(Calendar.DATE, -N)//获取N天前或N天后的时间，-2为2天前
     cal.add(Calendar.YEAR, -N) //获取N年或N年后的时间，-2为2年前
     //    cal.add(Calendar.MONTH, -N) //获取N月或N月后的时间，-2为2月前
@@ -73,12 +79,12 @@ object docsSimilarity {
 
     //扫描整个表
     val scan = new Scan()
-    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("t")) //title
-    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("c")) //content
-    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("manuallabel")) //label
-    scan.addColumn(Bytes.toBytes("f"), Bytes.toBytes("mod")) //time
-    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("websitename")) //
-    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("appc"))
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("urlid")) //urlID
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("title")) //title
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("content")) //content
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("label")) //label
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("label")) //label
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("websitename")) //websitename
 
     // scan.setTimeRange(1400468400000L, 1400472000000L)
     conf.set(TableInputFormat.SCAN, convertScanToString(scan))
@@ -87,16 +93,16 @@ object docsSimilarity {
       classOf[org.apache.hadoop.hbase.client.Result])
     //提取亿搜数据，并对数据进行过滤
     val hbaseRDD = hBaseRDD.map { case (k, v) => {
-      val urlID = k.get()
-      val title = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("t")) //标题列
-      val content = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("c")) //内容列
-      val label = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("manuallabel")) //标签列
-      val time = v.getValue(Bytes.toBytes("f"), Bytes.toBytes("mod")) //时间列
-      val webName = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("websitename")) //网站名列
-      val appc = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("appc")) //appc
-      (urlID, title, content, label, time, webName, appc)
+      val rowkey = k.get()
+      val urlID = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("urlid")) //标题列
+      val title = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("title")) //内容列
+      val content = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("content")) //标签列
+      val label = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("label")) //时间列
+      val time = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("time")) //网站名列
+      val websitename = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("websitename")) //appc
+      (urlID, title, content, label, time, websitename)
     }
-    }.filter(x => null != x._2 & null != x._3 & null != x._5 & null != x._6 & null != x._7).
+    }.filter(x => null != x._2 & null != x._3 & null != x._5 & null != x._6).
       map { x => {
         val urlID_1 = Bytes.toString(x._1)
         val title_1 = Bytes.toString(x._2)
@@ -112,31 +118,38 @@ object docsSimilarity {
       map(x => {
         val date: Date = new Date(x._5)
         val time = dateFormat.format(date)
-        YlzxSchema(x._1, x._2, x._3, x._4, time, x._6)
-      }) //.randomSplit(Array(0.1,0.9))(0)
+        //使用ansj分词
+        val segWords = ToAnalysis.parse(x._3).toArray.map(_.toString.split("/")).
+          filter(_.length >= 2).map(_ (0)).toList.
+          filter(word => word.length >= 2 & !stopwords.value.contains(word)).toSeq
+
+        YlzxSchema(x._1, x._2, x._3, x._4, time, x._6, segWords)
+      }).filter(x => null != x.segWords) //.filter(_.segWords.size > 1)//.randomSplit(Array(0.1,0.9))(0)
 
     hbaseRDD
 
   }
 
-
   def main(args: Array[String]) {
+    //    SetLogger
 
-//    SetLogger
-
-    val sparkConf = new SparkConf().setAppName(s"docsSimilarity") //.setMaster("local[*]").set("spark.executor.memory", "2g")
+    val sparkConf = new SparkConf().setAppName(s"docsSimiTest") //.setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
 
     // load word2Vec model
-    val word2VecModel = Word2VecModel.load("/personal/sunlu/Project/docsSimi/Word2VecModelDF_dic")
-    //load stopwords file
-    val stopwordsFile = "/personal/sunlu/lulu/yeeso/Stopwords.dic"
-//    val stopwords = sc.textFile(stopwordsFile).collect().toList
-    val stopwords = sc.broadcast(sc.textFile(stopwordsFile).collect().toList)
+    //    val word2VecModel = Word2VecModel.load("/personal/sunlu/Project/docsSimi/t_Word2VecModelDF")
 
-    val ylzxTable = args(0)
+    /*
+     //load stopwords file
+     val stopwordsFile = "/personal/sunlu/lulu/yeeso/Stopwords.dic"
+     //    val stopwords = sc.textFile(stopwordsFile).collect().toList
+     val stopwords = sc.broadcast(sc.textFile(stopwordsFile).collect().toList)
+      */
+
+    //    val ylzxTable = args(0)
+    val ylzxTable = "t_ylzx_sun"
     val docSimiTable = args(1)
     val ylzxRDD = getYlzxRDD(ylzxTable, sc).repartition(10)
     val ylzxDS = spark.createDataset(ylzxRDD)
@@ -146,8 +159,9 @@ object docsSimilarity {
       .setOutputCol("id")
 
     val indexedDF = indexer.fit(ylzxDS).transform(ylzxDS)
-    indexedDF.persist(StorageLevel.MEMORY_AND_DISK)
+    //    indexedDF.persist(StorageLevel.MEMORY_AND_DISK)
 
+    /*
     //定义UDF
     //分词、停用词过滤
 
@@ -157,11 +171,11 @@ object docsSimilarity {
         filter(word => word.length >= 1 & !stopwords.value.contains(word)).toSeq
       val result = seg match {
         case r if (r.length >= 1) => r
-        case _ => Seq("nll")
+        case _ => Seq("null")
       }
       result
     }
-    val segWords2 = udf((content: String) => segWordsFunc(content))
+    val segWords2 = udf((content: String) => segWordsFunc(content).mkString(" "))
 
 
     val segWords = udf((content: String) => {
@@ -170,9 +184,21 @@ object docsSimilarity {
         filter(word => word.length >= 1 & !stopwords.value.contains(word)).toSeq
     })
 
-    val segDF = indexedDF.withColumn("segWords", segWords2(column("content")))
 
-    val word2VecDF = word2VecModel.transform(segDF)
+    val segDF = indexedDF.withColumn("segWordsTemp", segWords2(column("content"))).
+      filter(! col("segWordsTemp").contains("null")).withColumn("segWords", explode(split(col("segWordsTemp"), " "))).
+      drop("segWordsTemp")
+*/
+
+    val word2Vec = new Word2Vec()
+      .setInputCol("segWords")
+      .setOutputCol("features")
+      .setVectorSize(3) // 1000
+      .setMinCount(1)
+    val word2VecModel = word2Vec.fit(indexedDF)
+    word2VecModel.write.overwrite().save("/personal/sunlu/Project/docsSimi/t_Word2VecModelDF")
+
+    val word2VecDF = word2VecModel.transform(indexedDF)
     val document = word2VecDF.select("id", "features").na.drop.rdd.map {
       case Row(id: Double, features: MLVector) => (id.toLong, Vectors.fromML(features))
     }.filter(_._2.size >= 2) //.distinct()//.repartition(300)

@@ -27,6 +27,8 @@
 
 提交任务代码：（参考）
 
+docsSimi_word2vec.sh
+
 #!/bin/bash
 #name=$1
 
@@ -68,7 +70,7 @@ info: id => urlID
 
 时间：2017年8月17日
 
-执行任务代码：
+### 执行任务代码：
 
 服务器：slave6
 
@@ -119,7 +121,9 @@ spark版本：2.1.0
 
 查看结果：
 
-执行任务docsSimilarity：计算文章相似性
+    vhadoop fs -ls /personal/sunlu/Project/docsSimi/Word2VecModelDF_dic
+
+### 执行任务docsSimilarity：计算文章相似性
 
     spark-submit \
     --class com.evayInfo.Inglory.Project.DocsSimilarity.docsSimilarity \
@@ -145,3 +149,21 @@ spark版本：2.1.0
 
 	 	TaskKilled (killed intentionally)
 
+3. 
+
+    org.apache.spark.shuffle.MetadataFetchFailedException: Missing an output location for shuffle 2
+   	
+### 运行任务docsSimiTest
+   	
+   	
+    spark-submit \
+    --class com.evayInfo.Inglory.Project.DocsSimilarity.docsSimiTest \
+    --master yarn \
+    --num-executors 8 \
+    --executor-cores 8 \
+    --executor-memory 6g \
+    --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+    /root/lulu/Progect/docsSimi/SparkDiary.jar \
+    t_ylzx_sun t_docsimi_word2vec
+    
+    spark-submit --class com.evayInfo.Inglory.Project.DocsSimilarity.docsSimiTest --master yarn --num-executors 4 --executor-cores 4 --executor-memory 6g --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar /root/lulu/Progect/docsSimi/SparkDiary.jar t_ylzx_sun t_docsimi

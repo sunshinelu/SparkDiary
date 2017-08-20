@@ -2,7 +2,7 @@ package com.evayInfo.Inglory.TestCode
 
 import java.util.UUID
 
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 /**
@@ -18,6 +18,11 @@ object uuidGenerate {
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
+
+    val a = UUID.randomUUID().toString().toLowerCase()
+
+    println(a.length)
+
     val rdd1 = sc.parallelize(Seq((1,"a"),(2,"b"),(3,"c")))
 
     val df1 = rdd1.toDF("col1", "col2")

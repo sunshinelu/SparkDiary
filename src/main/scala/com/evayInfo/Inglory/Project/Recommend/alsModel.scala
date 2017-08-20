@@ -179,7 +179,7 @@ object alsModel {
 
   def main(args: Array[String]) {
     // build spark environment
-    val spark = SparkSession.builder().appName("RatingSysV4").getOrCreate()
+    val spark = SparkSession.builder().appName("alsModel").getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
     //定义时间格式

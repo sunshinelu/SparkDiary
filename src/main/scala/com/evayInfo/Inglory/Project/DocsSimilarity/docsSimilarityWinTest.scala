@@ -59,6 +59,15 @@ object docsSimilarityWinTest {
 //    println("ylzxDS行数为：" + ylzxDS.count())
 //    ylzxDS行数为：38185
 
+    //    ylzxDS.select("urlID").sample(false,0.1)(k=>(k,1)).reduceBykey(_+_).map(k=>(k._2,k._1)).sortByKey(false).take(10)
+    //    ylzxDS.toDF().select("urlID").sample(false,0.1).(k =>(k,1)).reduceBykey(_+_).map(k=>(k._2,k._1)).sortByKey(false).take(10)
+
+    //    val sampledPairs = ylzxRDD.map(x => (x.urlID, 1)).sample(false, 0.1)
+    //    val sampledWordCounts = sampledPairs.countByKey()
+    //    sampledWordCounts.foreach(println(_))
+
+    val t1 = ylzxRDD.filter(_.urlID.length == 36)
+
     val indexer = new StringIndexer()
       .setInputCol("urlID")
       .setOutputCol("id")
