@@ -44,7 +44,7 @@ object rewriteHbase {
     //设置查询的表名
     hbaseConf.set(TableInputFormat.INPUT_TABLE, ylzxTable) //设置输入表名 第一个参数yeeso-test-ywk_webpage
 
-    /*
+/*
     hbaseConf.set("hbase.zookeeper.quorum", "192.168.37.21,192.168.37.22,192.168.37.23")
     hbaseConf.set("hbase.zookeeper.property.clientPort", "2181")
     hbaseConf.set("hbase.master", "192.168.37.22:60000", "192.168.37.23:60000")
@@ -94,7 +94,7 @@ object rewriteHbase {
 
   def main(args: Array[String]) {
 
-    SetLogger
+//    SetLogger
 
     val sparkConf = new SparkConf().setAppName(s"docsSimilarity").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
@@ -110,11 +110,11 @@ object rewriteHbase {
     //指定输出格式和输出表名
     hbaseConf.set(TableOutputFormat.OUTPUT_TABLE, reWriteTable) //设置输出表名
 
-    /*
+
         hbaseConf.set("hbase.zookeeper.quorum", "192.168.37.21,192.168.37.22,192.168.37.23")
         hbaseConf.set("hbase.zookeeper.property.clientPort", "2181")
         hbaseConf.set("hbase.master", "192.168.37.22:60000", "192.168.37.23:60000")
-    */
+
     /*
     //如果outputTable存在则不做任何操作，如果HBASE表不存在则新建表
     val hadmin = new HBaseAdmin(hbaseConf)
@@ -157,7 +157,7 @@ object rewriteHbase {
       put.add(Bytes.toBytes("info"), Bytes.toBytes("title"), Bytes.toBytes(x.title)) //title
       put.add(Bytes.toBytes("info"), Bytes.toBytes("content"), Bytes.toBytes(x.content)) //content
       put.add(Bytes.toBytes("info"), Bytes.toBytes("label"), Bytes.toBytes(x.label)) //label
-      put.add(Bytes.toBytes("info"), Bytes.toBytes("time"), Bytes.toBytes(x.time)) //time
+      put.add(Bytes.toBytes("info"), Bytes.toBytes("time"), Bytes.toBytes(x.time.toLong)) //time
       put.add(Bytes.toBytes("info"), Bytes.toBytes("websitename"), Bytes.toBytes(x.websitename)) //websitename
 
       (new ImmutableBytesWritable, put)

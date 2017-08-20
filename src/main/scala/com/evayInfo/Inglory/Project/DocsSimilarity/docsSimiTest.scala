@@ -83,7 +83,7 @@ object docsSimiTest {
     scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("title")) //title
     scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("content")) //content
     scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("label")) //label
-    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("label")) //label
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("time")) //label
     scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("websitename")) //websitename
 
     // scan.setTimeRange(1400468400000L, 1400472000000L)
@@ -97,20 +97,21 @@ object docsSimiTest {
       val urlID = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("urlid")) //标题列
       val title = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("title")) //内容列
       val content = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("content")) //标签列
-      val label = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("label")) //时间列
-      val time = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("time")) //网站名列
+      val label = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("label")) //网站名列
+      val time = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("time")) //时间列
       val websitename = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("websitename")) //appc
-      (urlID, title, content, label, time, websitename)
+      (rowkey, urlID, title, content, label, time, websitename)
     }
-    }.filter(x => null != x._2 & null != x._3 & null != x._5 & null != x._6).
+    }.filter(x => null != x._2 & null != x._3 & null != x._5 & null != x._6 & null != x._7).
       map { x => {
-        val urlID_1 = Bytes.toString(x._1)
-        val title_1 = Bytes.toString(x._2)
-        val content_1 = Bytes.toString(x._3)
-        val label_1 = Bytes.toString(x._4)
+        val rowkey_1 =  Bytes.toString(x._1)
+        val urlID_1 = Bytes.toString(x._2)
+        val title_1 =  Bytes.toString(x._3)
+        val content_1 = Bytes.toString(x._4)
+        val label_1 = Bytes.toString(x._5)
         //时间格式转化
-        val time_1 = Bytes.toLong(x._5)
-        val websitename_1 = Bytes.toString(x._6)
+        val time_1 =  Bytes.toLong(x._6)
+        val websitename_1 = Bytes.toString(x._7)
 
         (urlID_1, title_1, content_1, label_1, time_1, websitename_1)
       }
@@ -124,7 +125,7 @@ object docsSimiTest {
           filter(word => word.length >= 2 & !stopwords.value.contains(word)).toSeq
 
         YlzxSchema(x._1, x._2, x._3, x._4, time, x._6, segWords)
-      }).filter(x => null != x.segWords) //.filter(_.segWords.size > 1)//.randomSplit(Array(0.1,0.9))(0)
+      })//.filter(x => null != x.segWords) //.filter(_.segWords.size > 1)//.randomSplit(Array(0.1,0.9))(0)
 
     hbaseRDD
 
