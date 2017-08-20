@@ -13,7 +13,7 @@ import org.apache.hadoop.hbase.util.{Base64, Bytes}
 import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDescriptor, TableName}
 import org.apache.hadoop.io.Text
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.ml.feature.{StringIndexer, Word2Vec}
+import org.apache.spark.ml.feature.{StringIndexer, Word2VecModel}
 import org.apache.spark.ml.linalg.{Vector => MLVector}
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.linalg.distributed.{IndexedRow, IndexedRowMatrix, MatrixEntry}
@@ -21,7 +21,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Row, SparkSession}
-import org.apache.spark.storage.StorageLevel
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
@@ -65,7 +64,7 @@ object docsSimiTest {
     val todayL = dateFormat.parse(today).getTime
     //获取N天的时间，并把时间转换成long类型
     val cal: Calendar = Calendar.getInstance()
-    val N = 10
+    val N = 1
     //  cal.add(Calendar.DATE, -N)//获取N天前或N天后的时间，-2为2天前
     cal.add(Calendar.YEAR, -N) //获取N年或N年后的时间，-2为2年前
     //    cal.add(Calendar.MONTH, -N) //获取N月或N月后的时间，-2为2月前
@@ -104,13 +103,13 @@ object docsSimiTest {
     }
     }.filter(x => null != x._2 & null != x._3 & null != x._5 & null != x._6 & null != x._7).
       map { x => {
-        val rowkey_1 =  Bytes.toString(x._1)
+        val rowkey_1 = Bytes.toString(x._1)
         val urlID_1 = Bytes.toString(x._2)
-        val title_1 =  Bytes.toString(x._3)
+        val title_1 = Bytes.toString(x._3)
         val content_1 = Bytes.toString(x._4)
         val label_1 = Bytes.toString(x._5)
         //时间格式转化
-        val time_1 =  Bytes.toLong(x._6)
+        val time_1 = Bytes.toLong(x._6)
         val websitename_1 = Bytes.toString(x._7)
 
         (urlID_1, title_1, content_1, label_1, time_1, websitename_1)
@@ -125,7 +124,7 @@ object docsSimiTest {
           filter(word => word.length >= 2 & !stopwords.value.contains(word)).toSeq
 
         YlzxSchema(x._1, x._2, x._3, x._4, time, x._6, segWords)
-      })//.filter(x => null != x.segWords) //.filter(_.segWords.size > 1)//.randomSplit(Array(0.1,0.9))(0)
+      }) //.filter(x => null != x.segWords) //.filter(_.segWords.size > 1)//.randomSplit(Array(0.1,0.9))(0)
 
     hbaseRDD
 
@@ -140,7 +139,7 @@ object docsSimiTest {
     import spark.implicits._
 
     // load word2Vec model
-    //    val word2VecModel = Word2VecModel.load("/personal/sunlu/Project/docsSimi/t_Word2VecModelDF")
+    val word2VecModel = Word2VecModel.load("/personal/sunlu/Project/docsSimi/t_Word2VecModelDF")
 
     /*
      //load stopwords file
@@ -149,10 +148,10 @@ object docsSimiTest {
      val stopwords = sc.broadcast(sc.textFile(stopwordsFile).collect().toList)
       */
 
-    //    val ylzxTable = args(0)
-    val ylzxTable = "t_ylzx_sun"
+    val ylzxTable = args(0)
+    //    val ylzxTable = "t_ylzx_sun"
     val docSimiTable = args(1)
-    val ylzxRDD = getYlzxRDD(ylzxTable, sc).repartition(10)
+    val ylzxRDD = getYlzxRDD(ylzxTable, sc).repartition(100)
     val ylzxDS = spark.createDataset(ylzxRDD)
 
     val indexer = new StringIndexer()
@@ -191,6 +190,7 @@ object docsSimiTest {
       drop("segWordsTemp")
 */
 
+    /*
     val word2Vec = new Word2Vec()
       .setInputCol("segWords")
       .setOutputCol("features")
@@ -198,7 +198,7 @@ object docsSimiTest {
       .setMinCount(1)
     val word2VecModel = word2Vec.fit(indexedDF)
     word2VecModel.write.overwrite().save("/personal/sunlu/Project/docsSimi/t_Word2VecModelDF")
-
+*/
     val word2VecDF = word2VecModel.transform(indexedDF)
     val document = word2VecDF.select("id", "features").na.drop.rdd.map {
       case Row(id: Double, features: MLVector) => (id.toLong, Vectors.fromML(features))
@@ -213,10 +213,10 @@ object docsSimiTest {
     val upper = 1.0
 
     val sim = transposed_matrix.toRowMatrix.columnSimilarities(threshhold)
-    val exact = transposed_matrix.toRowMatrix.columnSimilarities()
+    //    val exact = transposed_matrix.toRowMatrix.columnSimilarities()
 
     val sim_threshhold = sim.entries.filter { case MatrixEntry(i, j, u) => u >= threshhold && u <= upper } //.repartition(400)
-    sim_threshhold.persist(StorageLevel.MEMORY_AND_DISK)
+    //    sim_threshhold.persist(StorageLevel.MEMORY_AND_DISK)
 
     val docSimsRDD = sim_threshhold.map { x => {
       val doc1 = x.i.toString
@@ -228,7 +228,7 @@ object docsSimiTest {
     }
     }
 
-    sim_threshhold.unpersist()
+    //    sim_threshhold.unpersist()
 
     val docSimsDS = spark.createDataset(docSimsRDD) //.repartition(50)
 
@@ -241,7 +241,7 @@ object docsSimiTest {
       select("doc2", "url2id", "title", "label", "time", "websitename")
 
     val wordsUrlLabDF2 = indexedDF.withColumnRenamed("id", "doc1").select("doc1", "urlID")
-    indexedDF.unpersist()
+    //    indexedDF.unpersist()
 
     val ds6 = ds5.join(wordsUrlLabDF, Seq("doc2"), "left")
     //doc1,doc2,sims,rn,url2id,title2,label2,time2,websitename2

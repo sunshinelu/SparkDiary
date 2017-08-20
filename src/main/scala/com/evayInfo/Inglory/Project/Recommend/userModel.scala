@@ -247,7 +247,7 @@ object userModel {
 
     //calculate similarities
     val ratings = new CoordinateMatrix(rdd1).transpose()
-    val itemSimi = ratings.toRowMatrix.columnSimilarities(0.1)
+    val userSimi = ratings.toRowMatrix.columnSimilarities(0.1)
 
     /**
      * 相似度.
@@ -262,13 +262,13 @@ object userModel {
                          ) extends Serializable
 
 
-    val itemSimiRdd = itemSimi.entries.map(f => UserSimi(f.i, f.j, f.value))
+    val userSimiRdd = userSimi.entries.map(f => UserSimi(f.i, f.j, f.value))
 
-    val rdd_app_R1 = itemSimiRdd.map { f => (f.userId1, f.userId1, f.similar) }
+    val rdd_app_R1 = userSimiRdd.map { f => (f.userId1, f.userId1, f.similar) }
     val user_prefer1 = rdd1.map { f => (f.i, f.j, f.value) }
 
     val rdd_app_R2 = rdd_app_R1.map { f => (f._1, (f._2, f._3)) }.join(user_prefer1.map(f => (f._2, (f._1, f._3))))
-    val rdd_app_R3 = rdd_app_R2.map { f => ((f._2._2._1, f._2._1._1), f._2._2._2 * f._2._1._2) }
+    val rdd_app_R3 = rdd_app_R2.map { f => ((f._2._1._1, f._2._2._1), f._2._2._2 * f._2._1._2) }
     val rdd_app_R4 = rdd_app_R3.reduceByKey((x, y) => x + y)
     val rdd_app_R5 = rdd_app_R4.leftOuterJoin(user_prefer1.map(f => ((f._1, f._2), 1))).filter(f => f._2._2.isEmpty).map(f => (f._1._1, (f._1._2, f._2._1)))
 

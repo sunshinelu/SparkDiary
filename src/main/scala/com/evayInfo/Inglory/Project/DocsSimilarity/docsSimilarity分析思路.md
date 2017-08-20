@@ -167,3 +167,6 @@ spark版本：2.1.0
     t_ylzx_sun t_docsimi_word2vec
     
     spark-submit --class com.evayInfo.Inglory.Project.DocsSimilarity.docsSimiTest --master yarn --num-executors 4 --executor-cores 4 --executor-memory 6g --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar /root/lulu/Progect/docsSimi/SparkDiary.jar t_ylzx_sun t_docsimi
+    
+    
+    spark-submit --class com.evayInfo.Inglory.Project.DocsSimilarity.docsSimiTest --master yarn --num-executors 4 --executor-cores 4 --executor-memory 6g --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar /root/lulu/Progect/docsSimi/SparkDiary.jar t_ylzx_sun t_docsimi
