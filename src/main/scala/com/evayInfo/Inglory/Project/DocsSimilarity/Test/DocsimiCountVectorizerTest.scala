@@ -28,5 +28,7 @@ object DocsimiCountVectorizerTest {
     import spark.implicits._
 
 
+    sc.stop()
+    spark.stop()
   }
 }

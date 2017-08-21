@@ -144,7 +144,7 @@ info: id => urlID
     val df2 = docsimiDS.select("id", "simsID", "level")
 
     val df3 = df1.join(df2, df1("itemString") === df2("id"), "left").
-      withColumn("rating", col("value") * col("level")).drop("value").drop("level")
+      withColumn("rating", col("value") * col("level")).drop("value").drop("level").na.drop()
     //    df3.printSchema()
     /*
     root
@@ -158,7 +158,7 @@ info: id => urlID
         df3.take(5).foreach(println)
 
     val df4 = df3.drop("itemString").drop("id").withColumnRenamed("simsID", "itemString").
-      join(df1_1, Seq("userString", "itemString"), "leftanti")
+      join(df1_1, Seq("userString", "itemString"), "leftanti").na.drop()
 //    df4.printSchema()
     /*
     root
@@ -168,6 +168,12 @@ info: id => urlID
      */
     df4.take(5).foreach(println)
 
+    val df5 = df4.join(ylzxDS, Seq("itemString"), "left")
+    df5.printSchema()
+    /*
+
+     */
+    df5.take(5).foreach(println)
 
     sc.stop()
     spark.stop()
