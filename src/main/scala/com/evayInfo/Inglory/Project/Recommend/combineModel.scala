@@ -16,10 +16,10 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
- * Created by sunlu on 17/8/17.
- * 组合模型的构建
- *
- */
+  * Created by sunlu on 17/8/17.
+  * 组合模型的构建
+  *
+  */
 object combineModel {
 
 
@@ -87,26 +87,28 @@ object combineModel {
   }
 
   def main(args: Array[String]) {
-        SetLogger
+    SetLogger
 
-    val sparkConf = new SparkConf().setAppName(s"combineModel").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val sparkConf = new SparkConf().setAppName(s"combineModel")
+    //.setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
-/*
+
     val alsTable = args(0)
     val contentTable = args(1)
     val itemTable = args(2)
     val userTable = args(3)
     val outputTable = args(4)
- */
+
+    /*
     val alsTable = "recommender_als"
-//    val alsTable = "ylzx_cnxh"
+    //    val alsTable = "ylzx_cnxh"
     val contentTable = "recommender_content"
     val itemTable = "recommender_user"
     val userTable = "recommender_item"
     val outputTable = "recommender_combined"
-
+     */
 
     val alsDS = spark.createDataset(getRecommData(alsTable, 0.25, sc))
     val contenDS = spark.createDataset(getRecommData(contentTable, 0.25, sc))
@@ -114,7 +116,7 @@ object combineModel {
     val userDS = spark.createDataset(getRecommData(userTable, 0.25, sc))
 
     // 将alsDS、contenDS、itemDS和userDS合并到一个dataset中
-    val recommDS = alsDS.union(itemDS).union(userDS)//.union(contenDS)
+    val recommDS = alsDS.union(itemDS).union(userDS).union(contenDS)
     val itemLab = recommDS.select("id", "title", "manuallabel", "mod").dropDuplicates()
 
     // 根据userID和id对rn进行求和，新增列名为rating
@@ -130,7 +132,6 @@ object combineModel {
     // 增加系统时间列
     val df4 = df3.select("userID", "id", "rating", "rn", "title", "manuallabel", "mod")
       .withColumn("systime", current_timestamp()).withColumn("systime", date_format($"systime", "yyyy-MM-dd HH:mm:ss"))
-
 
     val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
 
@@ -183,7 +184,6 @@ object combineModel {
         (new ImmutableBytesWritable, put)
       }
       }.saveAsNewAPIHadoopDataset(jobConf)
-
 
     sc.stop()
     spark.stop()
