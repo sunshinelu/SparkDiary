@@ -21,6 +21,7 @@ import org.apache.spark.sql.{Row, SparkSession}
 
 /**
   * Created by sunlu on 17/8/15.
+ * 运行成功！
   */
 
 object userModel {
@@ -53,7 +54,7 @@ object userModel {
     val todayL = dateFormat.parse(today).getTime
     //获取N天的时间，并把时间转换成long类型
     val cal: Calendar = Calendar.getInstance()
-    val N = 10
+    val N = 20
     //  cal.add(Calendar.DATE, -N)//获取N天前或N天后的时间，-2为2天前
     cal.add(Calendar.YEAR, -N) //获取N年或N年后的时间，-2为2年前
     //    cal.add(Calendar.MONTH, -N) //获取N月或N月后的时间，-2为2月前
@@ -216,8 +217,9 @@ object userModel {
 
     val ylzxTable = args(0)
     val logsTable = args(1)
+    val outputTable = args(2)
 
-    val ylzxRDD = getYlzxRDD(args(0), sc)
+    val ylzxRDD = getYlzxRDD(ylzxTable, sc)
     val ylzxDF = spark.createDataset(ylzxRDD).dropDuplicates("content").drop("content")
 
     val logsRDD = getLogsRDD(logsTable, sc)
@@ -262,17 +264,28 @@ object userModel {
                          ) extends Serializable
 
 
+    // user-user similarity
     val userSimiRdd = userSimi.entries.map(f => UserSimi(f.i, f.j, f.value))
+    userSimiRdd.collect().foreach(println)
 
-    val rdd_app_R1 = userSimiRdd.map { f => (f.userId1, f.userId1, f.similar) }
+    // user1, user1, similar
+    val rdd_app_R1 = userSimiRdd.map { f => (f.userId1, f.userId2, f.similar) }.
+      union(userSimiRdd.map { f => (f.userId2, f.userId1, f.similar) })
+
+    // user item value
     val user_prefer1 = rdd1.map { f => (f.i, f.j, f.value) }
 
-    val rdd_app_R2 = rdd_app_R1.map { f => (f._1, (f._2, f._3)) }.join(user_prefer1.map(f => (f._2, (f._1, f._3))))
+    // user1, [(user1, similar),(item, value)]
+    val rdd_app_R2 = rdd_app_R1.map { f => (f._1, (f._2, f._3)) }.join(user_prefer1.map(f => (f._1, (f._2, f._3))))
+    rdd_app_R2.collect().foreach(println)
     val rdd_app_R3 = rdd_app_R2.map { f => ((f._2._1._1, f._2._2._1), f._2._2._2 * f._2._1._2) }
+    rdd_app_R3.collect().foreach(println)
     val rdd_app_R4 = rdd_app_R3.reduceByKey((x, y) => x + y)
-    val rdd_app_R5 = rdd_app_R4.leftOuterJoin(user_prefer1.map(f => ((f._1, f._2), 1))).filter(f => f._2._2.isEmpty).map(f => (f._1._1, (f._1._2, f._2._1)))
 
+    val rdd_app_R5 = rdd_app_R4.leftOuterJoin(user_prefer1.map(f => ((f._1, f._2), 1))).
+      filter(f => f._2._2.isEmpty).map(f => (f._1._1, (f._1._2, f._2._1)))
     val rdd_app_R6 = rdd_app_R5.groupByKey()
+
     val r_number = 30
     val rdd_app_R7 = rdd_app_R6.map { f =>
       val i2 = f._2.toBuffer
@@ -287,6 +300,7 @@ object userModel {
     }
     )
 
+
     //RDD to RowRDD
     val itemRecomm = rdd_app_R8.map { f => UserRecomm(f._1, f._2, f._3) }
     //RowRDD to DF
@@ -299,13 +313,13 @@ object userModel {
     val joinDF3 = joinDF2.join(ylzxDF, Seq("itemString"), "left").na.drop()
     ylzxDF.unpersist()
     val w = Window.partitionBy("userString").orderBy(col("rating").desc)
-    val joinDF4 = joinDF3.withColumn("rn", row_number.over(w)) //.where($"rn" <= 10)
+    val joinDF4 = joinDF3.withColumn("rn", row_number.over(w)).where($"rn" <= 10)
     val joinDF5 = joinDF4.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
 
 
     val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
     //如果outputTable表存在，则删除表；如果不存在则新建表。
-    val outputTable = args(2)
+
     //    val outputTable = "t_RatingSys"
     val hAdmin = new HBaseAdmin(conf)
     if (hAdmin.tableExists(outputTable)) {

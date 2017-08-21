@@ -13,57 +13,85 @@ ALS Model、Content-Based Model、User-based Model和Item-based Model
 
 思路：使用ALS算法构建ALS推荐模型。
 
-结果：ALS Model的结果保存在`Recommender_als` 表中。
+结果：ALS Model的结果保存在`recommender_als` 表中。
 
 任务提交代码：
 
-spark-submit --class com.ecloud.Inglory.RatingSys.RatingSysV5 \
+spark-submit --class com.evayInfo.Inglory.Project.Recommend.alsModel \
 --master yarn \
---num-executors 8 \
---executor-cores 8 \
+--num-executors 2 \
+--executor-cores 2 \
 --executor-memory 4g \
---jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/lulu/Program/jarLibs/spark-streaming-kafka_2.11-1.6.3.jar,/root/lulu/Program/jarLibs/spark-streaming-flume_2.11-2.1.0.jar,/root/lulu/Program/jarLibs/kafka_2.11-0.10.0.1.jar,/root/lulu/Program/jarLibs/zkclient-0.8.jar,/root/lulu/Program/jarLibs/metrics-core-2.2.0.jar,/root/lulu/Program/jarLibs/metrics-annotation-2.2.0.jar,/root/lulu/Program/jarLibs/kafka-clients-0.10.0.1.jar \
-/root/lulu/Workspace/spark/yeeso/RecommendSys/RecommendSysV1.jar \
-yilan-total_webpage t_hbaseSink  Recommender_als
+--jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+/root/lulu/Progect/recommend/SparkDiary.jar \
+yilan-total_webpage t_hbaseSink  recommender_als
+
+count 'recommender_als'
 
 ### 2. Content-Based Model
 
 思路：计算文章的相似性，得出文章相似性矩阵，然后根据用户的历史浏览记录想用户推荐未浏览过，但相似性打分较高的文章。
 
-结果：Content-Based Model的结果保存在`Recommender_CB` 表中。
+结果：Content-Based Model的结果保存在`recommender_content` 表中。
+
+spark-submit --class com.evayInfo.Inglory.Project.Recommend.contentModel \
+--master yarn \
+--num-executors 2 \
+--executor-cores 2 \
+--executor-memory 4g \
+--jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+/root/lulu/Progect/recommend/SparkDiary.jar \
+yilan-total_webpage t_hbaseSink  recommender_content
 
 ### 3. User-based Model
 
 思路：使用用户日志数据，计算用户之间的相似，想用户推荐与其相似用户浏览过且自身未浏览过的文章。
 
-结果：User-Based Model的结果保存在`Recommender_UB` 表中。
+结果：User-Based Model的结果保存在`recommender_user` 表中。
+
+任务提交代码：
+
+spark-submit --class com.evayInfo.Inglory.Project.Recommend.userModel \
+--master yarn \
+--num-executors 2 \
+--executor-cores 2 \
+--executor-memory 4g \
+--jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+/root/lulu/Progect/recommend/SparkDiary.jar \
+yilan-total_webpage t_hbaseSink  recommender_user
+
+
+count 'recommender_user'
+
 
 ### 4. Item-based Model
 
 思路：使用用户日志数据，计算文章之间的相似，然后根据用户的历史浏览记录想用户推荐未浏览过，但相似性打分较高的文章。
 
-结果：Item-Based Model的结果保存在`Recommender_IB` 表中。
-
+结果：Item-Based Model的结果保存在`recommender_item` 表中。
 
 
 任务提交代码：
 
-spark-submit --class com.ecloud.Inglory.RatingSys.RatingSysV5 \
+spark-submit --class com.evayInfo.Inglory.Project.Recommend.itemModel \
 --master yarn \
---num-executors 8 \
---executor-cores 8 \
+--num-executors 2 \
+--executor-cores 2 \
 --executor-memory 4g \
---jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/lulu/Program/jarLibs/spark-streaming-kafka_2.11-1.6.3.jar,/root/lulu/Program/jarLibs/spark-streaming-flume_2.11-2.1.0.jar,/root/lulu/Program/jarLibs/kafka_2.11-0.10.0.1.jar,/root/lulu/Program/jarLibs/zkclient-0.8.jar,/root/lulu/Program/jarLibs/metrics-core-2.2.0.jar,/root/lulu/Program/jarLibs/metrics-annotation-2.2.0.jar,/root/lulu/Program/jarLibs/kafka-clients-0.10.0.1.jar \
-/root/lulu/Workspace/spark/yeeso/RecommendSys/RecommendSysV1.jar \
-yilan-total_webpage t_hbaseSink  Recommender_als
+--jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+/root/lulu/Progect/recommend/SparkDiary.jar \
+yilan-total_webpage t_hbaseSink  recommender_item
 
+count 'recommender_item'
 
 **注意**：Content-Based Model和Item-based Model均生成item-item similarity矩阵，后期过滤流程一致。
 
 
 ### 5. Combined Model
 
-通过整合ALS Model、Content-Based Model、User-based Model和Item-based Model模型构建Combined Model。
+思路: 通过整合ALS Model、Content-Based Model、User-based Model和Item-based Model模型构建Combined Model。
+
+结果：Combined Model的结果保存在`recommender_combined` 表中。
 
 ## 2、HBase表的设计
 

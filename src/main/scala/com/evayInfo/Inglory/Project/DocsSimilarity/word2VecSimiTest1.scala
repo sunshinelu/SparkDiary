@@ -92,6 +92,7 @@ object word2VecSimiTest1 {
     Exception in thread "main" org.json4s.package$MappingException: Did not find value which can be converted into java.lang.String
      */
 
+    //    model.getVectors
     val word2VecDF = model.transform(segDF)
 
     //    word2VecDF.printSchema()

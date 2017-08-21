@@ -21,6 +21,7 @@ import org.apache.spark.sql.{Row, SparkSession}
 
 /**
   * Created by sunlu on 17/8/15.
+ * 运行成功！
   */
 
 object itemModel {
@@ -53,7 +54,7 @@ object itemModel {
     val todayL = dateFormat.parse(today).getTime
     //获取N天的时间，并把时间转换成long类型
     val cal: Calendar = Calendar.getInstance()
-    val N = 10
+    val N = 20
     //  cal.add(Calendar.DATE, -N)//获取N天前或N天后的时间，-2为2天前
     cal.add(Calendar.YEAR, -N) //获取N年或N年后的时间，-2为2年前
     //    cal.add(Calendar.MONTH, -N) //获取N月或N月后的时间，-2为2月前
@@ -216,8 +217,9 @@ object itemModel {
 
     val ylzxTable = args(0)
     val logsTable = args(1)
+    val outputTable = args(2)
 
-    val ylzxRDD = getYlzxRDD(args(0), sc)
+    val ylzxRDD = getYlzxRDD(ylzxTable, sc)
     val ylzxDF = spark.createDataset(ylzxRDD).dropDuplicates("content").drop("content")
 
     val logsRDD = getLogsRDD(logsTable, sc)
@@ -262,7 +264,8 @@ object itemModel {
                          ) extends Serializable
 
 
-    val itemSimiRdd = itemSimi.entries.map(f => ItemSimi(f.i, f.j, f.value))
+    val itemSimiRdd = itemSimi.entries.map(f => ItemSimi(f.i, f.j, f.value)).
+      union(itemSimi.entries.map(f => ItemSimi(f.j, f.i, f.value)))
 
     val rdd_app_R1 = itemSimiRdd.map { f => (f.itemid1, f.itemid2, f.similar) }
     val user_prefer1 = rdd1.map { f => (f.i, f.j, f.value) }
@@ -299,14 +302,13 @@ object itemModel {
     val joinDF3 = joinDF2.join(ylzxDF, Seq("itemString"), "left").na.drop()
     ylzxDF.unpersist()
     val w = Window.partitionBy("userString").orderBy(col("rating").desc)
-    val joinDF4 = joinDF3.withColumn("rn", row_number.over(w)) //.where($"rn" <= 10)
+    val joinDF4 = joinDF3.withColumn("rn", row_number.over(w)).where($"rn" <= 10)
     val joinDF5 = joinDF4.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
 
 
     val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
     //如果outputTable表存在，则删除表；如果不存在则新建表。
-    val outputTable = args(2)
-    //    val outputTable = "t_RatingSys"
+
     val hAdmin = new HBaseAdmin(conf)
     if (hAdmin.tableExists(outputTable)) {
       hAdmin.disableTable(outputTable)

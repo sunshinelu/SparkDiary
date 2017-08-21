@@ -7,6 +7,7 @@ import org.apache.spark.sql.SparkSession
 
 /**
  * Created by sunlu on 17/8/20.
+ * 运行成功，处理流程有问题，UserCF2为修正版！
  */
 object UserCF {
 

@@ -13,7 +13,7 @@ import org.apache.hadoop.hbase.util.{Base64, Bytes}
 import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDescriptor, TableName}
 import org.apache.hadoop.io.Text
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.ml.feature.{StringIndexer, Word2VecModel}
+import org.apache.spark.ml.feature.Word2VecModel
 import org.apache.spark.ml.linalg.{Vector => MLVector}
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.linalg.distributed.{IndexedRow, IndexedRowMatrix, MatrixEntry}
@@ -25,9 +25,9 @@ import org.apache.spark.storage.StorageLevel
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
- * Created by sunlu on 17/8/17.
+ * Created by sunlu on 17/8/21.
  */
-object docsSimilarity {
+object docsSimilarityV2 {
 
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)
@@ -41,12 +41,21 @@ object docsSimilarity {
     Base64.encodeBytes(proto.toByteArray)
   }
 
-  case class YlzxSchema(urlID: String, title: String, content: String, label: String, time: String, websitename: String)
+  case class YlzxSchema(urlID: String, title: String, content: String, label: String, time: String, websitename: String,
+                        segWords: Seq[String])
+
+  case class YlzxSchema2(id: Long, urlID: String, title: String, label: String, time: String, websitename: String,
+                         segWords: Seq[String])
 
   case class docSimsSchema(doc1: String, doc2: String, sims: Double)
 
+  def getYlzxRDD(ylzxTable: String, sc: SparkContext): RDD[YlzxSchema2] = {
 
-  def getYlzxRDD(ylzxTable: String, sc: SparkContext): RDD[YlzxSchema] = {
+    //load stopwords file
+    val stopwordsFile = "/personal/sunlu/lulu/yeeso/Stopwords.dic"
+    //    val stopwords = sc.textFile(stopwordsFile).collect().toList
+    val stopwords = sc.broadcast(sc.textFile(stopwordsFile).collect().toList)
+
     //定义时间格式
     // val dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss z", Locale.ENGLISH)
     val dateFormat = new SimpleDateFormat("yyyy-MM-dd") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
@@ -112,70 +121,50 @@ object docsSimilarity {
       map(x => {
         val date: Date = new Date(x._5)
         val time = dateFormat.format(date)
-        YlzxSchema(x._1, x._2, x._3, x._4, time, x._6)
-      }) //.randomSplit(Array(0.1,0.9))(0)
+        //使用ansj分词
+        val segWords = ToAnalysis.parse(x._3).toArray.map(_.toString.split("/")).
+          filter(_.length >= 2).map(_ (0)).toList.
+          filter(word => word.length >= 2 & !stopwords.value.contains(word)).toSeq
+        YlzxSchema(x._1, x._2, x._3, x._4, time, x._6, segWords)
+      }).zipWithIndex().map(x => {
+      val id = x._2
+      val urlID = x._1.urlID
+      val title = x._1.title
+      //      val content = x._1.content
+      val label = x._1.label
+      val time = x._1.time
+      val websitename = x._1.websitename
+      val segWords = x._1.segWords
+      YlzxSchema2(id, urlID, title, label, time, websitename, segWords)
+    }).filter(x => null != x.segWords).filter(_.segWords.size > 1) //.randomSplit(Array(0.1,0.9))(0)
 
     hbaseRDD
 
   }
 
-
   def main(args: Array[String]) {
 
-//    SetLogger
+    //    SetLogger
 
-    val sparkConf = new SparkConf().setAppName(s"docsSimilarity") //.setMaster("local[*]").set("spark.executor.memory", "2g")
+    val sparkConf = new SparkConf().setAppName(s"docsSimilarityV2") //.setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
 
-    // load word2Vec model
-    val word2VecModel = Word2VecModel.load("/personal/sunlu/Project/docsSimi/Word2VecModelDF")
-    //load stopwords file
-    val stopwordsFile = "/personal/sunlu/lulu/yeeso/Stopwords.dic"
-//    val stopwords = sc.textFile(stopwordsFile).collect().toList
-    val stopwords = sc.broadcast(sc.textFile(stopwordsFile).collect().toList)
-
     val ylzxTable = args(0)
+    //    val ylzxTable =  "yilan-total_webpage"
     val docSimiTable = args(1)
+    // val docSimiTable = "docsimi_word2vec"
     val ylzxRDD = getYlzxRDD(ylzxTable, sc).repartition(200)
     val ylzxDS = spark.createDataset(ylzxRDD)
+    ylzxDS.persist(StorageLevel.MEMORY_AND_DISK)
 
-    val indexer = new StringIndexer()
-      .setInputCol("urlID")
-      .setOutputCol("id")
-
-    val indexedDF = indexer.fit(ylzxDS).transform(ylzxDS)
-    indexedDF.persist(StorageLevel.MEMORY_AND_DISK)
-
-    //定义UDF
-    //分词、停用词过滤
-
-    def segWordsFunc(content: String): Seq[String] = {
-      val seg = ToAnalysis.parse(content).toArray.map(_.toString.split("/")).
-        filter(_.length >= 2).map(_ (0)).toList.
-        filter(word => word.length >= 1 & !stopwords.value.contains(word)).toSeq
-      val result = seg match {
-        case r if (r.length >= 1) => r
-        case _ => Seq("null")
-      }
-      result
-    }
-    val segWords2 = udf((content: String) => segWordsFunc(content))
-
-
-    val segWords = udf((content: String) => {
-      ToAnalysis.parse(content).toArray.map(_.toString.split("/")).
-        filter(_.length >= 2).map(_ (0)).toList.
-        filter(word => word.length >= 1 & !stopwords.value.contains(word)).toSeq
-    })
-
-    val segDF = indexedDF.withColumn("segWords", segWords2(column("content")))
-
-    val word2VecDF = word2VecModel.transform(segDF)
+    // load word2Vec model
+    val word2VecModel = Word2VecModel.load("/personal/sunlu/Project/docsSimi/Word2VecModelDF")
+    val word2VecDF = word2VecModel.transform(ylzxDS)
     val document = word2VecDF.select("id", "features").na.drop.rdd.map {
-      case Row(id: Double, features: MLVector) => (id.toLong, Vectors.fromML(features))
-    }.filter(_._2.size >= 2) //.distinct()//.repartition(300)
+      case Row(id: Long, features: MLVector) => (id.toLong, Vectors.fromML(features))
+    } //.distinct()
 
     val tfidf = document.map { case (i, v) => new IndexedRow(i, v) } //.repartition(50)
     val mat = new IndexedRowMatrix(tfidf)
@@ -186,12 +175,12 @@ object docsSimilarity {
     val upper = 1.0
 
     val sim = transposed_matrix.toRowMatrix.columnSimilarities(threshhold)
-    val exact = transposed_matrix.toRowMatrix.columnSimilarities()
+    //    val exact = transposed_matrix.toRowMatrix.columnSimilarities()
 
     val sim_threshhold = sim.entries.filter { case MatrixEntry(i, j, u) => u >= threshhold && u <= upper } //.repartition(400)
     sim_threshhold.persist(StorageLevel.MEMORY_AND_DISK)
 
-    val docSimsRDD = sim_threshhold.map { x => {
+    val docSimsRDD1 = sim_threshhold.map { x => {
       val doc1 = x.i.toString
       val doc2 = x.j.toString
       val sims = x.value.toDouble
@@ -200,7 +189,15 @@ object docsSimilarity {
       docSimsSchema(doc1, doc2, sims2)
     }
     }
+    val docSimsRDD2 = docSimsRDD1.map { x => {
+      val doc1 = x.doc2
+      val doc2 = x.doc1
+      val sims = x.sims
+      docSimsSchema(doc1, doc2, sims)
+    }
+    }
 
+    val docSimsRDD = docSimsRDD1.union(docSimsRDD2)
     sim_threshhold.unpersist()
 
     val docSimsDS = spark.createDataset(docSimsRDD) //.repartition(50)
@@ -210,11 +207,11 @@ object docsSimilarity {
     val w = Window.partitionBy("doc1").orderBy(col("sims").desc)
     val ds5 = docSimsDS.withColumn("rn", row_number.over(w)).where(col("rn") <= 5)
 
-    val wordsUrlLabDF = indexedDF.withColumnRenamed("id", "doc2").withColumnRenamed("urlID", "url2id").
+    val wordsUrlLabDF = ylzxDS.withColumnRenamed("id", "doc2").withColumnRenamed("urlID", "url2id").
       select("doc2", "url2id", "title", "label", "time", "websitename")
 
-    val wordsUrlLabDF2 = indexedDF.withColumnRenamed("id", "doc1").select("doc1", "urlID")
-    indexedDF.unpersist()
+    val wordsUrlLabDF2 = ylzxDS.withColumnRenamed("id", "doc1").select("doc1", "urlID")
+    ylzxDS.unpersist()
 
     val ds6 = ds5.join(wordsUrlLabDF, Seq("doc2"), "left")
     //doc1,doc2,sims,rn,url2id,title2,label2,time2,websitename2
@@ -265,7 +262,7 @@ object docsSimilarity {
     jobConf.set("mapreduce.job.outputformat.class", classOf[TableOutputFormat[Text]].getName)
 
 
-    ds7.repartition(10).rdd.map(row => (row(2), row(3), row(4), row(5), row(6), row(7), row(8), row(9))).
+    ds7.rdd.map(row => (row(2), row(3), row(4), row(5), row(6), row(7), row(8), row(9))).
       map { x => {
         //sims, rn, url2id,  title, label, time, websitename, urlID
         val paste = x._8 + "::score=" + x._2.toString
@@ -283,7 +280,10 @@ object docsSimilarity {
       }
       }.saveAsNewAPIHadoopDataset(jobConf)
 
+
     sc.stop()
     spark.stop()
   }
+
+
 }

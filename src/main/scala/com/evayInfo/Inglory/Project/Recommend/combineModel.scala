@@ -1,5 +1,20 @@
 package com.evayInfo.Inglory.Project.Recommend
 
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.client.{HBaseAdmin, Put, Scan}
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable
+import org.apache.hadoop.hbase.mapreduce.{TableInputFormat, TableOutputFormat}
+import org.apache.hadoop.hbase.protobuf.ProtobufUtil
+import org.apache.hadoop.hbase.util.{Base64, Bytes}
+import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDescriptor, TableName}
+import org.apache.hadoop.io.Text
+import org.apache.log4j.{Level, Logger}
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions._
+import org.apache.spark.{SparkConf, SparkContext}
+
 /**
  * Created by sunlu on 17/8/17.
  * 组合模型的构建
@@ -7,8 +22,164 @@ package com.evayInfo.Inglory.Project.Recommend
  */
 object combineModel {
 
-  def main(args: Array[String]) {
 
+  def SetLogger = {
+    Logger.getLogger("org").setLevel(Level.OFF)
+    Logger.getLogger("com").setLevel(Level.OFF)
+    System.setProperty("spark.ui.showConsoleProgress", "false")
+    Logger.getRootLogger().setLevel(Level.OFF)
+  }
+
+  def convertScanToString(scan: Scan) = {
+    val proto = ProtobufUtil.toScan(scan)
+    Base64.encodeBytes(proto.toByteArray)
+  }
+
+  case class RecommSchema(userID: String, id: String, rn: Double, title: String, manuallabel: String, mod: String)
+
+
+  def getRecommData(tableName: String, weight: Double, sc: SparkContext): RDD[RecommSchema] = {
+    val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
+    //设置查询的表名
+    conf.set(TableInputFormat.INPUT_TABLE, tableName) //设置输入表名 第一个参数yeeso-test-ywk_webpage
+
+    //扫描整个表中指定的列和列簇
+    val scan = new Scan()
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("userID")) //userID
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("id")) //userID
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("rn")) //label
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("title")) //time
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("manuallabel")) //websitename
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("mod")) //content
+    conf.set(TableInputFormat.SCAN, convertScanToString(scan))
+
+    val hBaseRDD = sc.newAPIHadoopRDD(conf, classOf[TableInputFormat],
+      classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
+      classOf[org.apache.hadoop.hbase.client.Result])
+    //提取hbase数据，并对数据进行过滤
+    val hbaseRDD = hBaseRDD.map { case (k, v) => {
+      val rowkey = k.get()
+      val userID = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("userID")) //userID
+      val id = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("id")) //userID
+      val rn = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("rn")) //rn
+      val title = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("title")) //title
+      val manuallabel = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("manuallabel")) //manuallabel
+      val mod = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("mod")) //mod
+      (userID, id, rn, title, manuallabel, mod)
+    }
+    }.filter(x => null != x._1 & null != x._2 & null != x._3 & null != x._4 & null != x._5 & null != x._6).
+      map(x => {
+        val userID = Bytes.toString(x._1)
+        val id = Bytes.toString(x._2)
+        val rn = Bytes.toString(x._3)
+        val rn2 = (-rn.toInt + 11) * weight
+        val title = Bytes.toString(x._4)
+        val manuallabel = Bytes.toString(x._5)
+        val mod = Bytes.toString(x._6)
+
+        RecommSchema(userID, id, rn2, title, manuallabel, mod)
+      })
+    hbaseRDD
+  }
+
+  def main(args: Array[String]) {
+    //    SetLogger
+
+    val sparkConf = new SparkConf().setAppName(s"combineModel") //.setMaster("local[*]").set("spark.executor.memory", "2g")
+    val spark = SparkSession.builder().config(sparkConf).getOrCreate()
+    val sc = spark.sparkContext
+    import spark.implicits._
+
+    val alsTable = args(0)
+    val contentTable = args(1)
+    val itemTable = args(2)
+    val userTable = args(3)
+    val outputTable = args(4)
+    /*
+    val alsTable = "recommender_als"
+    val contentTable = "recommender_content"
+    val itemTable = "recommender_user"
+    val userTable = "recommender_item"
+    val outputTable = "recommender_combined"
+     */
+
+    val alsDS = spark.createDataset(getRecommData(alsTable, 0.25, sc))
+    val contenDS = spark.createDataset(getRecommData(contentTable, 0.25, sc))
+    val itemDS = spark.createDataset(getRecommData(itemTable, 0.25, sc))
+    val userDS = spark.createDataset(getRecommData(userTable, 0.25, sc))
+
+    // 将alsDS、contenDS、itemDS和userDS合并到一个dataset中
+    val recommDS = alsDS.union(itemDS).union(userDS).union(contenDS)
+    val itemLab = recommDS.select("id", "title", "manuallabel", "mod")
+
+    // 根据userID和id对rn进行求和，新增列名为rating
+    val df1 = recommDS.groupBy("userID", "id").agg(sum("rn")).withColumnRenamed("sum(rn)", "rating")
+
+    // 根据id将title、manuallabel和mod整合到df2中
+    val df2 = df1.join(itemLab, Seq("id"), "left").drop("rn")
+
+    // 根据userID进行分组，对打分进行倒序排序，获取打分前10的数据。
+    val w = Window.partitionBy("userID").orderBy(col("rating").desc)
+    val df3 = df2.withColumn("rn", row_number.over(w)).where($"rn" <= 10)
+
+    // 增加系统时间列
+    val df4 = df3.select("userID", "id", "rating", "rn", "title", "manuallabel", "time")
+      .withColumn("systime", current_timestamp()).withColumn("systime", date_format($"systime", "yyyy-MM-dd HH:mm:ss"))
+
+
+    val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
+    //如果outputTable表存在，则删除表；如果不存在则新建表。
+
+    val hAdmin = new HBaseAdmin(conf)
+    if (hAdmin.tableExists(outputTable)) {
+      hAdmin.disableTable(outputTable)
+      hAdmin.deleteTable(outputTable)
+    }
+    //    val htd = new HTableDescriptor(outputTable)
+    val htd = new HTableDescriptor(TableName.valueOf(outputTable))
+    htd.addFamily(new HColumnDescriptor("info".getBytes()))
+    hAdmin.createTable(htd)
+
+    //指定输出格式和输出表名
+    conf.set(TableOutputFormat.OUTPUT_TABLE, outputTable) //设置输出表名
+
+    val jobConf = new Configuration(conf)
+    jobConf.set("mapreduce.job.outputformat.class", classOf[TableOutputFormat[Text]].getName)
+
+    df4.rdd.map(row => (row(0), row(1), row(2), row(3), row(4), row(5), row(6), row(7))).
+      map(x => {
+        val userString = x._1.toString
+        val itemString = x._2.toString
+        //保留rating有效数字
+        val rating = x._3.toString.toDouble
+        val rating2 = f"$rating%1.5f".toString
+        val rn = x._4.toString
+        val title = if (null != x._5) x._5.toString else ""
+        val manuallabel = if (null != x._6) x._6.toString else ""
+        val time = if (null != x._7) x._7.toString else ""
+        val sysTime = if (null != x._8) x._8.toString else ""
+        (userString, itemString, rating2, rn, title, manuallabel, time, sysTime)
+      }).filter(_._5.length >= 2).
+      map { x => {
+        val paste = x._1 + "::score=" + x._4.toString
+        val key = Bytes.toBytes(paste)
+        val put = new Put(key)
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("userID"), Bytes.toBytes(x._1.toString)) //标签的family:qualify,userID
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("id"), Bytes.toBytes(x._2.toString)) //id
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("rating"), Bytes.toBytes(x._3.toString)) //rating
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("rn"), Bytes.toBytes(x._4.toString)) //rn
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("title"), Bytes.toBytes(x._5.toString)) //title
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("manuallabel"), Bytes.toBytes(x._6.toString)) //manuallabel
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("mod"), Bytes.toBytes(x._7.toString)) //mod
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("sysTime"), Bytes.toBytes(x._8.toString)) //sysTime
+
+        (new ImmutableBytesWritable, put)
+      }
+      }.saveAsNewAPIHadoopDataset(jobConf)
+
+
+    sc.stop()
+    spark.stop()
   }
 
 }

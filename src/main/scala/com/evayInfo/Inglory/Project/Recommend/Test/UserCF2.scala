@@ -1,5 +1,6 @@
 package com.evayInfo.Inglory.Project.Recommend.Test
 
+import com.evayInfo.Inglory.Project.Recommend.userModel.UserRecomm
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.mllib.linalg.distributed.{CoordinateMatrix, MatrixEntry}
@@ -7,6 +8,7 @@ import org.apache.spark.sql.SparkSession
 
 /**
  * Created by sunlu on 17/8/20.
+ * 运行成功！
  */
 object UserCF2 {
 
@@ -296,6 +298,24 @@ object UserCF2 {
 (2,2,1.3164965809277258)
 (3,1,0.9082482904638629)
 (3,2,0.9082482904638629)
+     */
+
+
+    //RDD to RowRDD
+    val userRecomm = rdd_app_R8.map { f => UserRecomm(f._1, f._2, f._3) }
+    userRecomm.collect().foreach(println)
+    /*
+    UserRecomm(4,1,0.9082482904638629)
+    UserRecomm(4,3,0.9082482904638629)
+    UserRecomm(1,4,0.4999999999999999)
+    UserRecomm(1,3,1.3164965809277258)
+    UserRecomm(5,4,0.816496580927726)
+    UserRecomm(6,3,0.7071067811865475)
+    UserRecomm(6,2,0.7071067811865475)
+    UserRecomm(2,4,0.4999999999999999)
+    UserRecomm(2,2,1.3164965809277258)
+    UserRecomm(3,1,0.9082482904638629)
+    UserRecomm(3,2,0.9082482904638629)
      */
 
     sc.stop()

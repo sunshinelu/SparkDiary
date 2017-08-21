@@ -107,10 +107,10 @@ object bulidWord2VecModel {
     val word2Vec = new Word2Vec()
       .setInputCol("segWords")
       .setOutputCol("features")
-      .setVectorSize(3) // 1000
-      .setMinCount(0)
+      .setVectorSize(1) // 1000
+      .setMinCount(1)
     val word2VecModel = word2Vec.fit(segDF)
-    word2VecModel.write.overwrite().save("/personal/sunlu/Project/docsSimi/Word2VecModelDF_dic")
+    word2VecModel.write.overwrite().save("/personal/sunlu/Project/docsSimi/Word2VecModelDF")
 
 
     sc.stop()
