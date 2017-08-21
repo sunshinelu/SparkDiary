@@ -1,6 +1,5 @@
 package com.evayInfo.Inglory.Project.Recommend
 
-
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
@@ -10,6 +9,7 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.functions._
 
 /**
   * Created by sunlu on 17/8/15.
@@ -88,17 +88,85 @@ info: id => urlID
   }
 
   def main(args: Array[String]) {
-    //    SetLogger
+    SetLogger
 
-    val sparkConf = new SparkConf().setAppName(s"contentModel") //.setMaster("local[*]").set("spark.executor.memory", "2g")
+    val sparkConf = new SparkConf().setAppName(s"contentModel").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
+    import spark.implicits._
+    /*
+        val ylzxTable = args(0)
+        val logsTable = args(1)
+        val docsimiTable = args(2) //
+    */
+    val ylzxTable = "yilan-total_webpage"
+    val logsTable = "t_hbaseSink"
+    val docsimiTable = "docsimi_word2vec"
 
-    val ylzxTable = args(0)
-    val logsTable = args(1)
-    val docsimiTable = args(2) //"docsimi_word2vec"
+    val ylzxRDD = GetData.getYlzxRDD(ylzxTable, sc)
+    val ylzxDS = spark.createDataset(ylzxRDD).dropDuplicates("content").drop("content")
+    //    ylzxDS.printSchema()
+    /*
+    root
+     |-- itemString: string (nullable = true)
+     |-- title: string (nullable = true)
+     |-- manuallabel: string (nullable = true)
+     |-- time: string (nullable = true)
+     |-- websitename: string (nullable = true)
+     */
+    val logsRDD = GetData.getLogsRDD(logsTable, sc)
+    val logsDS = spark.createDataset(logsRDD).na.drop(Array("userString"))
+    //    logsDS.printSchema()
+    /*
+    root
+ |-- userString: string (nullable = true)
+ |-- itemString: string (nullable = true)
+ |-- CREATE_TIME: long (nullable = true)
+ |-- value: double (nullable = true)
+     */
+    val df1 = logsDS.select("userString", "itemString", "value")
+    val df1_1 = logsDS.select("userString", "itemString")
 
+    val docsimiRDD = getDocsimiData(docsimiTable, sc)
+    val docsimiDS = spark.createDataset(docsimiRDD)
+    //    docsimiDS.printSchema()
+    /*
+    root
+     |-- id: string (nullable = true)
+     |-- simsID: string (nullable = true)
+     |-- level: double (nullable = true)
+     |-- title: string (nullable = true)
+     |-- manuallabel: string (nullable = true)
+     |-- mod: string (nullable = true)
+     |-- websitename: string (nullable = true)
+     */
 
+    val df2 = docsimiDS.select("id", "simsID", "level")
+
+    val df3 = df1.join(df2, df1("itemString") === df2("id"), "left").
+      withColumn("rating", col("value") * col("level")).drop("value").drop("level")
+    //    df3.printSchema()
+    /*
+    root
+     |-- userString: string (nullable = true)
+     |-- itemString: string (nullable = true)
+     |-- id: string (nullable = true)
+     |-- simsID: string (nullable = true)
+     |-- rating: double (nullable = true)
+     */
+
+        df3.take(5).foreach(println)
+
+    val df4 = df3.drop("itemString").drop("id").withColumnRenamed("simsID", "itemString").
+      join(df1_1, Seq("userString", "itemString"), "leftanti")
+//    df4.printSchema()
+    /*
+    root
+ |-- userString: string (nullable = true)
+ |-- itemString: string (nullable = true)
+ |-- rating: double (nullable = true)
+     */
+    df4.take(5).foreach(println)
 
 
     sc.stop()

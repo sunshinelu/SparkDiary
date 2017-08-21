@@ -43,6 +43,10 @@ object combineModel {
     //设置查询的表名
     conf.set(TableInputFormat.INPUT_TABLE, tableName) //设置输入表名 第一个参数yeeso-test-ywk_webpage
 
+    conf.set("hbase.zookeeper.quorum", "192.168.37.21,192.168.37.22,192.168.37.23")
+    conf.set("hbase.zookeeper.property.clientPort", "2181")
+    conf.set("hbase.master", "192.168.37.22:60000", "192.168.37.23:60000")
+
     //扫描整个表中指定的列和列簇
     val scan = new Scan()
     scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("userID")) //userID
@@ -83,25 +87,26 @@ object combineModel {
   }
 
   def main(args: Array[String]) {
-    //    SetLogger
+        SetLogger
 
-    val sparkConf = new SparkConf().setAppName(s"combineModel") //.setMaster("local[*]").set("spark.executor.memory", "2g")
+    val sparkConf = new SparkConf().setAppName(s"combineModel").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
-
+/*
     val alsTable = args(0)
     val contentTable = args(1)
     val itemTable = args(2)
     val userTable = args(3)
     val outputTable = args(4)
-    /*
+ */
     val alsTable = "recommender_als"
+//    val alsTable = "ylzx_cnxh"
     val contentTable = "recommender_content"
     val itemTable = "recommender_user"
     val userTable = "recommender_item"
     val outputTable = "recommender_combined"
-     */
+
 
     val alsDS = spark.createDataset(getRecommData(alsTable, 0.25, sc))
     val contenDS = spark.createDataset(getRecommData(contentTable, 0.25, sc))
@@ -109,27 +114,29 @@ object combineModel {
     val userDS = spark.createDataset(getRecommData(userTable, 0.25, sc))
 
     // 将alsDS、contenDS、itemDS和userDS合并到一个dataset中
-    val recommDS = alsDS.union(itemDS).union(userDS).union(contenDS)
-    val itemLab = recommDS.select("id", "title", "manuallabel", "mod")
+    val recommDS = alsDS.union(itemDS).union(userDS)//.union(contenDS)
+    val itemLab = recommDS.select("id", "title", "manuallabel", "mod").dropDuplicates()
 
     // 根据userID和id对rn进行求和，新增列名为rating
     val df1 = recommDS.groupBy("userID", "id").agg(sum("rn")).withColumnRenamed("sum(rn)", "rating")
 
     // 根据id将title、manuallabel和mod整合到df2中
-    val df2 = df1.join(itemLab, Seq("id"), "left").drop("rn")
+    val df2 = df1.join(itemLab, Seq("id"), "left").drop("rn").na.drop()
 
     // 根据userID进行分组，对打分进行倒序排序，获取打分前10的数据。
     val w = Window.partitionBy("userID").orderBy(col("rating").desc)
-    val df3 = df2.withColumn("rn", row_number.over(w)).where($"rn" <= 10)
+    val df3 = df2.withColumn("rn", row_number.over(w)).where($"rn" <= 5)
 
     // 增加系统时间列
-    val df4 = df3.select("userID", "id", "rating", "rn", "title", "manuallabel", "time")
+    val df4 = df3.select("userID", "id", "rating", "rn", "title", "manuallabel", "mod")
       .withColumn("systime", current_timestamp()).withColumn("systime", date_format($"systime", "yyyy-MM-dd HH:mm:ss"))
 
 
     val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
-    //如果outputTable表存在，则删除表；如果不存在则新建表。
 
+    /*
+    如果outputTable表存在，则删除表；如果不存在则新建表。
+     */
     val hAdmin = new HBaseAdmin(conf)
     if (hAdmin.tableExists(outputTable)) {
       hAdmin.disableTable(outputTable)
