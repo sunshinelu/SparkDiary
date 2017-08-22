@@ -29,7 +29,6 @@ object CheckCombined {
     val sparkConf = new SparkConf().setAppName(s"CheckCombined").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
-    import spark.implicits._
 
     val tableName = "recommender_combined"
 //    val tableName = "ylzx_cnxh"
@@ -41,7 +40,7 @@ object CheckCombined {
 
     val myID = "175786f8-1e74-4d6c-94e9-366cf1649721"
 
-    val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
+    @transient val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
     //设置查询的表名
     conf.set(TableInputFormat.INPUT_TABLE, tableName) //设置输入表名
     conf.set("hbase.zookeeper.quorum", "192.168.37.21,192.168.37.22,192.168.37.23")

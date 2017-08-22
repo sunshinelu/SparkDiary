@@ -41,7 +41,7 @@ spark-submit --class com.evayInfo.Inglory.Project.Recommend.contentModel \
 --executor-memory 4g \
 --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
 /root/lulu/Progect/recommend/SparkDiary.jar \
-yilan-total_webpage t_hbaseSink  recommender_content
+yilan-total_webpage t_hbaseSink docsimi_word2vec recommender_content
 
 ### 3. User-based Model
 
@@ -92,6 +92,17 @@ count 'recommender_item'
 思路: 通过整合ALS Model、Content-Based Model、User-based Model和Item-based Model模型构建Combined Model。
 
 结果：Combined Model的结果保存在`recommender_combined` 表中。
+
+任务提交代码：
+
+spark-submit --class com.evayInfo.Inglory.Project.Recommend.combineModel \
+--master yarn \
+--num-executors 2 \
+--executor-cores 2 \
+--executor-memory 4g \
+--jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+/root/lulu/Progect/recommend/SparkDiary.jar \
+recommender_als recommender_content  recommender_user recommender_item recommender_combined
 
 ## 2、HBase表的设计
 

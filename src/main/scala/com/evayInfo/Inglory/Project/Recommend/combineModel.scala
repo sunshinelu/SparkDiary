@@ -42,11 +42,11 @@ object combineModel {
     val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
     //设置查询的表名
     conf.set(TableInputFormat.INPUT_TABLE, tableName) //设置输入表名 第一个参数yeeso-test-ywk_webpage
-
-    conf.set("hbase.zookeeper.quorum", "192.168.37.21,192.168.37.22,192.168.37.23")
-    conf.set("hbase.zookeeper.property.clientPort", "2181")
-    conf.set("hbase.master", "192.168.37.22:60000", "192.168.37.23:60000")
-
+    /*
+        conf.set("hbase.zookeeper.quorum", "192.168.37.21,192.168.37.22,192.168.37.23")
+        conf.set("hbase.zookeeper.property.clientPort", "2181")
+        conf.set("hbase.master", "192.168.37.22:60000", "192.168.37.23:60000")
+    */
     //扫描整个表中指定的列和列簇
     val scan = new Scan()
     scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("userID")) //userID
