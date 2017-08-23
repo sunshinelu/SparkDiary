@@ -127,7 +127,7 @@ object DocsimiCountVectorizer {
           filter(_.length >= 2).map(_ (0)).toList.
           filter(word => word.length >= 2 & !stopwords.value.contains(word)).toSeq
         YlzxSchema(x._1, x._2, x._3, x._4, time, x._6, segWords)
-      }).zipWithIndex().map(x => {
+      }).zipWithUniqueId().map(x => {
       val id = x._2
       val urlID = x._1.urlID
       val title = x._1.title

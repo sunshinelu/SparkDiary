@@ -8,6 +8,8 @@
 
 方法三：使用item-based推荐算法计算item-item similarity => docsimi_item
 
+方法四：使用ALS推荐算法计算item-item similarity => docsimi_als
+
 => docsimi
 
 ## 1. 构建词典
