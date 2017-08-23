@@ -37,7 +37,7 @@ object cosineSimilarity {
     val v3 = v1.dot(v2)
     println(v3)
 
-    println(v1.norm())
+    //println(v1.norm())
     println(norm(v1))
     //    val m4 = norm(m1)
     //    println(m4)
