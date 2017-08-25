@@ -266,7 +266,7 @@ object userModel {
 
     // user-user similarity
     val userSimiRdd = userSimi.entries.map(f => UserSimi(f.i, f.j, f.value))
-    userSimiRdd.collect().foreach(println)
+    //    userSimiRdd.collect().foreach(println)
 
     // user1, user1, similar
     val rdd_app_R1 = userSimiRdd.map { f => (f.userId1, f.userId2, f.similar) }.

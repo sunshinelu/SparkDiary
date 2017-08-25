@@ -39,7 +39,11 @@ object readWriteMysql {
     //将ds1保存到testTable2表中
     val url2 = "jdbc:mysql://localhost:3306/sunluMySQL?useUnicode=true&characterEncoding=UTF-8"
     //使用"?useUnicode=true&characterEncoding=UTF-8"以防止出现存入MySQL数据库中中文乱码情况
+    //    val url = "jdbc:mysql://localhost:3306/sunluMySQL?useUnicode=true&characterEncoding=UTF-8&" +
+    //      "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+    // 使用"useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"防止出现时间上的错误
     val prop2 = new Properties()
+    prop1.setProperty("driver", "com.mysql.jdbc.Driver") //防止找不到driver
     prop2.setProperty("user", "root")
     prop2.setProperty("password", "root")
 
