@@ -10,7 +10,32 @@
 
 方法四：使用ALS推荐算法计算item-item similarity(rank值为features的长度) => docsimi_als
 
+方法五： 方法四：使用LDA算法计算文章相似性 => docsimi_lda
+
 => docsimi
+
+方法四：使用ALS推荐算法计算item-item similarity(rank值为features的长度) => docsimi_als
+
+    spark-submit \
+    --class com.evayInfo.Inglory.Project.DocsSimilarity.DocsimiALS \
+    --master yarn \
+    --num-executors 2 \
+    --executor-cores 2 \
+    --executor-memory 4g \
+    --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+    /root/lulu/Progect/docsSimi/SparkDiary.jar \
+    yilan-total_webpage t_hbaseSink docsimi_als
+
+
+
+
+
+
+
+
+
+
+
 
 ## 1. 构建词典
 

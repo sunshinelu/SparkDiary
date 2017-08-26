@@ -24,10 +24,7 @@ import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.{SparkConf, SparkContext}
 
-/**
- * Created by sunlu on 17/8/21.
- */
-object docsSimilarityV2 {
+object docsSimilarityV3 {
 
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)
@@ -68,10 +65,10 @@ object docsSimilarityV2 {
     val todayL = dateFormat.parse(today).getTime
     //获取N天的时间，并把时间转换成long类型
     val cal: Calendar = Calendar.getInstance()
-    val N = 1
+    val N = 6
     //  cal.add(Calendar.DATE, -N)//获取N天前或N天后的时间，-2为2天前
-    cal.add(Calendar.YEAR, -N) //获取N年或N年后的时间，-2为2年前
-    //    cal.add(Calendar.MONTH, -N) //获取N月或N月后的时间，-2为2月前
+//    cal.add(Calendar.YEAR, -N) //获取N年或N年后的时间，-2为2年前
+        cal.add(Calendar.MONTH, -N) //获取N月或N月后的时间，-2为2月前
 
     val nDaysAgo = dateFormat.format(cal.getTime())
     val nDaysAgoL = dateFormat.parse(nDaysAgo).getTime
@@ -284,6 +281,4 @@ object docsSimilarityV2 {
     sc.stop()
     spark.stop()
   }
-
-
 }

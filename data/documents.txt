@@ -1,4 +1,6 @@
-today is a good day!
-I am a girl.
-today is not a good day!
-hello word!
+today is a good day
+I am a girl
+today is not a good day
+hello word
+I am not a boy
+mom I love you

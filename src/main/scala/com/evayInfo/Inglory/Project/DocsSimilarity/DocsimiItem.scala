@@ -11,6 +11,7 @@ import org.apache.hadoop.hbase.protobuf.ProtobufUtil
 import org.apache.hadoop.hbase.util.{Base64, Bytes}
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.ml.feature.StringIndexer
+import org.apache.spark.mllib.linalg.distributed.{CoordinateMatrix, MatrixEntry}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Row, SparkSession}
@@ -38,6 +39,8 @@ object DocsimiItem {
   case class LogView(CREATE_BY_ID: String, CREATE_TIME: Long, REQUEST_URI: String, PARAMS: String)
 
   case class LogView2(userString: String, itemString: String, CREATE_TIME: Long, value: Double)
+  case class ItemSimi( itemid1: Long, itemid2: Long, similar: Double)
+
 
   def getYlzxRDD(ylzxTable: String, sc: SparkContext): RDD[YlzxSchema] = {
     //定义时间格式
@@ -205,9 +208,14 @@ object DocsimiItem {
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
+    /*
     val ylzxTable = args(0)
     val logsTable = args(1)
-    val outputTable = args(2)
+    val docSimiTable = args(2)
+*/
+    val ylzxTable = "yilan-total_webpage"
+    val logsTable = "t_hbaseSink"
+    val docSimiTable = "docsimi_item"
 
     val ylzxRDD = getYlzxRDD(ylzxTable, sc)
     val ylzxDF = spark.createDataset(ylzxRDD).dropDuplicates("content").drop("content")
@@ -226,13 +234,28 @@ object DocsimiItem {
       withColumn("urlID", ds3("urlID").cast("long")).
       withColumn("rating", ds3("rating").cast("double"))
 
-
     //Min-Max Normalization[-1,1]
     val minMax = ds4.agg(max("rating"), min("rating")).withColumnRenamed("max(rating)", "max").withColumnRenamed("min(rating)", "min")
     val maxValue = minMax.select("max").rdd.map { case Row(d: Double) => d }.first()
     val minValue = minMax.select("min").rdd.map { case Row(d: Double) => d }.first
     //limit the values to 4 digit
     val ds5 = ds4.withColumn("norm", bround((((ds4("rating") - minValue) / (maxValue - minValue)) * 2 - 1), 4))
+
+    //RDD to RowRDD
+    val rdd1 = ds5.select("userID", "urlID", "norm").rdd.
+      map { case Row(user: Long, item: Long, value: Double) => MatrixEntry(user, item, value) }
+
+    //calculate similarities
+    val ratings = new CoordinateMatrix(rdd1)
+    val itemSimi = ratings.toRowMatrix.columnSimilarities(0.1)
+    val itemSimiRdd = itemSimi.entries.map(f => ItemSimi(f.i, f.j, f.value)).
+      union(itemSimi.entries.map(f => ItemSimi(f.j, f.i, f.value)))
+
+    val itemSimiDF = spark.createDataset(itemSimiRdd)
+    val itemLab = ds5.select("itemString", "urlID").dropDuplicates
+    val itemid1Lab = itemLab.withColumnRenamed("urlID","itemid1")
+    val itemid2Lab = itemLab.withColumnRenamed("urlID","itemid2").withColumnRenamed("itemString", "url2id")
+
 
 
     sc.stop()

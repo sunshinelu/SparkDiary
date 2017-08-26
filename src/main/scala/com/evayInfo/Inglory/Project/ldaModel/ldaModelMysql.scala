@@ -47,7 +47,7 @@ object ldaModelMysql {
 
 
     //load stopwords file
-    val stopwordsFile = "data/Stopwords.dic"
+    val stopwordsFile = "file:///D:\\Workspace\\IDEA\\GitHub\\SparkDiary\\data\\Stopwords.dic"
     val stopwords = sc.textFile(stopwordsFile).collect().toList
 
     //定义UDF
