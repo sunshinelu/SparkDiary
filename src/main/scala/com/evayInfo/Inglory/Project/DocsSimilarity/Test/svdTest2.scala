@@ -419,6 +419,62 @@ sc.parallelize(result3.toArray).collect().foreach(println)
 {5=3;0.7037227086623596}
  */
 
+
+    val result4 = new ArrayBuffer[String]()
+
+    indexList.foreach(x => {
+      val docRowArr = docVec.lookup(x).head.toArray
+      val docRowVec = Matrices.dense(docRowArr.length, 1, docRowArr)
+      val docScores = normalizedUS.multiply(docRowVec).rows
+      val id  = docScores.map(_.index)
+      val score = docScores.map(_.vector.apply(0).toDouble)
+      val zipD = id.zip(score).top(3).foreach( y => {
+        result4 ++= Array(x + ";" + y._1 + ";" + y._2)
+
+      }
+      )
+
+
+    })
+    println("result4 is: ")
+    println(result4)
+/*
+ArrayBuffer(0;5;-0.09482317677459391, 0;4;0.9987693263933843, 0;3;0.6405442064048741, 2;5;0.8899743117710295, 2;4;0.4151964130709145, 2;3;0.9502791880424233, 4;5;-0.04533325657110171, 4;4;1.0, 4;3;0.6778422678249061, 1;5;-0.9954184549119085, 1;4;0.14064158846868094, 1;3;-0.6325670073225795, 3;5;0.7037227086431986, 3;4;0.6778422678249061, 3;3;1.0, 5;5;1.0, 5;4;-0.04533325657110171, 5;3;0.7037227086431986)
+
+ */
+    val result4RDD = sc.parallelize(result4).map(_.split(";")).map(x => {
+      val id = x(0)
+      val simiId = x(1)
+      val simiScore = x(2)
+      (id, simiId,simiScore )
+    })
+    result4RDD.collect().foreach(println)
+/*
+(0,5,-0.09482317677459391)
+(0,4,0.9987693263933843)
+(0,3,0.6405442064048741)
+(2,5,0.8899743117710295)
+(2,4,0.4151964130709145)
+(2,3,0.9502791880424233)
+(4,5,-0.04533325657110171)
+(4,4,1.0)
+(4,3,0.6778422678249061)
+(1,5,-0.9954184549119085)
+(1,4,0.14064158846868094)
+(1,3,-0.6325670073225795)
+(3,5,0.7037227086431986)
+(3,4,0.6778422678249061)
+(3,3,1.0)
+(5,5,1.0)
+(5,4,-0.04533325657110171)
+(5,3,0.7037227086431986)
+
+ */
+
+
+
+
+
     val test = for (i <- indexList) {
       val docRowArr = docVec.lookup(i).head.toArray
       val docRowVec = Matrices.dense(docRowArr.length, 1, docRowArr)
