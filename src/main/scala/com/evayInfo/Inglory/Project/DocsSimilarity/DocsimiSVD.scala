@@ -36,7 +36,7 @@ object DocsimiSVD {
     val docSimiTable = "docsimi_svd"
 
     val ylzxRDD = DocsimiCountVectorizer.getYlzxRDD(ylzxTable, sc)
-    val ylzxDS = spark.createDataset(ylzxRDD).randomSplit(Array(0.01, 0.99))(0)
+    val ylzxDS = spark.createDataset(ylzxRDD)//.randomSplit(Array(0.01, 0.99))(0)
 
     println("ylzxDS的数量为：" + ylzxDS.count())
 
