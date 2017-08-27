@@ -419,7 +419,7 @@ sc.parallelize(result3.toArray).collect().foreach(println)
 {5=3;0.7037227086623596}
  */
 
-
+// result4 is the best one! for now....
     val result4 = new ArrayBuffer[String]()
 
     indexList.foreach(x => {
