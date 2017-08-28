@@ -3,17 +3,20 @@ package com.evayInfo.Inglory.Project.DocsSimilarity.Test
 import java.util
 
 import breeze.linalg.{DenseMatrix => BDenseMatrix, SparseVector => BSparseVector}
-import com.evayInfo.Inglory.Project.DocsSimilarity.DocsimiSVD.rowsNormalized
-import org.apache.commons.collections.iterators.ArrayListIterator
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.feature.{CountVectorizer, CountVectorizerModel, IDF}
 import org.apache.spark.ml.linalg.{Vector => MLVector}
-import org.apache.spark.mllib.linalg.distributed.{IndexedRow, IndexedRowMatrix, RowMatrix}
-import org.apache.spark.mllib.linalg.{Matrices, Matrix, SingularValueDecomposition, Vectors, Vector => MLLibVector}
+import org.apache.spark.mllib.linalg.distributed.{IndexedRow, IndexedRowMatrix}
+import org.apache.spark.mllib.linalg.{Matrices, Matrix, Vector => MLLibVector, Vectors}
 import org.apache.spark.sql.{Row, SparkSession}
 
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ArrayBuffer
+
+/**
+ * Created by sunlu on 17/8/26.
+ * 是哟功能测试数据构建SVD模型计算文本相似性
+ */
 
 object svdTest2 {
 
@@ -32,9 +35,11 @@ object svdTest2 {
     val sc = spark.sparkContext
     import spark.implicits._
 
-    val documents = sc.textFile("file:///D:\\Workspace\\IDEA\\GitHub\\SparkDiary\\data\\documents.txt").map(_.split(" ").toSeq).
-      zipWithUniqueId().toDF("segWords", "id")
+    //    val documents = sc.textFile("file:///D:\\Workspace\\IDEA\\GitHub\\SparkDiary\\data\\documents.txt").map(_.split(" ").toSeq).
+    //      zipWithUniqueId().toDF("segWords", "id")
 
+    val documents = sc.textFile("file:///Users/sunlu/Documents/workspace/IDEA/Github/SparkDiary/data/documents.txt").map(_.split(" ").toSeq).
+      zipWithUniqueId().toDF("segWords", "id")
 
     val vocabSize: Int = 20000
 
@@ -472,7 +477,42 @@ ArrayBuffer(0;5;-0.09482317677459391, 0;4;0.9987693263933843, 0;3;0.640544206404
  */
 
 
+    val indexList2 = docVec.map(_._1)
 
+    val mapTest = indexList.flatMap(x => {
+      val docRowArr = docVec.lookup(x).head.toArray
+      val docRowVec = Matrices.dense(docRowArr.length, 1, docRowArr)
+      val docScores = normalizedUS.multiply(docRowVec).rows
+      val id = docScores.map(_.index).collect().toList
+      val score = docScores.map(_.vector.apply(0).toDouble).collect().toList
+      val zipD = id.zip(score).map(y => {
+        (x, y._1, y._2)
+      }
+      ).filter(_._3 >= 0.5) //.map(x => {(x._1 + ";" + x._2 + ";" + x._3)})
+      zipD
+
+    })
+    println("=======")
+    println(mapTest)
+    val mapTestRDD = sc.parallelize(mapTest)
+    mapTestRDD.collect().foreach(println)
+
+
+    val mapTest2 = indexList2.flatMap(x => {
+      val docRowArr = docVec.lookup(x).head.toArray
+      val docRowVec = Matrices.dense(docRowArr.length, 1, docRowArr)
+      val docScores = normalizedUS.multiply(docRowVec).rows
+      val id = docScores.map(_.index).collect().toList
+      val score = docScores.map(_.vector.apply(0).toDouble).collect().toList
+      val zipD = id.zip(score).map(y => {
+        (x, y._1, y._2)
+      }
+      ).filter(_._3 >= 0.5) //.map(x => {(x._1 + ";" + x._2 + ";" + x._3)})
+      zipD
+
+    })
+    println("=====mapTest2======")
+    mapTest2.collect().foreach(println)
 
 
     val test = for (i <- indexList) {
@@ -601,5 +641,16 @@ ArrayBuffer(0;5;-0.09482317677459391, 0;4;0.9987693263933843, 0;3;0.640544206404
     })
   }
 
+  /**
+   * Returns a matrix where each row is divided by its length.
+   */
+  def rowsNormalized(mat: BDenseMatrix[Double]): BDenseMatrix[Double] = {
+    val newMat = new BDenseMatrix[Double](mat.rows, mat.cols)
+    for (r <- 0 until mat.rows) {
+      val length = math.sqrt((0 until mat.cols).map(c => mat(r, c) * mat(r, c)).sum)
+      (0 until mat.cols).foreach(c => newMat.update(r, c, mat(r, c) / length))
+    }
+    newMat
+  }
 
 }
