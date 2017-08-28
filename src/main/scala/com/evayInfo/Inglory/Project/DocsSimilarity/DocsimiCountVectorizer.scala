@@ -110,7 +110,7 @@ object DocsimiCountVectorizer {
       map { x => {
         val urlID_1 = Bytes.toString(x._1)
         val title_1 = Bytes.toString(x._2)
-        val content_1 = Bytes.toString(x._3)
+        val content_1 = Bytes.toString(x._3).replace("&nbsp;", "").replaceAll("\\uFFFD", "").replaceAll("([\\ud800-\\udbff\\udc00-\\udfff])", "")
         val label_1 = Bytes.toString(x._4)
         //时间格式转化
         val time_1 = Bytes.toLong(x._5)

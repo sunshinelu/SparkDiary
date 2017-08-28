@@ -1,6 +1,8 @@
-package com.evayInfo.Inglory.Project.DocsSimilarity
+package com.evayInfo.Inglory.Project.DocsSimilarity.Test
+
 
 import breeze.linalg.{DenseMatrix => BDenseMatrix, SparseVector => BSparseVector}
+import com.evayInfo.Inglory.Project.DocsSimilarity.{DocsimiCountVectorizer, DocsimiUtil}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.{HBaseAdmin, Put}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
@@ -19,15 +21,14 @@ import org.apache.spark.sql.{Row, SparkSession}
 
 
 /**
- * Created by sunlu on 17/8/26.
- * 构建SVD模型计算文本相似性
+ * Created by sunlu on 17/8/28.
  *
  * 使用RDD保存相似性结果
  *
+ * spark-shell 测试成功！
  *
  */
-
-object DocsimiSVD {
+object DocsimiSVDTest1 {
 
   case class DocsimiIdSchema(doc1Id: Long, doc2Id: Long, value: Double)
 
@@ -35,7 +36,7 @@ object DocsimiSVD {
 
     DocsimiUtil.SetLogger
 
-    val sparkConf = new SparkConf().setAppName(s"DocsimiSVD") //.setMaster("local[*]").set("spark.executor.memory", "2g")
+    val sparkConf = new SparkConf().setAppName(s"DocsimiSVDTest1") //.setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
@@ -50,7 +51,7 @@ object DocsimiSVD {
     */
 
     val ylzxRDD = DocsimiCountVectorizer.getYlzxRDD(ylzxTable, sc)
-    val ylzxDS = spark.createDataset(ylzxRDD) //.randomSplit(Array(0.01, 0.99))(0)
+    val ylzxDS = spark.createDataset(ylzxRDD).randomSplit(Array(0.01, 0.99))(0)
 
     val vocabSize: Int = 20000
 
@@ -121,6 +122,7 @@ object DocsimiSVD {
     val docsimiDS = spark.createDataset(docSimiRDD)
     val ds1 = docsimiDS.join(doc1IdLab, Seq("doc1Id"), "left")
     val ds2 = ds1.join(doc2IdLab, Seq("doc2Id"), "left")
+
 
     //对dataframe进行分组排序，并取每组的前5个
     val w = Window.partitionBy("doc1Id").orderBy(col("value").desc)
@@ -239,5 +241,6 @@ object DocsimiSVD {
       new IndexedRow(indxed, Vectors.dense(array.map(_ / length)))
     })
   }
+
 
 }
