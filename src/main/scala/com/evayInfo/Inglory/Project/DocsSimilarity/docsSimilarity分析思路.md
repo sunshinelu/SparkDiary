@@ -56,7 +56,7 @@
 
 
 
-
+export JAVA_OPTIONS=-XX:-UseGCOverheadLimit
 
 
 
