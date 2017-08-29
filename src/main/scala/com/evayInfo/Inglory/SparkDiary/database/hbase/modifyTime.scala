@@ -12,7 +12,7 @@ import org.apache.hadoop.hbase.util.{Base64, Bytes}
 import org.apache.hadoop.io.Text
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SaveMode, SparkSession}
 
 /**
   * Created by sunlu on 25/8/17.
@@ -39,6 +39,7 @@ object modifyTime {
     val sparkConf = new SparkConf().setAppName(s"modifyTime").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
+    import spark.implicits._
 
 
     val ylzxTable = "yilan-total_webpage"
@@ -74,9 +75,10 @@ object modifyTime {
       }
       }.filter(_._2.toString.length == 19)
 
-     // val hbaseDF = hbaseRDD.toDF("rowkey", "time").coalesce(1).write.mode(SaveMode.Overwrite).csv("file:///D:\\Workspace\\IDEA\\GitHub\\SparkDiary\\result\\yilan-total_webpage_Rowkey")
-//        println("yilan-total_webpage表中时间列toLong的长度为19的数量为：" + hbaseRDD.count())
+//      val hbaseDF = hbaseRDD.toDF("rowkey", "time").coalesce(1).write.mode(SaveMode.Overwrite).csv("file:///D:\\Workspace\\IDEA\\GitHub\\SparkDiary\\result\\yilan-total_webpage_Rowkey2")
+        println("yilan-total_webpage表中时间列toLong的长度为19的数量为：" + hbaseRDD.count())
     //yilan-total_webpage表中时间列toLong的长度为19的数量为：66002
+//yilan-total_webpage表中时间列toLong的长度为19的数量为：2307
 
     val hbaseRDD3 = hBaseRDD.map { case (k, v) => {
       val rowkey = k.get()
@@ -93,8 +95,12 @@ object modifyTime {
       }.filter(_._2.toString.length == 13)
     println("修改后：yilan-total_webpage表中时间列toLong的长度为13的数量为：" + hbaseRDD3.count())
 //    修改后：yilan-total_webpage表中时间列toLong的长度为13的数量为：125659
+//修改后：yilan-total_webpage表中时间列toLong的长度为13的数量为：125659
+    //修改后：yilan-total_webpage表中时间列toLong的长度为13的数量为：127966
 
+    /*
     val rowkeyList = hbaseRDD.map(_._1).collect().toList
+
     val hbaseRDD2 = hBaseRDD.map { case (k, v) => {
       val rowkey = k.get()
       val time = v.getValue(Bytes.toBytes("f"), Bytes.toBytes("mod")) //时间列
@@ -133,7 +139,7 @@ object modifyTime {
       put.add(Bytes.toBytes("f"), Bytes.toBytes("mod"), Bytes.toBytes(x._2.toLong))
       (new ImmutableBytesWritable, put)
     }).saveAsNewAPIHadoopDataset(jobConf)
-
+*/
 
     /*
     count 'yilan-total_webpage'
