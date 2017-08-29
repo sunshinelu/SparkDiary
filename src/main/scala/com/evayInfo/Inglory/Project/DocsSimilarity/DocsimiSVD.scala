@@ -11,8 +11,8 @@ import org.apache.hadoop.io.Text
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.feature.{CountVectorizer, CountVectorizerModel, IDF}
 import org.apache.spark.ml.linalg.{Vector => MLVector}
-import org.apache.spark.mllib.linalg.distributed.{IndexedRow, IndexedRowMatrix}
-import org.apache.spark.mllib.linalg.{Matrices, Matrix, Vector => MLLibVector, Vectors}
+import org.apache.spark.mllib.linalg.distributed.{IndexedRow, IndexedRowMatrix, MatrixEntry}
+import org.apache.spark.mllib.linalg.{Matrix, Vector => MLLibVector, Vectors}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Row, SparkSession}
@@ -92,33 +92,60 @@ object DocsimiSVD {
     val US: IndexedRowMatrix = multiplyByDiagonalIndexedRowMatrix(svd.U, svd.s)
     val normalizedUS: IndexedRowMatrix = distributedIndexedRowNormalized(US)
 
-    val docVec = normalizedUS.rows.map { vec => {
-      val index = vec.index
-      val docRowArr = vec.vector.toArray
-      val docRowVec = Matrices.dense(docRowArr.length, 1, docRowArr)
-      (index, docRowVec)
+    // calculate column similarity using transposed normalizedUS
+    val normalizedUS_t = normalizedUS.toCoordinateMatrix.transpose()
+    val threshhold = 0.3
+    val U_sim = normalizedUS_t.toRowMatrix.columnSimilarities(threshhold)
+    val U_sim_filter = U_sim.entries.filter { case MatrixEntry(i, j, u) => u >= threshhold && u <= 1 }
+
+    val docsimi1 = U_sim_filter.map { case MatrixEntry(doc1Id: Long, doc2Id: Long, value: Double) => {
+      val doc1 = doc1Id
+      val doc2 = doc2Id
+      //保留sims中有效数字
+      val sims = f"$value%1.5f".toDouble
+      DocsimiIdSchema(doc1, doc2, sims)
     }
     }
-    val indexList = docVec.map(_._1).collect().toList
-    val docSimi = indexList.flatMap(x => {
-      val docRowArr = docVec.lookup(x).head.toArray
-      val docRowVec = Matrices.dense(docRowArr.length, 1, docRowArr)
-      val docScores = normalizedUS.multiply(docRowVec).rows
-      val id = docScores.map(_.index).collect().toList
-      val score = docScores.map(_.vector.apply(0).toDouble).collect().toList
-      val zipD = id.zip(score).map(y => {
-        DocsimiIdSchema(x, y._1, y._2)
-      }
-      ).filter(x => {
-        x.value >= 0.5 & x.value <= 0.999
-      }) //.map(x => {(x._1 + ";" + x._2 + ";" + x._3)})
-      zipD
+    val docsimi2 = U_sim_filter.map { case MatrixEntry(doc1Id: Long, doc2Id: Long, value: Double) => {
+      val doc1 = doc2Id
+      val doc2 = doc1Id
+      //保留sims中有效数字
+      val sims = f"$value%1.5f".toDouble
+      DocsimiIdSchema(doc1, doc2, sims)
+    }
+    }
 
-    })
+    val docsimiRDD = docsimi1.union(docsimi2)
 
-    val docSimiRDD = sc.parallelize(docSimi)
+    /*
+        val docVec = normalizedUS.rows.map { vec => {
+          val index = vec.index
+          val docRowArr = vec.vector.toArray
+          val docRowVec = Matrices.dense(docRowArr.length, 1, docRowArr)
+          (index, docRowVec)
+        }
+        }
+        val indexList = docVec.map(_._1).collect().toList
+        val docSimi = indexList.flatMap(x => {
+          val docRowArr = docVec.lookup(x).head.toArray
+          val docRowVec = Matrices.dense(docRowArr.length, 1, docRowArr)
+          val docScores = normalizedUS.multiply(docRowVec).rows
+          val id = docScores.map(_.index).collect().toList
+          val score = docScores.map(_.vector.apply(0).toDouble).collect().toList
+          val zipD = id.zip(score).map(y => {
+            DocsimiIdSchema(x, y._1, y._2)
+          }
+          ).filter(x => {
+            x.value >= 0.5 & x.value <= 0.999
+          }) //.map(x => {(x._1 + ";" + x._2 + ";" + x._3)})
+          zipD
 
-    val docsimiDS = spark.createDataset(docSimiRDD)
+        })
+
+        val docSimiRDD = sc.parallelize(docSimi)
+    */
+
+    val docsimiDS = spark.createDataset(docsimiRDD)
     val ds1 = docsimiDS.join(doc1IdLab, Seq("doc1Id"), "left")
     val ds2 = ds1.join(doc2IdLab, Seq("doc2Id"), "left")
 
