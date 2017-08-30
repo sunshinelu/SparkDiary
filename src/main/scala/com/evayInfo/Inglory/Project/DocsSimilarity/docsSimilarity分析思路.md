@@ -14,6 +14,8 @@
 
 方法六：使用SVD算法计算文章相似性 => docsimi_svd
 
+方法七：使用Jaccard算法（MinHashLSH）计算文章相似性 => docsimi_Jaccard
+
 => docsimi
 
 表结构：
@@ -54,6 +56,27 @@
     /root/lulu/Progect/docsSimi/SparkDiary.jar \
     yilan-total_webpage docsimi_svd
 
+方法七：使用Jaccard算法（MinHashLSH）计算文章相似性 => docsimi_Jaccard
+
+spark-submit \
+--class com.evayInfo.Inglory.Project.DocsSimilarity.DocsimiJaccard \
+--master yarn \
+--num-executors 8 \
+--executor-cores 4 \
+--executor-memory 6g \
+--conf spark.default.parallelism=100 \
+--conf spark.storage.memoryFraction=0.5 \
+--conf spark.shuffle.memoryFraction=0.4 \
+--jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+/root/lulu/Progect/docsSimi/SparkDiary.jar \
+yilan-total_webpage docsimi_jaccard
+
+
+ylzxRDD.count
+res0: Long = 105955
+
+count 'docsimi_jaccard'
+=> 264318
 
 
 export JAVA_OPTIONS=-XX:-UseGCOverheadLimit

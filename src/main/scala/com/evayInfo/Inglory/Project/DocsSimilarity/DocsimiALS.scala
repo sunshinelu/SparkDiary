@@ -41,7 +41,7 @@ object DocsimiALS {
     val logsTable = args(1)
     val docSimiTable = args(2)
 
-    val ylzxRDD = DocsimiUtil.getYlzxRDD(ylzxTable, sc)
+    val ylzxRDD = DocsimiUtil.getYlzxRDD(ylzxTable, 20, sc)
     val ylzxDS = spark.createDataset(ylzxRDD).dropDuplicates("content").drop("content")
 
     val logsRDD = DocsimiUtil.getLogsRDD(logsTable, sc)
