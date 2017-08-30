@@ -78,6 +78,52 @@ res0: Long = 105955
 count 'docsimi_jaccard'
 => 264318
 
+count 'docsimi_jaccard'
+=> 252262
+
+get 'docsimi_jaccard','fef4e4b8-6a4a-4b5d-8356-72050e3480d9::score=1'
+
+    hbase(main):002:0> get 'docsimi_jaccard','fef4e4b8-6a4a-4b5d-8356-72050e3480d9::score=1'
+    COLUMN                    CELL
+     info:id                  timestamp=1504086034736, value=fef4e4b8-6a4a-4b5d-8356-72050e3480d9
+     info:level               timestamp=1504086034736, value=1
+     info:manuallabel         timestamp=1504086034736, value=\xE4\xBA\xBA\xE6\x89\x8D
+     info:mod                 timestamp=1504086034736, value=2017-08-21
+     info:simsID              timestamp=1504086034736, value=62980453-ef59-4e43-946d-5c1672b745b1
+     info:simsScore           timestamp=1504086034736, value=0.8834745762711864
+     info:t                   timestamp=1504086034736, value=\xE6\xBB\xA8\xE5\xB7\x9E\xE6\x83\xA0\xE
+                              6\xB0\x91\xE5\x8E\xBF\xE6\x9D\x8E\xE5\xBA\x84\xE9\x95\x87\xE6\x89\x93\
+                              xE9\x80\xA0\xE5\x85\xA8\xE5\x9B\xBD\xE7\xBB\xB3\xE7\xBD\x91\xE7\x89\xB
+                              9\xE8\x89\xB2\xE5\xB0\x8F\xE9\x95\x87
+     info:websitename         timestamp=1504086034736, value=\xE5\x87\xA4\xE5\x87\xB0\xE7\xBD\x91
+    8 row(s) in 0.0960 seconds
+
+
+
+get 'docsimi_jaccard','fef4e4b8-6a4a-4b5d-8356-72050e3480d9::score=2'
+
+    hbase(main):003:0> get 'docsimi_jaccard','fef4e4b8-6a4a-4b5d-8356-72050e3480d9::score=2'
+    COLUMN                    CELL
+     info:id                  timestamp=1504086034736, value=fef4e4b8-6a4a-4b5d-8356-72050e3480d9
+     info:level               timestamp=1504086034736, value=2
+     info:manuallabel         timestamp=1504086034736, value=\xE6\x94\xBF\xE5\x8A\xA1
+     info:mod                 timestamp=1504086034736, value=2017-05-22
+     info:simsID              timestamp=1504086034736, value=cn.gov.tjec.www:http/newzixun/61011.htm
+     info:simsScore           timestamp=1504086034736, value=0.8858131487889274
+     info:t                   timestamp=1504086034736, value=\xE4\xBF\x9D\xE7\xA8\x8E\xE5\x8C\xBA\xE
+                              5\x8A\xA0\xE9\x80\x9F\xE5\xB8\x83\xE5\xB1\x80\xE4\xBA\xA7\xE5\x9F\x8E\
+                              xE8\x9E\x8D\xE5\x90\x88
+     info:websitename         timestamp=1504086034736, value=\xE5\xA4\xA9\xE6\xB4\xA5\xE5\xB8\x82\xE
+                              5\xB7\xA5\xE4\xB8\x9A\xE5\x92\x8C\xE4\xBF\xA1\xE6\x81\xAF\xE5\x8C\x96\
+                              xE5\xA7\x94\xE5\x91\x98\xE4\xBC\x9A
+
+
+http://www.sdny.gov.cn/snzx/dfdt/201708/t20170804_676565.html
+
+simi:
+
+http://news.ifeng.com/a/20170821/51702644_0.shtml
+http://www.tjec.gov.cn/newzixun/61011.htm
 
 export JAVA_OPTIONS=-XX:-UseGCOverheadLimit
 
