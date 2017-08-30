@@ -66,6 +66,14 @@ object DocsimiJaccard {
     val mhModel = mh.fit(tfidfDF)
     val mhTransformed = mhModel.transform(tfidfDF)
 
+    /*
+    // 使用工作流：尚未测试，有错误
+     val pipeline = new Pipeline().setStages(Array(vocabModel, idfModel,mhModel))
+     val model = pipeline.fit(ylzxDS)
+     val pipelineDF = model.transform(ylzxDS)
+     model.approxSimilarityJoin(mhTransformed, mhTransformed, 0.95)
+     */
+
     val simiDF = mhModel.approxSimilarityJoin(mhTransformed, mhTransformed, 0.95)
 
     val colRenamed = Seq("doc1Id", "doc1", "doc2Id", "doc2", "doc2_title",
