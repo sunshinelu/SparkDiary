@@ -8,21 +8,20 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDescriptor, TableName}
 import org.apache.hadoop.io.Text
 import org.apache.spark.SparkConf
-import org.apache.spark.ml.feature.{CountVectorizer, CountVectorizerModel, IDF, MinHashLSH}
+import org.apache.spark.ml.feature.{BucketedRandomProjectionLSH, CountVectorizer, CountVectorizerModel, IDF}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 
 /**
- * Created by sunlu on 17/8/30.
+ * Created by sunlu on 17/8/31.
  */
-object DocsimiJaccard {
-
+object DocsimiEuclidean {
   def main(args: Array[String]) {
 
     DocsimiUtil.SetLogger
 
-    val sparkConf = new SparkConf().setAppName(s"DocsimiJaccard") //.setMaster("local[*]").set("spark.executor.memory", "2g")
+    val sparkConf = new SparkConf().setAppName(s"DocsimiEuclidean") //.setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
@@ -31,11 +30,14 @@ object DocsimiJaccard {
     val docSimiTable = args(1)
     /*
     val ylzxTable =  "yilan-total_webpage"
-    val docSimiTable = "docsimi_jaccard"
+    val docSimiTable = "docsimi_euclidean"
 */
 
-    val ylzxRDD = DocsimiUtil.getYlzxSegRDD(ylzxTable, 20, sc)
+    val ylzxRDD = DocsimiUtil.getYlzxSegRDD(ylzxTable, 1, sc)
     val ylzxDS = spark.createDataset(ylzxRDD) //.randomSplit(Array(0.01, 0.99))(0)
+
+    println("ylzxDS的数据量为：" + ylzxDS.count())
+    //    ylzxDS的数据量为：95256
 
     val vocabSize: Int = 20000
 
@@ -47,44 +49,43 @@ object DocsimiJaccard {
       fit(ylzxDS)
 
     val docTermFreqs = vocabModel.transform(ylzxDS)
-
-    //    val doc2IdLab = docTermFreqs.select("id", "urlID", "title", "label", "websitename", "time").withColumnRenamed("id", "doc2Id").withColumnRenamed("urlID", "doc2")
-    //    val doc1IdLab = docTermFreqs.select("id", "urlID").withColumnRenamed("id", "doc1Id").withColumnRenamed("urlID", "doc1")
-
     //    docTermFreqs.cache()
 
     val idf = new IDF().setInputCol("features").setOutputCol("tfidfVec")
     val idfModel = idf.fit(docTermFreqs)
-    val tfidfDF = idfModel.transform(docTermFreqs) //.select("id", "tfidfVec")
+    val tfidfDF = idfModel.transform(docTermFreqs).select("id", "tfidfVec")
     //    tfidfDF.cache()
-
-    val mh = new MinHashLSH().
+    val brp = new BucketedRandomProjectionLSH().
+      setBucketLength(2.0).
       setNumHashTables(3).
       setInputCol("tfidfVec").
-      setOutputCol("mhVec")
+      setOutputCol("brpVec")
 
-    val mhModel = mh.fit(tfidfDF)
-    val mhTransformed = mhModel.transform(tfidfDF)
+    val brpModel = brp.fit(tfidfDF)
+    // Feature Transformation
+    val brpTransformed = brpModel.transform(tfidfDF)
+    val simiDF = brpModel.approxSimilarityJoin(brpTransformed, brpTransformed, 2.5)
 
-    /*
-    // 使用工作流：尚未测试，有错误
-     val pipeline = new Pipeline().setStages(Array(vocabModel, idfModel,mhModel))
-     val model = pipeline.fit(ylzxDS)
-     val pipelineDF = model.transform(ylzxDS)
-     model.approxSimilarityJoin(mhTransformed, mhTransformed, 0.95)
-     */
-
-    val simiDF = mhModel.approxSimilarityJoin(mhTransformed, mhTransformed, 1.0)
-
-    val colRenamed = Seq("doc1Id", "doc1", "doc2Id", "doc2", "doc2_title",
-      "doc2_label", "doc2_websitename", "doc2_time", "distCol")
-    val simiDF2 = simiDF.select("datasetA.id", "datasetA.urlID", "datasetB.id", "datasetB.urlID", "datasetB.title",
-      "datasetB.label", "datasetB.websitename", "datasetB.time", "distCol").toDF(colRenamed: _*).
+    val colRenamed1 = Seq("doc1Id", "doc2Id", "distCol")
+    val simiDF2 = simiDF.select("datasetA.id", "datasetB.id", "distCol").toDF(colRenamed1: _*).
       filter($"doc1Id" =!= $"doc2Id")
 
+    val doc2IdLab = docTermFreqs.select("id", "urlID", "title", "label", "websitename", "time").
+      withColumnRenamed("id", "doc2Id").withColumnRenamed("urlID", "doc2")
+    val doc1IdLab = docTermFreqs.select("id", "urlID").
+      withColumnRenamed("id", "doc1Id").withColumnRenamed("urlID", "doc1")
+
+    val joinedDF = simiDF2.join(doc1IdLab, Seq("doc1Id"), "left").na.drop().
+      join(doc2IdLab, Seq("doc2Id"), "left").na.drop()
+
+    val colRenamed2 = Seq("doc1Id", "doc1", "doc2Id", "doc2", "doc2_title",
+      "doc2_label", "doc2_websitename", "doc2_time", "distCol")
+    val renamedDF = joinedDF.select("doc1Id", "doc1", "doc2Id", "doc2", "title", "label", "websitename", "time", "distCol").
+      toDF(colRenamed2: _*).
+      filter($"distCol" > 0)
     //对dataframe进行分组排序，并取每组的前5个
     val w = Window.partitionBy("doc1Id").orderBy(col("distCol").asc)
-    val sortedDF = simiDF2.withColumn("rn", row_number.over(w)).where(col("rn") <= 5)
+    val sortedDF = renamedDF.withColumn("rn", row_number.over(w)).where(col("rn") <= 5)
 
     val resultDF = sortedDF.select("doc1", "doc2", "distCol", "rn", "doc2_title", "doc2_label", "doc2_time", "doc2_websitename")
 
@@ -148,9 +149,7 @@ object DocsimiJaccard {
       }.saveAsNewAPIHadoopDataset(jobConf)
 
 
-
     sc.stop()
     spark.stop()
   }
-
 }

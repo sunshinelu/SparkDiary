@@ -25,7 +25,7 @@ object TfIdfTest2 {
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
 
-    val documents = sc.textFile("data/documents.txt").map(_.split(" ").toSeq).zipWithUniqueId()
+    val documents = sc.textFile("file:///Users/sunlu/Documents/workspace/IDEA/Github/SparkDiary/data/documents.txt").map(_.split(" ").toSeq).zipWithUniqueId()
     documents.collect().foreach(println)
     /*
     (WrappedArray(today, is, a, good, day!),0)
@@ -62,15 +62,15 @@ object TfIdfTest2 {
 
     val sim = transposed_matrix.toRowMatrix.columnSimilarities(threshhold)
     val sim_threshhold = sim.entries.filter { case MatrixEntry(i, j, u) => u >= threshhold && u <= upper }
-    sim_threshhold.collect().foreach(println)
+    //    sim_threshhold.collect().foreach(println)
     /*
     MatrixEntry(0,4,0.7521233104520024)
      */
-    println(sim.numCols())
+    //    println(sim.numCols())
     /*
     5
      */
-    println(sim.numRows())
+    //    println(sim.numRows())
     /*
 5
  */
@@ -79,11 +79,19 @@ object TfIdfTest2 {
     val exactRDD = exact.entries
     exactRDD.collect().foreach(println)
     /*
-   MatrixEntry(0,4,0.7521233104520024)
-   MatrixEntry(2,4,0.02234553609295628)
-   MatrixEntry(0,2,0.029709936897883572)
+MatrixEntry(2,3,0.3749789896548412)
+MatrixEntry(0,3,0.03537414306758181)
+MatrixEntry(0,4,0.897839102815081)
+MatrixEntry(3,5,0.07544264360410328)
+MatrixEntry(2,4,0.03571515324947806)
+MatrixEntry(2,5,0.08483693547311918)
+MatrixEntry(3,4,0.2331596985459432)
+MatrixEntry(0,2,0.03977901289607115)
      */
-
+    println(exactRDD.count())
+    /*
+    8
+     */
 
     sc.stop()
     spark.stop()

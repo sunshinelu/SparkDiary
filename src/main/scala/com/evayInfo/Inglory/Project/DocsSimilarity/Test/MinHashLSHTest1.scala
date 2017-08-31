@@ -82,7 +82,8 @@ object MinHashLSHTest1 {
 
     val df1 = mhModel.approxSimilarityJoin(mhTransformed, mhTransformed, 0.9)
     println("df1 is: ")
-    df1.printSchema()
+    println(df1.count())
+    //    df1.printSchema()
     /*
     root
  |-- datasetA: struct (nullable = false)
@@ -103,7 +104,7 @@ object MinHashLSHTest1 {
  |    |    |-- element: vector (containsNull = true)
  |-- distCol: double (nullable = true)
      */
-    //    df1.take(10000)foreach(println)
+    //        df1.filter("datasetA.id < datasetB.id").show()//.take(10000)foreach(println)
     /*
 [[WrappedArray(today, is, a, good, day),0,(15,[0,2,3,4,5],[1.0,1.0,1.0,1.0,1.0]),(15,[0,2,3,4,5],[0.3364722366212129,0.8472978603872037,0.8472978603872037,0.8472978603872037,0.8472978603872037]),WrappedArray([-2.031299587E9], [-1.758749518E9], [-1.974047307E9])],[WrappedArray(I, am, a, girl),2,(15,[0,1,7,9],[1.0,1.0,1.0,1.0]),(15,[0,1,7,9],[0.3364722366212129,0.5596157879354227,0.8472978603872037,1.252762968495368]),WrappedArray([-1.05621966E9], [-1.974869772E9], [-1.974047307E9])],0.875]
 [[WrappedArray(today, is, not, a, good, day),4,(15,[0,2,3,4,5,6],[1.0,1.0,1.0,1.0,1.0,1.0]),(15,[0,2,3,4,5,6],[0.3364722366212129,0.8472978603872037,0.8472978603872037,0.8472978603872037,0.8472978603872037,0.8472978603872037]),WrappedArray([-2.031299587E9], [-1.758749518E9], [-1.974047307E9])],[WrappedArray(I, am, not, a, boy),3,(15,[0,1,6,7,14],[1.0,1.0,1.0,1.0,1.0]),(15,[0,1,6,7,14],[0.3364722366212129,0.5596157879354227,0.8472978603872037,0.8472978603872037,1.252762968495368]),WrappedArray([-1.586867511E9], [-1.974869772E9], [-1.974047307E9])],0.7777777777777778]
@@ -196,7 +197,7 @@ object MinHashLSHTest1 {
     val colRenamed = Seq("id1", "segWords1", "id2", "segWords2", "distCol")
     val df3 = df1.select("datasetA.id", "datasetA.segWords", "datasetB.id", "datasetB.segWords", "distCol").
       toDF(colRenamed: _*)
-    df3.printSchema()
+    //    df3.printSchema()
     /*
     root
  |-- id1: long (nullable = true)

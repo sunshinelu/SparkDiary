@@ -58,10 +58,15 @@ object BucketedRandomProjectionLSHExample {
     val transformedB = model.transform(dfB).cache()
 
     // Approximate similarity join
+    println("Approximate similarity join: dfA vs. dfB ")
     model.approxSimilarityJoin(dfA, dfB, 1.5).show()
+    println("Approximate similarity join: transformedA vs. transformedB ")
     model.approxSimilarityJoin(transformedA, transformedB, 1.5).show()
     // Self Join
-    model.approxSimilarityJoin(dfA, dfA, 2.5).filter("datasetA.id < datasetB.id").show()
+    println("Self Join: dfA vs. dfA ")
+    model.approxSimilarityJoin(dfA, dfA, 2.5).show() //.filter("datasetA.id < datasetB.id").show()
+    println("Self Join: transformedA vs. transformedA ")
+    model.approxSimilarityJoin(transformedA, transformedA, 2.5).show() //.filter("datasetA.id < datasetB.id").show()
 
     // Approximate nearest neighbor search
     model.approxNearestNeighbors(dfA, key, 2).show()

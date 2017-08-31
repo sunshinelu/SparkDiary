@@ -2,19 +2,24 @@
 
 计算doc-doc similarity的方法：
 
-方法一：使用word2vec方法生成features => docsimi_word2vec
+方法一：使用word2vec方法生成features => docsimi_word2vec (运行时间 > 3小时)
 
-方法二：使用CountVectorizer方法限制词的个数，生成features => docsimi_count
+方法二：使用CountVectorizer方法限制词的个数，生成features => docsimi_count (运行时间 > 3小时)
 
-方法三：使用item-based推荐算法计算item-item similarity => docsimi_item
+方法三：使用item-based推荐算法计算item-item similarity => docsimi_item (结果受用户浏览日志限制)
 
-方法四：使用ALS推荐算法计算item-item similarity(rank值为features的长度) => docsimi_als
+方法四：使用ALS推荐算法计算item-item similarity(rank值为features的长度) => docsimi_als (结果受用户浏览日志限制)
 
-方法五：使用LDA算法计算文章相似性 => docsimi_lda
+方法五：使用LDA算法计算文章相似性 => docsimi_lda ()
 
-方法六：使用SVD算法计算文章相似性 => docsimi_svd
+方法六：使用SVD算法计算文章相似性 => docsimi_svd (运行时间 > 3小时)
 
-方法七：使用Jaccard算法（MinHashLSH）计算文章相似性 => docsimi_Jaccard
+方法七：使用Jaccard算法（MinHashLSH）计算文章相似性 => docsimi_jaccard (运行时间在1小时以内，但是数据缺失严重。)
+
+方法八：使用Euclidean算法计算文章相似性 => docsimi_euclidean (运行时间 > 3小时)
+
+方法九：使用文章标题计算文章相似性 => docsimi_title ()
+
 
 => docsimi
 
@@ -124,6 +129,28 @@ simi:
 
 http://news.ifeng.com/a/20170821/51702644_0.shtml
 http://www.tjec.gov.cn/newzixun/61011.htm
+
+
+
+
+方法八：使用Euclidean算法计算文章相似性 => docsimi_euclidean
+
+spark-submit \
+--class com.evayInfo.Inglory.Project.DocsSimilarity.DocsimiEuclidean \
+--master yarn \
+--num-executors 8 \
+--executor-cores 4 \
+--executor-memory 6g \
+--conf spark.default.parallelism=150 \
+--conf spark.storage.memoryFraction=0.5 \
+--conf spark.shuffle.memoryFraction=0.4 \
+--jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+/root/lulu/Progect/docsSimi/SparkDiary.jar \
+yilan-total_webpage docsimi_euclidean
+
+
+
+
 
 export JAVA_OPTIONS=-XX:-UseGCOverheadLimit
 

@@ -60,8 +60,8 @@ object EuclideanTest1 {
 
     // Feature Transformation
     val brpTransformed = brpModel.transform(tfidfDF)
-    println("brpTransformed is: ")
-    brpTransformed.printSchema()
+    //    println("brpTransformed is: ")
+    //    brpTransformed.printSchema()
     /*
     root
  |-- segWords: array (nullable = true)
@@ -72,7 +72,7 @@ object EuclideanTest1 {
  |-- brpVec: array (nullable = true)
  |    |-- element: vector (containsNull = true)
      */
-    brpTransformed.take(100).foreach(println)
+    //    brpTransformed.take(100).foreach(println)
     /*
 [WrappedArray(today, is, a, good, day),0,(15,[0,2,3,4,5],[1.0,1.0,1.0,1.0,1.0]),(15,[0,2,3,4,5],[0.3364722366212129,0.8472978603872037,0.8472978603872037,0.8472978603872037,0.8472978603872037]),WrappedArray([0.0], [0.0], [0.0])]
 [WrappedArray(I, am, a, girl),2,(15,[0,1,7,9],[1.0,1.0,1.0,1.0]),(15,[0,1,7,9],[0.3364722366212129,0.5596157879354227,0.8472978603872037,1.252762968495368]),WrappedArray([0.0], [-1.0], [0.0])]
@@ -85,7 +85,18 @@ object EuclideanTest1 {
 
     val df1 = brpModel.approxSimilarityJoin(brpTransformed, brpTransformed, 2.5)
     println("df1 is: ")
-    df1.printSchema()
+    println("df1 count is: " + df1.count())
+    /*
+    2.5 => df1 count is: 22
+    5.0 => df1 count is: 30
+    8.0 => df1 count is: 30
+    10.0 => df1 count is: 34
+    50.0 => df1 count is: 34
+    100.0 => df1 count is: 34
+    500.0 => df1 count is: 34
+    1000.0 => df1 count is: 30
+     */
+    //    df1.printSchema()
     /*
     root
  |-- datasetA: struct (nullable = false)
@@ -106,7 +117,7 @@ object EuclideanTest1 {
  |    |-- tfidfVec: vector (nullable = true)
  |-- distCol: double (nullable = true)
      */
-    df1.take(100).foreach(println)
+    //    df1.take(100).foreach(println)
     /*
     [[WrappedArray(hello, word),1,(15,[12,13],[1.0,1.0]),(15,[12,13],[1.252762968495368,1.252762968495368]),WrappedArray([-1.0], [-1.0], [0.0])],[WrappedArray(today, is, a, good, day),0,(15,[0,2,3,4,5],[1.0,1.0,1.0,1.0,1.0]),WrappedArray([0.0], [0.0], [0.0]),(15,[0,2,3,4,5],[0.3364722366212129,0.8472978603872037,0.8472978603872037,0.8472978603872037,0.8472978603872037])],2.474610743804057]
     [[WrappedArray(hello, word),1,(15,[12,13],[1.0,1.0]),(15,[12,13],[1.252762968495368,1.252762968495368]),WrappedArray([-1.0], [-1.0], [0.0])],[WrappedArray(I, am, a, girl),2,(15,[0,1,7,9],[1.0,1.0,1.0,1.0]),WrappedArray([0.0], [-1.0], [0.0]),(15,[0,1,7,9],[0.3364722366212129,0.5596157879354227,0.8472978603872037,1.252762968495368])],2.4192028079597168]
@@ -133,7 +144,7 @@ object EuclideanTest1 {
 
      */
 
-    df1.select("datasetA.id", "datasetA.segWords", "datasetB.id", "datasetB.segWords", "distCol").take(100).foreach(println)
+    //    df1.select("datasetA.id", "datasetA.segWords", "datasetB.id", "datasetB.segWords", "distCol").take(100).foreach(println)
     /*
     [1,WrappedArray(hello, word),0,WrappedArray(today, is, a, good, day),2.474610743804057]
     [1,WrappedArray(hello, word),2,WrappedArray(I, am, a, girl),2.4192028079597168]
