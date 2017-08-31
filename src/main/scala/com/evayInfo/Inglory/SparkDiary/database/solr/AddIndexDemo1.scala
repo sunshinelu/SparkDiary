@@ -1,4 +1,4 @@
-package com.evayInfo.Inglory.TestCode
+package com.evayInfo.Inglory.SparkDiary.database.solr
 
 import java.io.IOException
 import java.util.{ArrayList, Collection, Iterator}
@@ -10,10 +10,7 @@ import org.apache.solr.client.solrj.SolrClient
 import org.apache.solr.client.solrj.impl.HttpSolrClient
 import org.apache.solr.common.SolrInputDocument
 
-/**
- * Created by sunlu on 17/8/31.
- */
-object AddIndex {
+object AddIndexDemo1 {
   private var conf: Configuration = null
 
   def getHbaseCon {
@@ -24,8 +21,8 @@ object AddIndex {
   }
 
   /**
-   * 获取HBASE表中的所有结果集
-   */
+    * 获取HBASE表中的所有结果集
+    */
   @throws(classOf[IOException])
   def getAllRows(tableName: String): ResultScanner = {
     getHbaseCon
@@ -36,8 +33,8 @@ object AddIndex {
   }
 
   /**
-   * 删除所有的索引
-   */
+    * 删除所有的索引
+    */
   private def purgAllIndex(solrUrl: String) {
     var solrClient: SolrClient = null
     try {
@@ -73,8 +70,8 @@ object AddIndex {
   }
 
   /**
-   * 对相似文章结果表（ylzx_xgwz）建立索引
-   */
+    * 对相似文章结果表（ylzx_xgwz）建立索引
+    */
   def addIndex_SimilarArticle(results: ResultScanner, solrUrl_similarArticleRec: String) {
     var solrClient: SolrClient = null
     purgAllIndex(solrUrl_similarArticleRec)
