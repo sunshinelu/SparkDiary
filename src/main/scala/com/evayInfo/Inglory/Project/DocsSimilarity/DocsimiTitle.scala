@@ -1,7 +1,7 @@
 package com.evayInfo.Inglory.Project.DocsSimilarity
 
 import org.apache.spark.SparkConf
-import org.apache.spark.ml.feature.{BucketedRandomProjectionLSH, HashingTF, IDF}
+import org.apache.spark.ml.feature.{BucketedRandomProjectionLSH, HashingTF, IDF, MinHashLSH}
 import org.apache.spark.sql.SparkSession
 
 /**
@@ -41,6 +41,9 @@ object DocsimiTitle {
     val rescaledData = idfModel.transform(featurizedData)
     rescaledData.select("id", "features").show()
 
+    /*
+
+     */
     val brp = new BucketedRandomProjectionLSH()
       .setBucketLength(2.0)
       .setNumHashTables(3)
@@ -49,8 +52,20 @@ object DocsimiTitle {
     val brpModel = brp.fit(rescaledData)
 
     val brpTransformed = brpModel.transform(rescaledData).cache()
+    val docsimi_brp = brpModel.approxSimilarityJoin(brpTransformed, brpTransformed, 5.0)
 
+    /*
 
+     */
+    val mh = new MinHashLSH()
+      .setNumHashTables(3)
+      .setInputCol("keys")
+      .setOutputCol("values")
+    val mhModel = mh.fit(rescaledData)
+
+    // Feature Transformation
+    val mhTransformed = mhModel.transform(rescaledData)
+    val docsimi_mh = mhModel.approxSimilarityJoin(mhTransformed, mhTransformed, 1.0)
 
 
 
