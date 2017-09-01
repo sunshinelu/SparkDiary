@@ -22,6 +22,20 @@
        使用“标题＋内容关键词＋manuallabel”计算文章相似性()
 
 
+word2vec                       
+
+CountVectorizer                      cosine
+
+item-based         
+
+ALS                                  Jaccard  
+
+LDA
+
+SVD                                  Euclidean
+
+标题＋内容关键词＋manuallabel
+
 => docsimi
 
 表结构：
