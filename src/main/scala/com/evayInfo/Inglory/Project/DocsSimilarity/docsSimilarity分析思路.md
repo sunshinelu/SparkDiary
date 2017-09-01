@@ -19,6 +19,7 @@
 方法八：使用Euclidean算法计算文章相似性 => docsimi_euclidean (运行时间 > 3小时)
 
 方法九：使用文章标题计算文章相似性 => docsimi_title ()
+       使用“标题＋内容关键词＋manuallabel”计算文章相似性()
 
 
 => docsimi
@@ -148,6 +149,21 @@ spark-submit \
 /root/lulu/Progect/docsSimi/SparkDiary.jar \
 yilan-total_webpage docsimi_euclidean
 
+
+方法九：使用文章标题计算文章相似性 => docsimi_title
+
+spark-submit \
+--class com.evayInfo.Inglory.Project.DocsSimilarity.DocsimiTitle \
+--master yarn \
+--num-executors 8 \
+--executor-cores 4 \
+--executor-memory 6g \
+--conf spark.default.parallelism=150 \
+--conf spark.storage.memoryFraction=0.5 \
+--conf spark.shuffle.memoryFraction=0.4 \
+--jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+/root/lulu/Progect/docsSimi/SparkDiary.jar \
+yilan-total_webpage docsimi_title
 
 
 

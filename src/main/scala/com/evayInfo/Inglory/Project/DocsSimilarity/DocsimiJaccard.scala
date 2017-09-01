@@ -59,7 +59,7 @@ object DocsimiJaccard {
     //    tfidfDF.cache()
 
     val mh = new MinHashLSH().
-      setNumHashTables(3).
+      setNumHashTables(10).
       setInputCol("tfidfVec").
       setOutputCol("mhVec")
 
