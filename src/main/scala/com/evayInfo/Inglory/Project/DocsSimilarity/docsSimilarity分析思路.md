@@ -101,6 +101,14 @@ count 'docsimi_jaccard'
 count 'docsimi_jaccard'
 => 252262
 
+
+1hrs, 7mins, 51sec
+
+count 'docsimi_jaccard'
+=> 304427
+
+
+
 get 'docsimi_jaccard','fef4e4b8-6a4a-4b5d-8356-72050e3480d9::score=1'
 
     hbase(main):002:0> get 'docsimi_jaccard','fef4e4b8-6a4a-4b5d-8356-72050e3480d9::score=1'
