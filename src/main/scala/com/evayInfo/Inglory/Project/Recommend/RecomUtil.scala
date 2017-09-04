@@ -31,7 +31,7 @@ object RecomUtil {
     Base64.encodeBytes(proto.toByteArray)
   }
 
-  def getYlzxRDD(ylzxTable: String, sc: SparkContext): RDD[YlzxSchema] = {
+  def getYlzxRDD(ylzxTable: String, year: Int, sc: SparkContext): RDD[YlzxSchema] = {
     //定义时间格式
     // val dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss z", Locale.ENGLISH)
     val dateFormat = new SimpleDateFormat("yyyy-MM-dd") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
@@ -44,7 +44,7 @@ object RecomUtil {
     val todayL = dateFormat.parse(today).getTime
     //获取N天的时间，并把时间转换成long类型
     val cal: Calendar = Calendar.getInstance()
-    val N = 20
+    val N = year
     //  cal.add(Calendar.DATE, -N)//获取N天前或N天后的时间，-2为2天前
     cal.add(Calendar.YEAR, -N) //获取N年或N年后的时间，-2为2年前
     //    cal.add(Calendar.MONTH, -N) //获取N月或N月后的时间，-2为2月前
@@ -188,6 +188,55 @@ object RecomUtil {
         LogView2(userString, itemString, time, rating)
       })
 
+    hbaseRDD
+  }
+
+
+  case class DocsimiSchema(id: String, simsID: String, level: Double, title: String, manuallabel: String, mod: String, websitename: String)
+
+  def getDocsimiRDD(tableName: String, sc: SparkContext): RDD[DocsimiSchema] = {
+    val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
+    //设置查询的表名
+    conf.set(TableInputFormat.INPUT_TABLE, tableName) //设置输入表名 第一个参数yeeso-test-ywk_webpage
+
+    //扫描整个表中指定的列和列簇
+    val scan = new Scan()
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("id")) //id
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("simsID")) //simsID
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("level")) //level
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("t")) //title
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("manuallabel")) //manuallabel
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("mod")) //mod
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("websitename")) //websitename
+    conf.set(TableInputFormat.SCAN, convertScanToString(scan))
+
+    val hBaseRDD = sc.newAPIHadoopRDD(conf, classOf[TableInputFormat],
+      classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
+      classOf[org.apache.hadoop.hbase.client.Result])
+    //提取hbase数据，并对数据进行过滤
+    val hbaseRDD = hBaseRDD.map { case (k, v) => {
+      val rowkey = k.get()
+      val id = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("id")) //id
+      val simsID = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("simsID")) //simsID
+      val level = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("level")) //level
+      val title = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("t")) //title
+      val manuallabel = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("manuallabel")) //manuallabel
+      val mod = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("mod")) //mod
+      val websitename = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("websitename")) //mod
+      (id, simsID, level, title, manuallabel, mod, websitename)
+    }
+    }.filter(x => null != x._1 & null != x._2 & null != x._3 & null != x._4 & null != x._5 & null != x._6 & null != x._7).
+      map(x => {
+        val id = Bytes.toString(x._1)
+        val simsID = Bytes.toString(x._2)
+        val level = Bytes.toString(x._3)
+        val level2 = (-0.1 * level.toInt) + 1
+        val title = Bytes.toString(x._4)
+        val manuallabel = Bytes.toString(x._5)
+        val mod = Bytes.toString(x._6)
+        val websitename = Bytes.toString(x._7)
+        DocsimiSchema(id, simsID, level2, title, manuallabel, mod, websitename)
+      })
     hbaseRDD
   }
 

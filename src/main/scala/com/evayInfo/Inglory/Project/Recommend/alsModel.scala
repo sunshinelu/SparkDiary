@@ -17,7 +17,7 @@ import org.apache.spark.mllib.recommendation.{ALS, MatrixFactorizationModel, Rat
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
 /**
  * Created by sunlu on 17/8/15.
@@ -352,6 +352,86 @@ object alsModel {
 
     sc.stop()
     spark.stop()
+  }
+
+
+  def getAlsModel(ylzxTable: String, logsTable: String, sc: SparkContext, spark: SparkSession): DataFrame = {
+
+    import spark.implicits._
+    /*
+    1. get data
+     */
+    // get ylzx data
+    val ylzxRDD = RecomUtil.getYlzxRDD(ylzxTable, 20, sc)
+    val ylzxDF = spark.createDataset(ylzxRDD).dropDuplicates("content").drop("content")
+    // get logs data
+    val logsRDD = RecomUtil.getLogsRDD(logsTable, sc)
+    val logsDS = spark.createDataset(logsRDD).na.drop(Array("userString"))
+    /*
+    2. data clean
+     */
+    val ds1 = logsDS.groupBy("userString", "itemString").agg(sum("value")).withColumnRenamed("sum(value)", "rating")
+
+    //string to number
+    val userID = new StringIndexer().setInputCol("userString").setOutputCol("userID").fit(ds1)
+    val ds2 = userID.transform(ds1)
+    val urlID = new StringIndexer().setInputCol("itemString").setOutputCol("urlID").fit(ds2)
+    val ds3 = urlID.transform(ds2)
+
+    val ds4 = ds3.withColumn("userID", ds3("userID").cast("long")).
+      withColumn("urlID", ds3("urlID").cast("long")).
+      withColumn("rating", ds3("rating").cast("double"))
+
+
+    //Min-Max Normalization[-1,1]
+    val minMax = ds4.agg(max("rating"), min("rating")).withColumnRenamed("max(rating)", "max").withColumnRenamed("min(rating)", "min")
+    val maxValue = minMax.select("max").rdd.map { case Row(d: Double) => d }.first()
+    val minValue = minMax.select("min").rdd.map { case Row(d: Double) => d }.first
+    //limit the values to 4 digit
+    val ds5 = ds4.withColumn("norm", bround((((ds4("rating") - minValue) / (maxValue - minValue)) * 2 - 1), 4))
+
+    //RDD to RowRDD
+    val alsRDD = ds5.select("userID", "urlID", "norm").rdd.map { row => (row(0), row(1), row(2)) }.map { x =>
+      val user = x._1.toString.toInt
+      val item = x._2.toString.toInt
+      val rate = x._3.toString.toDouble
+      Rating(user, item, rate)
+    }
+
+    /*
+    3.build als model
+     */
+    // Build the recommendation model using ALS
+    val rank = 10
+    val numIterations = 10
+    val model = ALS.train(alsRDD, rank, numIterations, 0.01)
+
+    /*
+    4. get result
+     */
+    val topProducts = model.recommendProductsForUsers(15)
+
+    val topProductsRowRDD = topProducts.flatMap(x => {
+      val y = x._2
+      for (w <- y) yield (w.user, w.product, w.rating)
+    }).map { f => Schema2(f._1.toLong, f._2.toLong, f._3) }
+
+    val topProductsDF = spark.createDataset(topProductsRowRDD)
+
+    val userLab = ds5.select("userString", "userID").dropDuplicates
+    val itemLab = ds5.select("itemString", "urlID").dropDuplicates
+
+
+    val joinDF1 = topProductsDF.join(userLab, Seq("userID"), "left")
+    val joinDF2 = joinDF1.join(itemLab, Seq("urlID"), "left")
+    val joinDF3 = joinDF2.join(ylzxDF, Seq("itemString"), "left").na.drop()
+
+    val w = Window.partitionBy("userString").orderBy(col("rating").desc)
+    val joinDF4 = joinDF3.withColumn("rn", row_number.over(w)).where(col("rn") <= 10)
+    val joinDF5 = joinDF4.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
+
+    joinDF5
+
   }
 
 

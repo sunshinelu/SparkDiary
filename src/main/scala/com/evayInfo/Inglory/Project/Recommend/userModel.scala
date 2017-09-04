@@ -15,9 +15,9 @@ import org.apache.spark.SparkContext
 import org.apache.spark.ml.feature.StringIndexer
 import org.apache.spark.mllib.linalg.distributed.{CoordinateMatrix, MatrixEntry}
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql._
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{Row, SparkSession}
 
 /**
   * Created by sunlu on 17/8/15.
@@ -33,6 +33,8 @@ object userModel {
   case class LogView2(userString: String, itemString: String, CREATE_TIME: Long, value: Double)
 
   case class UserRecomm(userID: Long, urlID: Long, rating: Double)
+
+  case class UserSimi(userId1: Long, userId2: Long, similar: Double)
 
 
   def convertScanToString(scan: Scan) = {
@@ -251,18 +253,6 @@ object userModel {
     val ratings = new CoordinateMatrix(rdd1).transpose()
     val userSimi = ratings.toRowMatrix.columnSimilarities(0.1)
 
-    /**
-     * 相似度.
-     * @param userId1 物品
-     * @param userId2 物品
-     * @param similar 相似度
-     */
-    case class UserSimi(
-                         val userId1: Long,
-                         val userId2: Long,
-                         val similar: Double
-                         ) extends Serializable
-
 
     // user-user similarity
     val userSimiRdd = userSimi.entries.map(f => UserSimi(f.i, f.j, f.value))
@@ -374,4 +364,102 @@ object userModel {
     spark.stop()
 
   }
+
+  def getUserModel(ylzxTable: String, logsTable: String, sc: SparkContext, spark: SparkSession): DataFrame = {
+
+    import spark.implicits._
+    /*
+   1. get data
+    */
+    // get ylzx data
+    val ylzxRDD = RecomUtil.getYlzxRDD(ylzxTable, 20, sc)
+    val ylzxDF = spark.createDataset(ylzxRDD).dropDuplicates("content").drop("content")
+    // get logs data
+    val logsRDD = RecomUtil.getLogsRDD(logsTable, sc)
+    val logsDS = spark.createDataset(logsRDD).na.drop(Array("userString"))
+    /*
+2. data clean
+ */
+    val ds1 = logsDS.groupBy("userString", "itemString").agg(sum("value")).withColumnRenamed("sum(value)", "rating")
+    //string to number
+    val userID = new StringIndexer().setInputCol("userString").setOutputCol("userID").fit(ds1)
+    val ds2 = userID.transform(ds1)
+    val urlID = new StringIndexer().setInputCol("itemString").setOutputCol("urlID").fit(ds2)
+    val ds3 = urlID.transform(ds2)
+
+    val ds4 = ds3.withColumn("userID", ds3("userID").cast("long")).
+      withColumn("urlID", ds3("urlID").cast("long")).
+      withColumn("rating", ds3("rating").cast("double"))
+
+
+    //Min-Max Normalization[-1,1]
+    val minMax = ds4.agg(max("rating"), min("rating")).withColumnRenamed("max(rating)", "max").withColumnRenamed("min(rating)", "min")
+    val maxValue = minMax.select("max").rdd.map { case Row(d: Double) => d }.first()
+    val minValue = minMax.select("min").rdd.map { case Row(d: Double) => d }.first
+    //limit the values to 4 digit
+    val ds5 = ds4.withColumn("norm", bround((((ds4("rating") - minValue) / (maxValue - minValue)) * 2 - 1), 4))
+
+    //RDD to RowRDD
+    val rdd1 = ds5.select("userID", "urlID", "norm").rdd.
+      map { case Row(user: Long, item: Long, value: Double) => MatrixEntry(user, item, value) }
+
+    //calculate similarities
+    val ratings = new CoordinateMatrix(rdd1).transpose()
+    val userSimi = ratings.toRowMatrix.columnSimilarities(0.1)
+
+
+    // user-user similarity
+    val userSimiRdd = userSimi.entries.map(f => UserSimi(f.i, f.j, f.value))
+    //    userSimiRdd.collect().foreach(println)
+
+    // user1, user1, similar
+    val rdd_app_R1 = userSimiRdd.map { f => (f.userId1, f.userId2, f.similar) }.
+      union(userSimiRdd.map { f => (f.userId2, f.userId1, f.similar) })
+
+    // user item value
+    val user_prefer1 = rdd1.map { f => (f.i, f.j, f.value) }
+
+    // user1, [(user1, similar),(item, value)]
+    val rdd_app_R2 = rdd_app_R1.map { f => (f._1, (f._2, f._3)) }.join(user_prefer1.map(f => (f._1, (f._2, f._3))))
+    rdd_app_R2.collect().foreach(println)
+    val rdd_app_R3 = rdd_app_R2.map { f => ((f._2._1._1, f._2._2._1), f._2._2._2 * f._2._1._2) }
+    rdd_app_R3.collect().foreach(println)
+    val rdd_app_R4 = rdd_app_R3.reduceByKey((x, y) => x + y)
+
+    val rdd_app_R5 = rdd_app_R4.leftOuterJoin(user_prefer1.map(f => ((f._1, f._2), 1))).
+      filter(f => f._2._2.isEmpty).map(f => (f._1._1, (f._1._2, f._2._1)))
+    val rdd_app_R6 = rdd_app_R5.groupByKey()
+
+    val r_number = 30
+    val rdd_app_R7 = rdd_app_R6.map { f =>
+      val i2 = f._2.toBuffer
+      val i2_2 = i2.sortBy(_._2)
+      if (i2_2.length > r_number) i2_2.remove(0, (i2_2.length - r_number))
+      (f._1, i2_2.toIterable)
+    }
+
+    val rdd_app_R8 = rdd_app_R7.flatMap(f => {
+      val id2 = f._2
+      for (w <- id2) yield (f._1, w._1, w._2)
+    }
+    )
+
+    //RDD to RowRDD
+    val itemRecomm = rdd_app_R8.map { f => UserRecomm(f._1, f._2, f._3) }
+    //RowRDD to DF
+    val itemRecomDF = spark.createDataset(itemRecomm)
+
+    val userLab = ds5.select("userString", "userID").dropDuplicates
+    val itemLab = ds5.select("itemString", "urlID").dropDuplicates
+    val joinDF1 = itemRecomDF.join(userLab, Seq("userID"), "left")
+    val joinDF2 = joinDF1.join(itemLab, Seq("urlID"), "left")
+    val joinDF3 = joinDF2.join(ylzxDF, Seq("itemString"), "left").na.drop()
+    ylzxDF.unpersist()
+    val w = Window.partitionBy("userString").orderBy(col("rating").desc)
+    val joinDF4 = joinDF3.withColumn("rn", row_number.over(w)).where($"rn" <= 10)
+    val joinDF5 = joinDF4.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
+    joinDF5
+  }
+
+
 }

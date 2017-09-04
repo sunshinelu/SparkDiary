@@ -10,7 +10,7 @@
 
 方法四：使用ALS推荐算法计算item-item similarity(rank值为features的长度) => docsimi_als (结果受用户浏览日志限制)
 
-方法五：使用LDA算法计算文章相似性 => docsimi_lda ()
+方法五：使用LDA算法生成features计算文章相似性 => docsimi_lda ()
 
 方法六：使用SVD算法计算文章相似性 => docsimi_svd (运行时间 > 3小时)
 
@@ -101,12 +101,116 @@ count 'docsimi_jaccard'
 count 'docsimi_jaccard'
 => 252262
 
+========================
+ val mh = new MinHashLSH().
+      setNumHashTables(10).//改为10
+      setInputCol("tfidfVec").
+      setOutputCol("mhVec")
 
+           ｜｜
+           ｜｜
+           \  /
+            \/
 1hrs, 7mins, 51sec
 
 count 'docsimi_jaccard'
 => 304427
 
+=========================over
+
+=========================
+
+ val mh = new MinHashLSH().
+      setNumHashTables(30).//改为30
+      setInputCol("tfidfVec").
+      setOutputCol("mhVec")
+
+           ｜｜
+           ｜｜
+           \  /
+            \/
+
+org.apache.spark.shuffle.MetadataFetchFailedException: Missing an output location for shuffle 2
+
+=========================over
+
+=========================
+
+ val mh = new MinHashLSH().
+      setNumHashTables(20).//改为20
+      setInputCol("tfidfVec").
+      setOutputCol("mhVec")
+
+           ｜｜
+           ｜｜
+           \  /
+            \/
+
+在slave6下使用yarn－cluster模式提交任务
+
+
+spark-submit \
+--class com.evayInfo.Inglory.Project.DocsSimilarity.DocsimiJaccard \
+--master yarn \
+--deploy-mode cluster \
+--num-executors 8 \
+--executor-cores 4 \
+--executor-memory 6g \
+--conf spark.default.parallelism=150 \
+--conf spark.storage.memoryFraction=0.5 \
+--conf spark.shuffle.memoryFraction=0.4 \
+/root/lulu/Progect/docsSimi/SparkDiary-1.0-SNAPSHOT-jar-with-dependencies.jar \
+yilan-total_webpage docsimi_jaccard
+
+
+任务运行时间：1hrs, 24mins, 12sec
+
+count 'docsimi_jaccard'
+
+=> 325139
+
+=========================over
+
+=========================
+
+val vocabSize: Int = 200000
+
+           ｜｜
+           ｜｜
+           \  /
+            \/
+
+在slave6下使用yarn－cluster模式提交任务
+
+
+2hrs, 33mins, 18sec
+
+count 'docsimi_jaccard'
+
+=> 377740
+
+=========================over
+
+
+=========================
+
+spark-submit \
+--class com.evayInfo.Inglory.Project.DocsSimilarity.DocsimiJaccard \
+--master yarn \
+--deploy-mode cluster \
+--num-executors 12 \
+--executor-cores 3 \
+--executor-memory 3g \
+--conf spark.default.parallelism=150 \
+--conf spark.storage.memoryFraction=0.4 \
+--conf spark.shuffle.memoryFraction=0.6 \
+/root/lulu/Progect/docsSimi/SparkDiary-1.0-SNAPSHOT-jar-with-dependencies.jar \
+yilan-total_webpage docsimi_jaccard
+
+任务被全部清空，不知是否是由于executors的数量设置过大导致。
+
+
+=========================over
 
 
 get 'docsimi_jaccard','fef4e4b8-6a4a-4b5d-8356-72050e3480d9::score=1'

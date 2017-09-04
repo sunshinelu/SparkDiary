@@ -7,8 +7,8 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.{HBaseAdmin, Put}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.TableOutputFormat
-import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDescriptor, TableName}
 import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDescriptor, TableName}
 import org.apache.hadoop.io.Text
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.feature.StringIndexer
@@ -105,7 +105,7 @@ root
  |-- user2: string (nullable = true)
      */
 
-    val ylzxRDD = RecomUtil.getYlzxRDD(ylzxTable, sc)
+    val ylzxRDD = RecomUtil.getYlzxRDD(ylzxTable, 20, sc)
     val ylzxDF = spark.createDataset(ylzxRDD).dropDuplicates("content").drop("content")
     val logsRDD = RecomUtil.getLogsRDD(logsTable, sc)
     val logsDS = spark.createDataset(logsRDD).na.drop(Array("userString")).select("userString","itemString", "value")

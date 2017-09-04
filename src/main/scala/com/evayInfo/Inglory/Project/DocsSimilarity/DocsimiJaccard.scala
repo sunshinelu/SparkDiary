@@ -8,7 +8,7 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDescriptor, TableName}
 import org.apache.hadoop.io.Text
 import org.apache.spark.SparkConf
-import org.apache.spark.ml.feature.{CountVectorizer, CountVectorizerModel, IDF, MinHashLSH}
+import org.apache.spark.ml.feature.{IDF, MinHashLSH}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
@@ -37,7 +37,8 @@ object DocsimiJaccard {
     val ylzxRDD = DocsimiUtil.getYlzxSegRDD(ylzxTable, 20, sc)
     val ylzxDS = spark.createDataset(ylzxRDD) //.randomSplit(Array(0.01, 0.99))(0)
 
-    val vocabSize: Int = 20000
+    /*
+    val vocabSize: Int = 200000
 
     val vocabModel: CountVectorizerModel = new CountVectorizer().
       setInputCol("segWords").
@@ -57,9 +58,13 @@ object DocsimiJaccard {
     val idfModel = idf.fit(docTermFreqs)
     val tfidfDF = idfModel.transform(docTermFreqs) //.select("id", "tfidfVec")
     //    tfidfDF.cache()
+*/
+    val idf = new IDF().setInputCol("segWords").setOutputCol("tfidfVec")
+    val idfModel = idf.fit(ylzxDS)
+    val tfidfDF = idfModel.transform(ylzxDS)
 
     val mh = new MinHashLSH().
-      setNumHashTables(10).
+      setNumHashTables(20).
       setInputCol("tfidfVec").
       setOutputCol("mhVec")
 

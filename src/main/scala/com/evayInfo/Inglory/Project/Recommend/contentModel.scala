@@ -13,7 +13,7 @@ import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDes
 import org.apache.hadoop.io.Text
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql._
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.{SparkConf, SparkContext}
@@ -279,4 +279,49 @@ root
     sc.stop()
     spark.stop()
   }
+
+
+  def getContentModel(ylzxTable: String, logsTable: String, docsimiTable: String, sc: SparkContext, spark: SparkSession): DataFrame = {
+
+    import spark.implicits._
+
+    /*
+    1. get data
+     */
+
+    val ylzxRDD = RecomUtil.getYlzxRDD(ylzxTable, 20, sc)
+    val ylzxDS = spark.createDataset(ylzxRDD).dropDuplicates("content").drop("content").dropDuplicates()
+
+    val logsRDD = RecomUtil.getLogsRDD(logsTable, sc)
+    val logsDS = spark.createDataset(logsRDD).na.drop(Array("userString"))
+
+    val docsimiRDD = RecomUtil.getDocsimiRDD(docsimiTable, sc)
+    val docsimiDS = spark.createDataset(docsimiRDD)
+
+    /*
+    2. data clean
+     */
+    val df1 = logsDS.groupBy("userString", "itemString").agg(sum(col("value"))).drop("value").
+      withColumnRenamed("sum(value)", "value")
+    val df1_1 = df1.select("userString", "itemString")
+
+    val df2 = docsimiDS.select("id", "simsID", "level")
+    val df3 = df1.join(df2, df1("itemString") === df2("id"), "left").
+      withColumn("rating", col("value") * col("level")).drop("value").drop("level").na.drop()
+
+    val df4 = df3.drop("itemString").drop("id").withColumnRenamed("simsID", "itemString").
+      join(df1_1, Seq("userString", "itemString"), "leftanti").na.drop().
+      groupBy("userString", "itemString").agg(sum(col("rating"))).drop("rating").
+      withColumnRenamed("sum(rating)", "rating")
+
+    val df5 = df4.join(ylzxDS, Seq("itemString"), "left")
+    // 根据userString进行分组，对打分进行倒序排序，获取打分前10的数据。
+    val w = Window.partitionBy("userString").orderBy(col("rating").desc)
+    val df6 = df5.withColumn("rn", row_number.over(w)).where(col("rn") <= 5)
+
+    val df7 = df6.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
+    df7
+
+  }
+
 }
