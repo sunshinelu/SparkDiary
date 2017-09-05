@@ -14,6 +14,7 @@ import org.apache.spark.sql.functions._
 
 /**
  * Created by sunlu on 17/9/4.
+ * 合并基于als、item、user和content的推荐模型，构建组合模型
  */
 object combinedModel {
   def main(args: Array[String]) {
@@ -30,18 +31,33 @@ object combinedModel {
     val logsTable = args(1)
     val docsimiTable = args(2)
     val outputTable = args(3)
+    /*
+    val ylzxTable = "yilan-total_webpage"
+    val logsTable = "t_hbaseSink"
+    val docsimiTable = "ylzx_xgwz"
+    val outputTable = "ylzx_cnxh_combined"
+     */
 
-    val alsDS = alsModel.getAlsModel(ylzxTable, logsTable, sc, spark)
-    val contentDS = contentModel.getContentModel(ylzxTable, logsTable, docsimiTable, sc, spark)
-    val itemDS = itemModel.getItemModel(ylzxTable, logsTable, sc, spark)
-    val userDS = userModel.getUserModel(ylzxTable, logsTable, sc, spark)
+    val w_als = 0.25
+    val w_content = 0.25
+    val w_item = 0.25
+    val w_user = 0.25
+
+    val alsDS = alsModel.getAlsModel(ylzxTable, logsTable, sc, spark).drop("rating").
+      withColumn("wValue", col("rn") * w_als)
+    val contentDS = contentModel.getContentModel(ylzxTable, logsTable, docsimiTable, sc, spark).drop("rating").
+      withColumn("wValue", col("rn") * w_content)
+    val itemDS = itemModel.getItemModel(ylzxTable, logsTable, sc, spark).drop("rating").
+      withColumn("wValue", col("rn") * w_item)
+    val userDS = userModel.getUserModel(ylzxTable, logsTable, sc, spark).drop("rating").
+      withColumn("wValue", col("rn") * w_user)
 
     // 将alsDS、contenDS、itemDS和userDS合并到一个dataset中
     val recommDS = alsDS.union(itemDS).union(userDS).union(contentDS)
     //("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
     val itemLab = recommDS.select("itemString", "title", "manuallabel", "time").dropDuplicates()
     // 根据userString和itemString对rn进行求和，新增列名为rating
-    val df1 = recommDS.groupBy("userString", "itemString").agg(sum("rn")).withColumnRenamed("sum(rn)", "rating")
+    val df1 = recommDS.groupBy("userString", "itemString").agg(sum("wValue")).withColumnRenamed("sum(wValue)", "rating")
 
     // 根据itemString将title、manuallabel和time整合到df2中
     val df2 = df1.join(itemLab, Seq("itemString"), "left").drop("rn").na.drop()
@@ -108,5 +124,6 @@ object combinedModel {
     sc.stop()
     spark.stop()
   }
+
 
 }

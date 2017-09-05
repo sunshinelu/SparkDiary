@@ -8,7 +8,7 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDescriptor, TableName}
 import org.apache.hadoop.io.Text
 import org.apache.spark.SparkConf
-import org.apache.spark.ml.feature.{IDF, MinHashLSH}
+import org.apache.spark.ml.feature.{HashingTF, IDF, MinHashLSH}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
@@ -59,9 +59,13 @@ object DocsimiJaccard {
     val tfidfDF = idfModel.transform(docTermFreqs) //.select("id", "tfidfVec")
     //    tfidfDF.cache()
 */
-    val idf = new IDF().setInputCol("segWords").setOutputCol("tfidfVec")
-    val idfModel = idf.fit(ylzxDS)
-    val tfidfDF = idfModel.transform(ylzxDS)
+    val hashingTF = new HashingTF().
+      setInputCol("segWords").setOutputCol("tfFeatures") //.setNumFeatures(20)
+    val tfData = hashingTF.transform(ylzxDS)
+
+    val idf = new IDF().setInputCol("tfFeatures").setOutputCol("tfidfVec")
+    val idfModel = idf.fit(tfData)
+    val tfidfDF = idfModel.transform(tfData)
 
     val mh = new MinHashLSH().
       setNumHashTables(20).

@@ -212,6 +212,22 @@ yilan-total_webpage docsimi_jaccard
 
 =========================over
 
+=========================
+
+    val hashingTF = new HashingTF().
+      setInputCol("segWords").setOutputCol("tfFeatures")//.setNumFeatures(20)
+    val tfData = hashingTF.transform(ylzxDS)
+
+    val idf = new IDF().setInputCol("tfFeatures").setOutputCol("tfidfVec")
+    val idfModel = idf.fit(tfData)
+    val tfidfDF = idfModel.transform(tfData)
+
+count 'docsimi_jaccard'
+=> 415388
+
+
+=========================over
+
 
 get 'docsimi_jaccard','fef4e4b8-6a4a-4b5d-8356-72050e3480d9::score=1'
 
