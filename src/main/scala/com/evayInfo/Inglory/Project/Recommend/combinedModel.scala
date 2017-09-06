@@ -95,7 +95,7 @@ object combinedModel {
         val userString = x._1.toString
         val itemString = x._2.toString
         //保留rating有效数字
-        val rating = x._3.toString.toDouble
+        val rating = x._3.toString
         val rating2 = f"$rating%1.5f".toString
         val rn = x._4.toString
         val title = if (null != x._5) x._5.toString else ""

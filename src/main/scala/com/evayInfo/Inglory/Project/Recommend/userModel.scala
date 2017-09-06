@@ -267,9 +267,9 @@ object userModel {
 
     // user1, [(user1, similar),(item, value)]
     val rdd_app_R2 = rdd_app_R1.map { f => (f._1, (f._2, f._3)) }.join(user_prefer1.map(f => (f._1, (f._2, f._3))))
-    rdd_app_R2.collect().foreach(println)
+    //    rdd_app_R2.collect().foreach(println)
     val rdd_app_R3 = rdd_app_R2.map { f => ((f._2._1._1, f._2._2._1), f._2._2._2 * f._2._1._2) }
-    rdd_app_R3.collect().foreach(println)
+    //    rdd_app_R3.collect().foreach(println)
     val rdd_app_R4 = rdd_app_R3.reduceByKey((x, y) => x + y)
 
     val rdd_app_R5 = rdd_app_R4.leftOuterJoin(user_prefer1.map(f => ((f._1, f._2), 1))).
@@ -421,9 +421,9 @@ object userModel {
 
     // user1, [(user1, similar),(item, value)]
     val rdd_app_R2 = rdd_app_R1.map { f => (f._1, (f._2, f._3)) }.join(user_prefer1.map(f => (f._1, (f._2, f._3))))
-    rdd_app_R2.collect().foreach(println)
+    //    rdd_app_R2.collect().foreach(println)
     val rdd_app_R3 = rdd_app_R2.map { f => ((f._2._1._1, f._2._2._1), f._2._2._2 * f._2._1._2) }
-    rdd_app_R3.collect().foreach(println)
+    //    rdd_app_R3.collect().foreach(println)
     val rdd_app_R4 = rdd_app_R3.reduceByKey((x, y) => x + y)
 
     val rdd_app_R5 = rdd_app_R4.leftOuterJoin(user_prefer1.map(f => ((f._1, f._2), 1))).
@@ -454,7 +454,7 @@ object userModel {
     val joinDF1 = itemRecomDF.join(userLab, Seq("userID"), "left")
     val joinDF2 = joinDF1.join(itemLab, Seq("urlID"), "left")
     val joinDF3 = joinDF2.join(ylzxDF, Seq("itemString"), "left").na.drop()
-    ylzxDF.unpersist()
+
     val w = Window.partitionBy("userString").orderBy(col("rating").desc)
     val joinDF4 = joinDF3.withColumn("rn", row_number.over(w)).where($"rn" <= 10)
     val joinDF5 = joinDF4.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")

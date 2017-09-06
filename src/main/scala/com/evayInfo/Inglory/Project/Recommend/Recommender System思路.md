@@ -104,6 +104,20 @@ spark-submit --class com.evayInfo.Inglory.Project.Recommend.combineModel \
 /root/lulu/Progect/recommend/SparkDiary.jar \
 recommender_als recommender_content  recommender_user recommender_item recommender_combined
 
+
+修改分析方案，直接获取子模型分析结果，不把子模型结果保存到hbase中。
+
+spark-submit --class com.evayInfo.Inglory.Project.Recommend.combinedModel \
+--master yarn \
+--num-executors 2 \
+--executor-cores 2 \
+--executor-memory 4g \
+--jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+/root/lulu/Progect/recommend/SparkDiary.jar \
+yilan-total_webpage t_hbaseSink  ylzx_xgwz ylzx_cnxh_combined
+
+
+
 ## 2、HBase表的设计
 
 

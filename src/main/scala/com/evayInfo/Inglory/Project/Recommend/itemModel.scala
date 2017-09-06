@@ -429,7 +429,7 @@ object itemModel {
     val joinDF1 = itemRecomDF.join(userLab, Seq("userID"), "left")
     val joinDF2 = joinDF1.join(itemLab, Seq("urlID"), "left")
     val joinDF3 = joinDF2.join(ylzxDF, Seq("itemString"), "left").na.drop()
-    ylzxDF.unpersist()
+
     val w = Window.partitionBy("userString").orderBy(col("rating").desc)
     val joinDF4 = joinDF3.withColumn("rn", row_number.over(w)).where($"rn" <= 10)
     val joinDF5 = joinDF4.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
