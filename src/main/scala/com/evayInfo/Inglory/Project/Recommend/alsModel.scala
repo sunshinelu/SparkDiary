@@ -433,6 +433,142 @@ object alsModel {
     joinDF5
 
   }
+  def getAlsResult(ylzxTable: String, logsTable: String, sc: SparkContext, spark: SparkSession): Unit = {
 
+    //定义时间格式
+    // val dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss z", Locale.ENGLISH)
+    val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
+
+    //获取当前时间
+    val now: Date = new Date()
+    //对时间格式尽心格式化
+    val today = dateFormat.format(now)
+
+    import spark.implicits._
+    /*
+    1. get data
+     */
+    // get ylzx data
+    val ylzxRDD = RecomUtil.getYlzxRDD(ylzxTable, 20, sc)
+    val ylzxDF = spark.createDataset(ylzxRDD).dropDuplicates("content").drop("content")
+    // get logs data
+    val logsRDD = RecomUtil.getLogsRDD(logsTable, sc)
+    val logsDS = spark.createDataset(logsRDD).na.drop(Array("userString"))
+    /*
+    2. data clean
+     */
+    val ds1 = logsDS.groupBy("userString", "itemString").agg(sum("value")).withColumnRenamed("sum(value)", "rating")
+
+    //string to number
+    val userID = new StringIndexer().setInputCol("userString").setOutputCol("userID").fit(ds1)
+    val ds2 = userID.transform(ds1)
+    val urlID = new StringIndexer().setInputCol("itemString").setOutputCol("urlID").fit(ds2)
+    val ds3 = urlID.transform(ds2)
+
+    val ds4 = ds3.withColumn("userID", ds3("userID").cast("long")).
+      withColumn("urlID", ds3("urlID").cast("long")).
+      withColumn("rating", ds3("rating").cast("double"))
+
+    //Min-Max Normalization[-1,1]
+    val minMax = ds4.agg(max("rating"), min("rating")).withColumnRenamed("max(rating)", "max").withColumnRenamed("min(rating)", "min")
+    val maxValue = minMax.select("max").rdd.map { case Row(d: Double) => d }.first()
+    val minValue = minMax.select("min").rdd.map { case Row(d: Double) => d }.first
+    //limit the values to 4 digit
+    val ds5 = ds4.withColumn("norm", bround((((ds4("rating") - minValue) / (maxValue - minValue)) * 2 - 1), 4))
+
+    //RDD to RowRDD
+    val alsRDD = ds5.select("userID", "urlID", "norm").rdd.map { row => (row(0), row(1), row(2)) }.map { x =>
+      val user = x._1.toString.toInt
+      val item = x._2.toString.toInt
+      val rate = x._3.toString.toDouble
+      Rating(user, item, rate)
+    }
+
+    /*
+    3.build als model
+     */
+    // Build the recommendation model using ALS
+    val rank = 10
+    val numIterations = 10
+    val model = ALS.train(alsRDD, rank, numIterations, 0.01)
+
+    /*
+    4. get result
+     */
+    val topProducts = model.recommendProductsForUsers(15)
+
+    val topProductsRowRDD = topProducts.flatMap(x => {
+      val y = x._2
+      for (w <- y) yield (w.user, w.product, w.rating)
+    }).map { f => Schema2(f._1.toLong, f._2.toLong, f._3) }
+
+    val topProductsDF = spark.createDataset(topProductsRowRDD)
+
+    val userLab = ds5.select("userString", "userID").dropDuplicates
+    val itemLab = ds5.select("itemString", "urlID").dropDuplicates
+
+
+    val joinDF1 = topProductsDF.join(userLab, Seq("userID"), "left")
+    val joinDF2 = joinDF1.join(itemLab, Seq("urlID"), "left")
+    val joinDF3 = joinDF2.join(ylzxDF, Seq("itemString"), "left").na.drop()
+
+    val w = Window.partitionBy("userString").orderBy(col("rating").desc)
+    val joinDF4 = joinDF3.withColumn("rn", row_number.over(w)).where(col("rn") <= 10)
+    val joinDF5 = joinDF4.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
+/*
+5. save result
+ */
+    val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
+    //如果outputTable表存在，则删除表；如果不存在则新建表。
+
+    val outputTable = "recommender_als"
+    val hAdmin = new HBaseAdmin(conf)
+    if (hAdmin.tableExists(outputTable)) {
+      hAdmin.disableTable(outputTable)
+      hAdmin.deleteTable(outputTable)
+    }
+    //    val htd = new HTableDescriptor(outputTable)
+    val htd = new HTableDescriptor(TableName.valueOf(outputTable))
+    htd.addFamily(new HColumnDescriptor("info".getBytes()))
+    hAdmin.createTable(htd)
+
+    //指定输出格式和输出表名
+    conf.set(TableOutputFormat.OUTPUT_TABLE, outputTable) //设置输出表名，与输入是同一个表t_userProfileV1
+
+    val jobConf = new Configuration(conf)
+    jobConf.set("mapreduce.job.outputformat.class", classOf[TableOutputFormat[Text]].getName)
+
+    joinDF5.rdd.map(row => (row(0), row(1), row(2), row(3), row(4), row(5), row(6))).
+      map(x => {
+        val userString = x._1.toString
+        val itemString = x._2.toString
+        //保留rating有效数字
+        val rating = x._3.toString.toDouble
+        val rating2 = f"$rating%1.5f".toString
+        val rn = x._4.toString
+        val title = if (null != x._5) x._5.toString else ""
+        val manuallabel = if (null != x._6) x._6.toString else ""
+        val time = if (null != x._7) x._7.toString else ""
+        val sysTime = today
+        (userString, itemString, rating2, rn, title, manuallabel, time, sysTime)
+      }).filter(_._5.length >= 2).
+      map { x => {
+        val paste = x._1 + "::score=" + x._4.toString
+        val key = Bytes.toBytes(paste)
+        val put = new Put(key)
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("userID"), Bytes.toBytes(x._1.toString)) //标签的family:qualify,userID
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("id"), Bytes.toBytes(x._2.toString)) //id
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("rating"), Bytes.toBytes(x._3.toString)) //rating
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("rn"), Bytes.toBytes(x._4.toString)) //rn
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("title"), Bytes.toBytes(x._5.toString)) //title
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("manuallabel"), Bytes.toBytes(x._6.toString)) //manuallabel
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("mod"), Bytes.toBytes(x._7.toString)) //mod
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("sysTime"), Bytes.toBytes(x._8.toString)) //sysTime
+
+        (new ImmutableBytesWritable, put)
+      }
+      }.saveAsNewAPIHadoopDataset(jobConf)
+
+  }
 
 }

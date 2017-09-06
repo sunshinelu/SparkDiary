@@ -324,4 +324,103 @@ root
 
   }
 
+  def getContentResult(ylzxTable: String, logsTable: String, docsimiTable: String, sc: SparkContext, spark: SparkSession): Unit = {
+    //定义时间格式
+    // val dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss z", Locale.ENGLISH)
+    val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
+
+    //获取当前时间
+    val now: Date = new Date()
+    //对时间格式尽心格式化
+    val today = dateFormat.format(now)
+
+    import spark.implicits._
+    /*
+    1. get data
+     */
+
+    val ylzxRDD = RecomUtil.getYlzxRDD(ylzxTable, 20, sc)
+    val ylzxDS = spark.createDataset(ylzxRDD).dropDuplicates("content").drop("content").dropDuplicates()
+
+    val logsRDD = RecomUtil.getLogsRDD(logsTable, sc)
+    val logsDS = spark.createDataset(logsRDD).na.drop(Array("userString"))
+
+    val docsimiRDD = RecomUtil.getDocsimiRDD(docsimiTable, sc)
+    val docsimiDS = spark.createDataset(docsimiRDD)
+
+    /*
+    2. data clean
+     */
+    val df1 = logsDS.groupBy("userString", "itemString").agg(sum(col("value"))).drop("value").
+      withColumnRenamed("sum(value)", "value")
+    val df1_1 = df1.select("userString", "itemString")
+
+    val df2 = docsimiDS.select("id", "simsID", "level")
+    val df3 = df1.join(df2, df1("itemString") === df2("id"), "left").
+      withColumn("rating", col("value") * col("level")).drop("value").drop("level").na.drop()
+
+    val df4 = df3.drop("itemString").drop("id").withColumnRenamed("simsID", "itemString").
+      join(df1_1, Seq("userString", "itemString"), "leftanti").na.drop().
+      groupBy("userString", "itemString").agg(sum(col("rating"))).drop("rating").
+      withColumnRenamed("sum(rating)", "rating")
+
+    val df5 = df4.join(ylzxDS, Seq("itemString"), "left")
+    // 根据userString进行分组，对打分进行倒序排序，获取打分前10的数据。
+    val w = Window.partitionBy("userString").orderBy(col("rating").desc)
+    val df6 = df5.withColumn("rn", row_number.over(w)).where(col("rn") <= 10)
+
+    val df7 = df6.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
+    val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
+    //如果outputTable表存在，则删除表；如果不存在则新建表。
+
+    val outputTable = "recommender_content"
+    val hAdmin = new HBaseAdmin(conf)
+    if (hAdmin.tableExists(outputTable)) {
+      hAdmin.disableTable(outputTable)
+      hAdmin.deleteTable(outputTable)
+    }
+    //    val htd = new HTableDescriptor(outputTable)
+    val htd = new HTableDescriptor(TableName.valueOf(outputTable))
+    htd.addFamily(new HColumnDescriptor("info".getBytes()))
+    hAdmin.createTable(htd)
+
+    //指定输出格式和输出表名
+    conf.set(TableOutputFormat.OUTPUT_TABLE, outputTable) //设置输出表名，与输入是同一个表t_userProfileV1
+
+    val jobConf = new Configuration(conf)
+    jobConf.set("mapreduce.job.outputformat.class", classOf[TableOutputFormat[Text]].getName)
+
+    df7.rdd.map(row => (row(0), row(1), row(2), row(3), row(4), row(5), row(6))).
+      map(x => {
+        val userString = x._1.toString
+        val itemString = x._2.toString
+        //保留rating有效数字
+        val rating = x._3.toString.toDouble
+        val rating2 = f"$rating%1.5f".toString
+        val rn = x._4.toString
+        val title = if (null != x._5) x._5.toString else ""
+        val manuallabel = if (null != x._6) x._6.toString else ""
+        val time = if (null != x._7) x._7.toString else ""
+        val sysTime = today
+        (userString, itemString, rating2, rn, title, manuallabel, time, sysTime)
+      }).filter(_._5.length >= 2).
+      map { x => {
+        val paste = x._1 + "::score=" + x._4.toString
+        val key = Bytes.toBytes(paste)
+        val put = new Put(key)
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("userID"), Bytes.toBytes(x._1.toString)) //标签的family:qualify,userID
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("id"), Bytes.toBytes(x._2.toString)) //id
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("rating"), Bytes.toBytes(x._3.toString)) //rating
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("rn"), Bytes.toBytes(x._4.toString)) //rn
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("title"), Bytes.toBytes(x._5.toString)) //title
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("manuallabel"), Bytes.toBytes(x._6.toString)) //manuallabel
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("mod"), Bytes.toBytes(x._7.toString)) //mod
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("sysTime"), Bytes.toBytes(x._8.toString)) //sysTime
+
+        (new ImmutableBytesWritable, put)
+      }
+      }.saveAsNewAPIHadoopDataset(jobConf)
+
+  }
+
 }
