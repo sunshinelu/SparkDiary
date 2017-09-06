@@ -110,6 +110,9 @@ root
     val logsRDD = RecomUtil.getLogsRDD(logsTable, sc)
     val logsDS = spark.createDataset(logsRDD).na.drop(Array("userString")).select("userString","itemString", "value")
 
+    /*
+    基于用户的协同过滤：data frame版本
+     */
     val userR_1 = simiJoined.join(logsDS, simiJoined("user1") === logsDS("userString"), "left").
       withColumn("recomValue", col("userSimi") * col("value")).
       groupBy("user2", "itemString").agg(sum($"recomValue")).

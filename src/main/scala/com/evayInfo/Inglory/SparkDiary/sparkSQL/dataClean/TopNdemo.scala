@@ -56,6 +56,14 @@ object TopNdemo {
     //取Top3
     val dfTop3_TEMP = df.withColumn("rn", row_number.over(w2)).where($"rn" <= 3) //.drop("rn")
     dfTop3_TEMP.show
+    dfTop3_TEMP.printSchema()
+    /*
+    root
+ |-- Hour: integer (nullable = true)
+ |-- Category: string (nullable = true)
+ |-- TotalValue: double (nullable = true)
+ |-- rn: integer (nullable = true)
+     */
 
     /*
     使用RDD解决spark TopN问题：分组、排序、取TopN

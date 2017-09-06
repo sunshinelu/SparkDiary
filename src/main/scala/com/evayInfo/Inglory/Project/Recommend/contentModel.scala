@@ -317,7 +317,7 @@ root
     val df5 = df4.join(ylzxDS, Seq("itemString"), "left")
     // 根据userString进行分组，对打分进行倒序排序，获取打分前10的数据。
     val w = Window.partitionBy("userString").orderBy(col("rating").desc)
-    val df6 = df5.withColumn("rn", row_number.over(w)).where(col("rn") <= 5)
+    val df6 = df5.withColumn("rn", row_number.over(w)).where(col("rn") <= 10)
 
     val df7 = df6.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
     df7

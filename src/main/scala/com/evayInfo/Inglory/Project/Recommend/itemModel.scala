@@ -390,7 +390,7 @@ object itemModel {
 
     //calculate similarities
     val ratings = new CoordinateMatrix(rdd1)
-    val itemSimi = ratings.toRowMatrix.columnSimilarities(0.1)
+    val itemSimi = ratings.toRowMatrix().columnSimilarities(0.2)
 
 
     val itemSimiRdd = itemSimi.entries.map(f => ItemSimi(f.i, f.j, f.value)).

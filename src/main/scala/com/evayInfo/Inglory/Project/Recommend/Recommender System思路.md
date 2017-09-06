@@ -116,7 +116,8 @@ spark-submit --class com.evayInfo.Inglory.Project.Recommend.combinedModel \
 /root/lulu/Progect/recommend/SparkDiary.jar \
 yilan-total_webpage t_hbaseSink  ylzx_xgwz ylzx_cnxh_combined
 
-
+（在combinedModel中添加` println("df1数量为：" + df1.count())`任务才运行成功，
+应该是spark data frame中的优化逻辑导致。目前尚未找到解决方案。）
 
 ## 2、HBase表的设计
 

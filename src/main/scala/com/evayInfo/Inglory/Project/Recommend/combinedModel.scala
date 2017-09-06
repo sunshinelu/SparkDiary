@@ -43,32 +43,67 @@ object combinedModel {
     val w_item = 0.25
     val w_user = 0.25
 
+    // (-rn.toInt + 11) * weight
     val alsDS = alsModel.getAlsModel(ylzxTable, logsTable, sc, spark).drop("rating").
-      withColumn("wValue", col("rn") * w_als)
+      withColumn("wValue", (-col("rn") + 11) * w_als)
+    //    println("alsDS数量为：" + alsDS.count()) // alsDS数量为：356
+    //    alsDS.printSchema()
+    //    alsDS.persist(StorageLevel.MEMORY_AND_DISK_SER_2)
+
     val contentDS = contentModel.getContentModel(ylzxTable, logsTable, docsimiTable, sc, spark).drop("rating").
-      withColumn("wValue", col("rn") * w_content)
-    val itemDS = itemModel.getItemModel(ylzxTable, logsTable, sc, spark).drop("rating").
-      withColumn("wValue", col("rn") * w_item)
+      withColumn("wValue", (-col("rn") + 11) * w_content)
+    //    println("contentDS数量为：" + contentDS.count()) // contentDS数量为：170
+    //    contentDS.printSchema()
+    //    contentDS.persist(StorageLevel.MEMORY_AND_DISK_SER_2)
+
     val userDS = userModel.getUserModel(ylzxTable, logsTable, sc, spark).drop("rating").
-      withColumn("wValue", col("rn") * w_user)
+      withColumn("wValue", (-col("rn") + 11) * w_user)
+    //    println("userDS数量为：" + userDS.count()) // userDS数量为：325
+    //    userDS.printSchema()
+    //    userDS.persist(StorageLevel.MEMORY_AND_DISK_SER_2)
+
+    val itemDS = itemModel.getItemModel(ylzxTable, logsTable, sc, spark).drop("rating").
+      withColumn("wValue", (-col("rn") + 11) * w_item)
+    //    println("itemDS数量为：" + itemDS.count()) // itemDS数量为：340
+    //    itemDS.printSchema()
+    //    itemDS.persist(StorageLevel.MEMORY_AND_DISK_SER_2)
+
 
     // 将alsDS、contenDS、itemDS和userDS合并到一个dataset中
     val recommDS = alsDS.union(itemDS).union(userDS).union(contentDS)
+    //    println("recommDS数量为：" + recommDS.count()) // recommDS数量为：1195
+
     //("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
     val itemLab = recommDS.select("itemString", "title", "manuallabel", "time").dropDuplicates()
+    //    println("itemLab数量为：" + itemLab.count()) // itemLab数量为：507
+
     // 根据userString和itemString对rn进行求和，新增列名为rating
     val df1 = recommDS.groupBy("userString", "itemString").agg(sum("wValue")).withColumnRenamed("sum(wValue)", "rating")
+    println("df1数量为：" + df1.count()) // df1数量为：1020
 
     // 根据itemString将title、manuallabel和time整合到df2中
     val df2 = df1.join(itemLab, Seq("itemString"), "left").drop("rn").na.drop()
 
     // 根据userString进行分组，对打分进行倒序排序，获取打分前5的数据。
     val w = Window.partitionBy("userString").orderBy(col("rating").desc)
-    val df3 = df2.withColumn("rn", row_number.over(w)).where($"rn" <= 5)
+    val df3 = df2.withColumn("rn", row_number.over(w)).where($"rn" <= 10)
+
     // 增加系统时间列
     val df4 = df3.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time").
       withColumn("systime", current_timestamp()).withColumn("systime", date_format($"systime", "yyyy-MM-dd HH:mm:ss"))
 
+    //    df4.printSchema()
+    /*
+    root
+     |-- userString: string (nullable = true)
+     |-- itemString: string (nullable = true)
+     |-- rating: double (nullable = true)
+     |-- rn: integer (nullable = true)
+     |-- title: string (nullable = true)
+     |-- manuallabel: string (nullable = true)
+     |-- time: string (nullable = true)
+     |-- systime: string (nullable = false)
+     */
     val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
 
     /*
@@ -95,7 +130,7 @@ object combinedModel {
         val userString = x._1.toString
         val itemString = x._2.toString
         //保留rating有效数字
-        val rating = x._3.toString
+        val rating = x._3.toString.toDouble
         val rating2 = f"$rating%1.5f".toString
         val rn = x._4.toString
         val title = if (null != x._5) x._5.toString else ""
