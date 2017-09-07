@@ -158,19 +158,20 @@ object checkSWTdata {
       val time = v.getValue(Bytes.toBytes("f"), Bytes.toBytes("mod")) //时间列
       (urlID, title, manuallabel, time)
     }
-    }.filter(x => null != x._2 & null != x._3 & null != x._4).
+    }.//filter(x => null != x._2 & null != x._3 & null != x._4).
       map { x => {
         val urlID_1 = Bytes.toString(x._1)
-        val title_1 = Bytes.toString(x._2)
-        val manuallabel_1 = Bytes.toString(x._3)
+        val title_1 = if (null != x._2) (Bytes.toString(x._2)) else ""
+        val manuallabel_1 = if (null != x._3) (Bytes.toString(x._3))  else ""
         //时间格式转化
-        val time = Bytes.toLong(x._4) //toString(x._4).toLong
+        val time = if (null != x._4) (Bytes.toLong(x._4)) else (0L) //toString(x._4).toLong
         ylzxSchema2(urlID_1, title_1, manuallabel_1, time)
       }
-      }.filter(x => {
-      x.title.length >= 2
-    }).filter(x => x.time >= nDaysAgoL).filter(x => x.manuallabel.contains("商务"))
-
+      }.filter(x => x.manuallabel.contains("商务"))
+    /*.filter(x => {
+    x.title.length >= 2
+  }).filter(x => x.time >= nDaysAgoL).filter(x => x.manuallabel.contains("商务"))
+*/
     hbaseRDD
   }
 
@@ -205,6 +206,14 @@ object checkSWTdata {
 
     ylzxDS2.filter(col("itemString") === "3f8ed9a1-541b-4fb1-97f8-d2987935ab3a").collect().foreach(println)
     ylzxDS2.filter(col("itemString") === "1cbff174-2194-4556-90af-a11e4656c2d4").collect().foreach(println)
+
+    /*
+        get 'yilan-total_webpage','1cbff174-2194-4556-90af-a11e4656c2d4'
+        get 'yilan-total_webpage','3f8ed9a1-541b-4fb1-97f8-d2987935ab3a'
+
+    count 'yilan-total_webpage'
+
+        */
 
     sc.stop()
     spark.stop()
