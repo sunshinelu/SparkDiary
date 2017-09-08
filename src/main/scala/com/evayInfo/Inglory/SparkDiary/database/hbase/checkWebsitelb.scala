@@ -101,8 +101,8 @@ object checkWebsitelb {
     val df3 = df1.join(dic, Seq("webLabel"), "left")
 //    println("df3的数量为：" + df3.count())
     //df3的数量为：44088
-    df3.printSchema()
-    df3.show(5)
+    //    df3.printSchema()
+    //    df3.show(5)
 
     val df4_rdd = df3.select("itemString", "VALUE").rdd.map{case(rowkey:String, websitelb:String) => (rowkey, websitelb)}
 
