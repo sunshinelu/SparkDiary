@@ -41,7 +41,7 @@ object checkLogData {
     val logsTimeDS = spark.createDataset(logsTimeRDD)
 
     val ds0 = logsTimeDS.filter(col("time").contains("2017-07-13")).
-      filter(col("REQUEST_URI").contains( """search/getContentById.do""")).select($"PARAMS").
+      filter(col("REQUEST_URI").contains( """getContentById.do""")).select($"PARAMS").
       collect() //select("time").sort(col("time").desc).show(7)
 
     val logsRDD = getLogsRDD(logsTable, sc)
@@ -116,7 +116,7 @@ object checkLogData {
         val parmas = Bytes.toString(x._4)
         LogView(userID, requestURL, parmas, creatTimeS)
       }
-      }.filter(x => x.REQUEST_URI.contains( """search/getContentById.do""")).
+      }.filter(x => x.REQUEST_URI.contains( """getContentById.do""")).
       filter(_.PARAMS.toString.length >= 10).
       map(x => {
         val userID = x.CREATE_BY_ID.toString

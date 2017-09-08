@@ -14,7 +14,7 @@ object readText {
     val logsRDD2 = logsRDD.map(_.split("\t")).filter(_.length == 11).filter(_ (4).length > 2).map(line => (LogView(line(4), line(8), line(10))))
 
     //过滤REQUEST_URI列中包含search/getContentById.do的列，并提取PARAMS中的id
-    val logsRDD3 = logsRDD2.filter(x => x.REQUEST_URI.contains("search/getContentById.do")).
+    val logsRDD3 = logsRDD2.filter(x => x.REQUEST_URI.contains("getContentById.do")).
       filter(_.PARAMS.toString.length >= 10).
       map(x => {
         val userID = x.CREATE_BY_ID.toString

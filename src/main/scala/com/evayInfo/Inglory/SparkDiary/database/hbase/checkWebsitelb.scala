@@ -10,8 +10,8 @@ import org.apache.hadoop.hbase.util.{Base64, Bytes}
 import org.apache.hadoop.io.Text
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.udf
+import org.apache.spark.sql.{Row, SparkSession}
 /*
 查看total表中的p:websitelb
  */
@@ -95,7 +95,8 @@ object checkWebsitelb {
 
     val dic = spark.read.format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat").
       option("header", true).option("delimiter", ",").
-      load("file:///D:\\Workspace\\IDEA\\GitHub\\SparkDiary\\data\\webLab.csv").
+//      load("file:///D:\\Workspace\\IDEA\\GitHub\\SparkDiary\\data\\webLab.csv").
+      load("/personal/sunlu/lulu/webLab.csv").
       withColumnRenamed("TEXT", "webLabel")
 
     val df3 = df1.join(dic, Seq("webLabel"), "left")
@@ -104,7 +105,7 @@ object checkWebsitelb {
     //    df3.printSchema()
     //    df3.show(5)
 
-    val df4_rdd = df3.select("itemString", "VALUE").rdd.map{case(rowkey:String, websitelb:String) => (rowkey, websitelb)}
+    val df4_rdd = df3.select("itemString", "VALUE").rdd.map { case Row(rowkey: String, websitelb: String) => (rowkey, websitelb) }
 
     //指定输出格式和输出表名
     conf.set(TableOutputFormat.OUTPUT_TABLE, ylzxTable) //设置输出表名

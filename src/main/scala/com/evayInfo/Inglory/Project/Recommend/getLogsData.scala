@@ -1,12 +1,12 @@
 package com.evayInfo.Inglory.Project.Recommend
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDescriptor, TableName}
 import org.apache.hadoop.hbase.client.{HBaseAdmin, Put, Scan}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.{TableInputFormat, TableOutputFormat}
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil
 import org.apache.hadoop.hbase.util.{Base64, Bytes}
+import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDescriptor, TableName}
 import org.apache.hadoop.io.Text
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.rdd.RDD
@@ -72,8 +72,9 @@ object getLogsData {
         val parmas = Bytes.toString(x._5)
         LogView(rowkey, userID, creatTime, requestURL, parmas)
       }
-      }.filter(x => x.REQUEST_URI.contains("search/getContentById.do") || x.REQUEST_URI.contains("like/add.do") ||
-      x.REQUEST_URI.contains("favorite/add.do") || x.REQUEST_URI.contains("favorite/delete.do")
+      }.filter(x => x.REQUEST_URI.contains("getContentById.do") || x.REQUEST_URI.contains("like/add.do") ||
+      x.REQUEST_URI.contains("favorite/add.do") || x.REQUEST_URI.contains("favorite/delete.do") ||
+      x.REQUEST_URI.contains("addFavorite.do") || x.REQUEST_URI.contains("delFavorite.do")
     ).filter(_.PARAMS.toString.length >= 10)
 
     hbaseRDD
