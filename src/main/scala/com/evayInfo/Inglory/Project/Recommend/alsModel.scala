@@ -524,7 +524,7 @@ object alsModel {
     val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
     //如果outputTable表存在，则删除表；如果不存在则新建表。
 
-    val outputTable = "recommender_als"
+    val outputTable = "recommender_temp"
     val hAdmin = new HBaseAdmin(conf)
     if (hAdmin.tableExists(outputTable)) {
       hAdmin.disableTable(outputTable)
@@ -556,7 +556,8 @@ object alsModel {
         (userString, itemString, rating2, rn, title, manuallabel, time, sysTime)
       }).filter(_._5.length >= 2).
       map { x => {
-        val paste = x._1 + "::score=" + x._4.toString
+        val modelLabel = "als"
+        val paste = "als_" + x._1 + "::score=" + x._4.toString
         val key = Bytes.toBytes(paste)
         val put = new Put(key)
         put.add(Bytes.toBytes("info"), Bytes.toBytes("userID"), Bytes.toBytes(x._1.toString)) //标签的family:qualify,userID
@@ -567,6 +568,7 @@ object alsModel {
         put.add(Bytes.toBytes("info"), Bytes.toBytes("manuallabel"), Bytes.toBytes(x._6.toString)) //manuallabel
         put.add(Bytes.toBytes("info"), Bytes.toBytes("mod"), Bytes.toBytes(x._7.toString)) //mod
         put.add(Bytes.toBytes("info"), Bytes.toBytes("sysTime"), Bytes.toBytes(x._8.toString)) //sysTime
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("modellabel"), Bytes.toBytes(modelLabel.toString)) //modellabel
 
         (new ImmutableBytesWritable, put)
       }

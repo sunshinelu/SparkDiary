@@ -371,19 +371,32 @@ root
 
     val df7 = df6.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
     val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
-    //如果outputTable表存在，则删除表；如果不存在则新建表。
 
-    val outputTable = "recommender_content"
-    val hAdmin = new HBaseAdmin(conf)
-    if (hAdmin.tableExists(outputTable)) {
-      hAdmin.disableTable(outputTable)
-      hAdmin.deleteTable(outputTable)
+
+    val outputTable = "recommender_temp"
+
+    //如果outputTable存在则不做任何操作，如果HBASE表不存在则新建表
+    val hadmin = new HBaseAdmin(conf)
+    if (!hadmin.isTableAvailable(outputTable)) {
+      print("Table Not Exists! Create Table")
+      val tableDesc = new HTableDescriptor(TableName.valueOf(outputTable))
+      tableDesc.addFamily(new HColumnDescriptor("info".getBytes()))
+      hadmin.createTable(tableDesc)
+    } else {
+      print("Table  Exists!  not Create Table")
     }
-    //    val htd = new HTableDescriptor(outputTable)
-    val htd = new HTableDescriptor(TableName.valueOf(outputTable))
-    htd.addFamily(new HColumnDescriptor("info".getBytes()))
-    hAdmin.createTable(htd)
-
+    /*
+        //如果outputTable表存在，则删除表；如果不存在则新建表。
+        val hAdmin = new HBaseAdmin(conf)
+        if (hAdmin.tableExists(outputTable)) {
+          hAdmin.disableTable(outputTable)
+          hAdmin.deleteTable(outputTable)
+        }
+        //    val htd = new HTableDescriptor(outputTable)
+        val htd = new HTableDescriptor(TableName.valueOf(outputTable))
+        htd.addFamily(new HColumnDescriptor("info".getBytes()))
+        hAdmin.createTable(htd)
+    */
     //指定输出格式和输出表名
     conf.set(TableOutputFormat.OUTPUT_TABLE, outputTable) //设置输出表名，与输入是同一个表t_userProfileV1
 
@@ -405,7 +418,8 @@ root
         (userString, itemString, rating2, rn, title, manuallabel, time, sysTime)
       }).filter(_._5.length >= 2).
       map { x => {
-        val paste = x._1 + "::score=" + x._4.toString
+        val modelLabel = "content"
+        val paste = "content_" + x._1 + "::score=" + x._4.toString
         val key = Bytes.toBytes(paste)
         val put = new Put(key)
         put.add(Bytes.toBytes("info"), Bytes.toBytes("userID"), Bytes.toBytes(x._1.toString)) //标签的family:qualify,userID
@@ -416,6 +430,7 @@ root
         put.add(Bytes.toBytes("info"), Bytes.toBytes("manuallabel"), Bytes.toBytes(x._6.toString)) //manuallabel
         put.add(Bytes.toBytes("info"), Bytes.toBytes("mod"), Bytes.toBytes(x._7.toString)) //mod
         put.add(Bytes.toBytes("info"), Bytes.toBytes("sysTime"), Bytes.toBytes(x._8.toString)) //sysTime
+        put.add(Bytes.toBytes("info"), Bytes.toBytes("modellabel"), Bytes.toBytes(modelLabel.toString)) //modellabel
 
         (new ImmutableBytesWritable, put)
       }

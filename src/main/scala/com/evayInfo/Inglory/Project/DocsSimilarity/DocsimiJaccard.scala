@@ -34,7 +34,7 @@ object DocsimiJaccard {
     val docSimiTable = "docsimi_jaccard"
 */
 
-    val ylzxRDD = DocsimiUtil.getYlzxSegRDD(ylzxTable, 20, sc)
+    val ylzxRDD = DocsimiUtil.getYlzxSegRDD(ylzxTable, 1, sc)
     val ylzxDS = spark.createDataset(ylzxRDD) //.randomSplit(Array(0.01, 0.99))(0)
 
     /*
@@ -68,7 +68,7 @@ object DocsimiJaccard {
     val tfidfDF = idfModel.transform(tfData)
 
     val mh = new MinHashLSH().
-      setNumHashTables(20).
+      setNumHashTables(5).
       setInputCol("tfidfVec").
       setOutputCol("mhVec")
 

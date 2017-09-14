@@ -16,6 +16,9 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 /**
  * Created by sunlu on 17/9/8.
+ * spark-shell下测试：
+ * spark-shell --master yarn --num-executors 4 --executor-cores  2 --executor-memory 4g --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar
+
  */
 object checkUserLogs {
 
@@ -134,7 +137,7 @@ object checkUserLogs {
     // 获取时间
     //定义时间格式
     // val dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss z", Locale.ENGLISH)
-    val dateFormat = new SimpleDateFormat("yyyy-MM-dd") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
+    val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
 
     //获取当前时间
     val now: Date = new Date()
@@ -182,7 +185,7 @@ object checkUserLogs {
         val creatTime = Bytes.toString(x._2)
         //定义时间格式
         val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
-        val dateFormat2 = new SimpleDateFormat("yyyy-MM-dd") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
+        val dateFormat2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
         val creatTimeD = dateFormat.parse(creatTime)
         val creatTimeS = dateFormat2.format(creatTimeD)
         val creatTimeL = dateFormat2.parse(creatTimeS).getTime
@@ -269,7 +272,7 @@ object checkUserLogs {
 
 
     //read log files
-    val logsRDD3 = sc.textFile("/app-ylzx-logs").filter(null != _)
+    val logsRDD3 = sc.textFile("/app-ylzx-logs/log_2017-09-10.log").filter(null != _)
     //    val logsRDD = sc.textFile("/personal/sunlu/ylzx_app").filter(null != _)
 
     val logsRDD3_2 = logsRDD3.map(_.split("\t")).filter(_.length == 11).filter(_ (4).length > 2).map(line => (LogView3(line(4), line(8), line(10))))
