@@ -61,6 +61,44 @@ spark-submit --class com.evayInfo.Inglory.Project.Recommend.userModel \
 yilan-total_webpage t_hbaseSink  recommender_user
 
 
+userModelV2 思路：
+
+`YLZX_NRGL_OPER_CATEGORY`：操作员与栏目（标签）关系表
+  `OPERATOR_ID`：'操作员ID',
+  `CATEGORY_NAME`：'栏目（标签）名称',
+  
+
+`YLZX_NRGL_MYSUB_WEBSITE`我订阅的网站
+  `OPERATOR_ID` ：用户ID
+  `WEBSITE_ID`：'网站ID',
+  `WEBSITE_NAME`：'网站名称',
+  `WEBSITE_URL`：'网站地址',
+
+
+ `YLZX_NRGL_MYSUB_WEBSITE_COL` 我订阅的栏目
+  `OPERATOR_ID`：用户ID
+  `WEBSITE_ID`：'网站ID',
+  `COLUMN_ID`：栏目ID
+  `COLUMN_NAME`：'网站名称',
+  `COLUMN_URL`：'网站地址',
+
+使用`YLZX_NRGL_OPER_CATEGORY`表中的 `OPERATOR_ID`列和`CATEGORY_NAME`列，
+ `YLZX_NRGL_MYSUB_WEBSITE_COL` 表中的`OPERATOR_ID`和`COLUMN_ID`列计算用户相似性。
+
+然后进行user based recommender。
+
+任务提交代码：
+
+spark-submit --class com.evayInfo.Inglory.Project.Recommend.userModelV2 \
+--master yarn \
+--num-executors 2 \
+--executor-cores 2 \
+--executor-memory 4g \
+--jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
+/root/lulu/Progect/recommend/SparkDiary.jar \
+yilan-total_webpage t_hbaseSink  recommender_user
+
+
 count 'recommender_user'
 
 
