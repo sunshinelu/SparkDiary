@@ -22,7 +22,10 @@ import org.apache.spark.{SparkConf, SparkContext}
 /**
  * Created by sunlu on 17/9/15.
  * 使用`YLZX_NRGL_OPER_CATEGORY`表中的 `OPERATOR_ID`列和`CATEGORY_NAME`列，
- `YLZX_NRGL_MYSUB_WEBSITE_COL` 表中的`OPERATOR_ID`和`COLUMN_ID`列计算用户相似性。
+ `YLZX_NRGL_MYSUB_WEBSITE_COL` 表中的`OPERATOR_ID`和`COLUMN_ID`列
+用户浏览日志
+ 用户热门标签点击日志
+计算用户相似性。
  做基于用户的推荐
  */
 object userModelV2 {
@@ -46,23 +49,50 @@ object userModelV2 {
     val logsTable = "t_hbaseSink"
     val outputTable = "recommender_user"
 
-    val url1 = "jdbc:mysql://localhost:3306/ylzx?useUnicode=true&characterEncoding=UTF-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+    //    val url1 = "jdbc:mysql://localhost:3306/ylzx?useUnicode=true&characterEncoding=UTF-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+    val url1 = "jdbc:mysql://192.168.37.102:3306/ylzx?useUnicode=true&characterEncoding=UTF-8"
     val prop1 = new Properties()
+    /*
     prop1.setProperty("driver", "com.mysql.jdbc.Driver")
     prop1.setProperty("user", "root")
     prop1.setProperty("password", "root")
+    */
+    prop1.setProperty("user", "ylzx")
+    prop1.setProperty("password", "ylzx")
     //get data
     val website_df = spark.read.jdbc(url1, "YLZX_NRGL_MYSUB_WEBSITE_COL", prop1)
     val category_df = spark.read.jdbc(url1, "YLZX_NRGL_OPER_CATEGORY", prop1)
 
     val website_df1 = website_df.select("OPERATOR_ID", "COLUMN_ID").
       withColumnRenamed("COLUMN_ID", "userFeature").
-      withColumn("value", lit(1.0)).na.drop().dropDuplicates()
+      withColumn("value", lit(2.0)).na.drop().dropDuplicates() //增大网站标签权重
     val category_df1 = category_df.select("OPERATOR_ID", "CATEGORY_NAME").
       withColumnRenamed("CATEGORY_NAME", "userFeature").
       withColumn("value", lit(1.0)).na.drop().dropDuplicates()
+    val logsRDD = getLogsRDD(logsTable, sc)
 
-    val df = website_df1.union(category_df1)
+    val logsDS = spark.createDataset(logsRDD).na.drop(Array("userString")).
+      groupBy("userString", "itemString").
+      agg(sum("value")).
+      withColumnRenamed("sum(value)", "rating").drop("value") // "userString", "itemString" ,"rating"
+
+    val logs_df1 = logsDS.withColumnRenamed("userString", "OPERATOR_ID").
+      withColumnRenamed("itemString", "userFeature").withColumnRenamed("rating", "value")
+
+    //(userString: String, searchWords: String, searchValue: Double)
+    val hotlabelRDD = getHotLabelLogRDD(logsTable, sc)
+    val hotlabelDS = spark.createDataset(hotlabelRDD).na.drop(Array("userString")).
+      groupBy("userString", "searchWords").
+      agg(sum("searchValue")).
+      withColumnRenamed("sum(searchValue)", "value").drop("searchValue")
+    val hotlabel_df1 = hotlabelDS.withColumnRenamed("userString", "OPERATOR_ID").
+      withColumnRenamed("searchWords", "userFeature")
+
+
+    val df = website_df1.union(category_df1).union(logs_df1).union(hotlabel_df1).
+      groupBy("OPERATOR_ID", "userFeature").
+      agg(sum("value")).drop("value").
+      withColumnRenamed("sum(value)", "value")
 
 
     //string to number
@@ -100,14 +130,14 @@ object userModelV2 {
     val userSimiDF2 = userSimiDF.join(user1IdLab, Seq("user1Id"), "left").
       join(user2IdLab, Seq("user2Id"), "left").na.drop.select("user1", "user2", "userSimi")
 
+    /*
+        val myID = """175786f8-1e74-4d6c-94e9-366cf1649721"""
+        userSimiDF2.filter(col("user1").contains("175786f8")).show
+        userSimiDF2.filter($"user1" === myID).show
+        userSimiDF2.filter(col("user1").contains("175786f8")).orderBy(col("userSimi").desc).show(false)
+        val simUserId = "e5e16dfb-8dfa-4467-aaa2-7c3081fb55bb"
+    */
 
-
-    val logsRDD = getLogsRDD(logsTable, sc)
-
-    val logsDS = spark.createDataset(logsRDD).na.drop(Array("userString")).
-      groupBy("userString", "itemString").
-      agg(sum("value")).
-      withColumnRenamed("sum(value)", "rating").drop("value") // "userString", "itemString" ,"rating"
 
     /*
   基于用户的协同过滤：data frame版本
@@ -126,15 +156,52 @@ object userModelV2 {
     val ylzxRDD = RecomUtil.getYlzxRDD(ylzxTable, 20, sc)
     val ylzxDF = spark.createDataset(ylzxRDD).dropDuplicates("content").drop("content")
 
-    val userR_3 = userR_2.join(ylzxDF, Seq("itemString"), "left")
+    val userR_3 = userR_2.join(ylzxDF, Seq("itemString"), "left").
+      select("user2", "itemString", "recomValue", "title", "manuallabel", "time").na.drop()
+
+    /*
+        logsDS.filter(col("userString") === simUserId).orderBy(col("rating").desc).show(false)
+        userR_3.filter(col("user2") === myID).orderBy(col("recomValue").desc).show(false)
+        userR_3.filter(col("user2") === myID).select("title","time").orderBy(col("time").desc).show(200, false)
+    */
 
     //对dataframe进行分组排序，并取每组的前5个
     val w = Window.partitionBy("user2").orderBy(col("recomValue").desc)
-    val userR_4 = userR_3.withColumn("rn", row_number.over(w)).where(col("rn") <= 5)
+    val userR_4 = userR_3.withColumn("rn", row_number.over(w)).where(col("rn") <= 15)
 
-    val userR_5 = userR_4.select("user2", "itemString", "recomValue", "rn", "title", "manuallabel", "time")
-      .withColumn("systime", current_timestamp()).withColumn("systime", date_format($"systime", "yyyy-MM-dd HH:mm:ss"))
+    val simiItem = "fed8a4c7-8c0a-4f1a-b684-0eb08b9f5fb0"
+    val simiItem2 = "e7685b22-451a-434e-8489-832561c770d9"
+    /*
+     get 'yilan-total_webpage','fed8a4c7-8c0a-4f1a-b684-0eb08b9f5fb0'
 
+get 'yilan-total_webpage','e7685b22-451a-434e-8489-832561c770d9'
+
+
+    logsDS.filter(col("userString") === myID).filter(col("itemString") === simiItem).show(false)
+    logsDS2.filter(col("user2") === myID).filter(col("itemString") === simiItem).show(false)
+    userR_3.filter(col("user2") === myID).filter(col("itemString") === simiItem).show(false)//null
+    userR_4.filter(col("user2") === myID).filter(col("itemString") === simiItem).show(false)//null
+
+    logsDS.filter(col("userString") === myID).filter(col("itemString") === simiItem2).show(false)//null
+    logsDS2.filter(col("user2") === myID).filter(col("itemString") === simiItem2).show(false)//null
+    userR_3.filter(col("user2") === myID).filter(col("itemString") === simiItem2).show(false)
+    userR_4.filter(col("user2") === myID).filter(col("itemString") === simiItem2).show(false)//null
+    userR_4.filter(col("user2") === myID).select("title","time").orderBy(col("time").desc).show(200, false)
+     */
+
+    val userR_5 = userR_4.select("user2", "itemString", "recomValue", "rn", "title", "manuallabel", "time").na.drop.
+      withColumn("systime", current_timestamp()).withColumn("systime", date_format($"systime", "yyyy-MM-dd HH:mm:ss"))
+    /*
+    root
+     |-- user2: string (nullable = true)
+     |-- itemString: string (nullable = true)
+     |-- recomValue: double (nullable = true)
+     |-- rn: integer (nullable = true)
+     |-- title: string (nullable = true)
+     |-- manuallabel: string (nullable = true)
+     |-- time: string (nullable = true)
+     |-- systime: string (nullable = false)
+     */
     val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
 
     /*
@@ -156,7 +223,10 @@ object userModelV2 {
     val jobConf = new Configuration(conf)
     jobConf.set("mapreduce.job.outputformat.class", classOf[TableOutputFormat[Text]].getName)
 
-    userR_5.rdd.map(row => (row(0), row(1), row(2), row(3), row(4), row(5), row(6), row(7))).
+    userR_5.toDF().rdd.map {
+      case Row(user2: String, itemString: String, recomValue: Double, rn: Int, title: String, manuallabel: String, time: String, systime: String) =>
+        (user2, itemString, recomValue, rn, title, manuallabel, time, systime)
+    }.
       map(x => {
         val userString = x._1.toString
         val itemString = x._2.toString
@@ -187,6 +257,38 @@ object userModelV2 {
       }
       }.saveAsNewAPIHadoopDataset(jobConf)
 
+    /*
+       userR_5.rdd.map(row => (row(0), row(1), row(2), row(3), row(4), row(5), row(6), row(7))).
+         map(x => {
+           val userString = x._1.toString
+           val itemString = x._2.toString
+           //保留rating有效数字
+           val rating = x._3.toString.toDouble
+           val rating2 = f"$rating%1.5f".toString
+           val rn = x._4.toString
+           val title = if (null != x._5) x._5.toString else ""
+           val manuallabel = if (null != x._6) x._6.toString else ""
+           val time = if (null != x._7) x._7.toString else ""
+           val sysTime = if (null != x._8) x._8.toString else ""
+           (userString, itemString, rating2, rn, title, manuallabel, time, sysTime)
+         }).filter(_._5.length >= 2).
+         map { x => {
+           val paste = x._1 + "::score=" + x._4.toString
+           val key = Bytes.toBytes(paste)
+           val put = new Put(key)
+           put.add(Bytes.toBytes("info"), Bytes.toBytes("userID"), Bytes.toBytes(x._1.toString)) //标签的family:qualify,userID
+           put.add(Bytes.toBytes("info"), Bytes.toBytes("id"), Bytes.toBytes(x._2.toString)) //id
+           put.add(Bytes.toBytes("info"), Bytes.toBytes("rating"), Bytes.toBytes(x._3.toString)) //rating
+           put.add(Bytes.toBytes("info"), Bytes.toBytes("rn"), Bytes.toBytes(x._4.toString)) //rn
+           put.add(Bytes.toBytes("info"), Bytes.toBytes("title"), Bytes.toBytes(x._5.toString)) //title
+           put.add(Bytes.toBytes("info"), Bytes.toBytes("manuallabel"), Bytes.toBytes(x._6.toString)) //manuallabel
+           put.add(Bytes.toBytes("info"), Bytes.toBytes("mod"), Bytes.toBytes(x._7.toString)) //mod
+           put.add(Bytes.toBytes("info"), Bytes.toBytes("sysTime"), Bytes.toBytes(x._8.toString)) //sysTime
+
+           (new ImmutableBytesWritable, put)
+         }
+         }.saveAsNewAPIHadoopDataset(jobConf)
+   */
 
     sc.stop()
     spark.stop()
@@ -290,5 +392,85 @@ object userModelV2 {
 
     hbaseRDD
   }
+
+  case class HotLabelSchema(userString: String, searchWords: String, CREATE_TIME: Long, value: Double)
+
+  case class HotLabelSchema2(userString: String, searchWords: String, searchValue: Double)
+
+
+  def getHotLabelLogRDD(logsTable: String, sc: SparkContext): RDD[HotLabelSchema2] = {
+    val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
+    //设置查询的表名
+    conf.set(TableInputFormat.INPUT_TABLE, logsTable) //设置输入表名 第一个参数yeeso-test-ywk_webpage
+
+    //扫描整个表中指定的列和列簇
+    val scan = new Scan()
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("cREATE_BY_ID")) //cREATE_BY_ID
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("cREATE_TIME")) //cREATE_TIME
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("rEQUEST_URI")) //rEQUEST_URI
+    scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("pARAMS")) //pARAMS
+    conf.set(TableInputFormat.SCAN, convertScanToString(scan))
+
+    val hBaseRDD = sc.newAPIHadoopRDD(conf, classOf[TableInputFormat],
+      classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
+      classOf[org.apache.hadoop.hbase.client.Result])
+    //提取hbase数据，并对数据进行过滤
+    val hbaseRDD = hBaseRDD.map { case (k, v) => {
+      val rowkey = k.get()
+      val userID = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("cREATE_BY_ID")) //cREATE_BY_ID
+      val creatTime = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("cREATE_TIME")) //cREATE_TIME
+      val requestURL = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("rEQUEST_URI")) //rEQUEST_URI
+      val parmas = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("pARAMS")) //pARAMS
+      (userID, creatTime, requestURL, parmas)
+    }
+    }.filter(x => null != x._1 & null != x._2 & null != x._3 & null != x._4).
+      map { x => {
+        val userID = Bytes.toString(x._1)
+        val creatTime = Bytes.toString(x._2)
+        //定义时间格式
+        val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
+        val dateFormat2 = new SimpleDateFormat("yyyy-MM-dd") // yyyy-MM-dd HH:mm:ss或者 yyyy-MM-dd
+        val creatTimeD = dateFormat.parse(creatTime)
+        val creatTimeS = dateFormat.format(creatTimeD)
+        val creatTimeL = dateFormat2.parse(creatTimeS).getTime
+
+        val requestURL = Bytes.toString(x._3)
+        val parmas = Bytes.toString(x._4)
+        LogView(userID, creatTimeL, requestURL, parmas)
+      }
+      }.filter(x => {
+      x.REQUEST_URI.contains("search.do") && x.PARAMS.contains("manuallabel=") && x.CREATE_BY_ID.length >= 5
+    }).map(x => {
+      val userID = x.CREATE_BY_ID.toString
+      //      val reg = """manuallabel=.+(,|})""".r
+      val reg =
+        """manuallabel=.+,""".r
+      val searchWord = reg.findFirstIn(x.PARAMS.toString).toString.replace("Some(manuallabel=", "").replace(",)", "").replace("}", "").replace(")", "")
+      val time = x.CREATE_TIME
+      val value = 1.0
+      HotLabelSchema(userID, searchWord, time, value)
+    }).filter(x => (x.searchWords.length >= 2 && x.searchWords.length <= 10)).map(x => {
+      val userString = x.userString
+      val searchWords = x.searchWords
+      val time = x.CREATE_TIME
+      val value = x.value
+
+      val rating = time match {
+        case x if (x >= UtilTool.get3Dasys()) => 0.9 * value
+        case x if (x >= UtilTool.get7Dasys() && x < UtilTool.get3Dasys()) => 0.8 * value
+        case x if (x >= UtilTool.getHalfMonth() && x < UtilTool.get7Dasys()) => 0.7 * value
+        case x if (x >= UtilTool.getOneMonth() && x < UtilTool.getHalfMonth()) => 0.6 * value
+        case x if (x >= UtilTool.getSixMonth() && x < UtilTool.getOneMonth()) => 0.5 * value
+        case x if (x >= UtilTool.getOneYear() && x < UtilTool.getSixMonth()) => 0.4 * value
+        case x if (x < UtilTool.getOneYear()) => 0.3 * value
+        case _ => 0.0
+      }
+
+      HotLabelSchema2(userString, searchWords, rating)
+    })
+
+    hbaseRDD
+  }
+
 
 }
