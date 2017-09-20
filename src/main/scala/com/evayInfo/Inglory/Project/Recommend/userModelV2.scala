@@ -90,7 +90,7 @@ object userModelV2 {
 //    println("hotlabel_df1 is: " + hotlabel_df1.count())//hotlabel_df1 is: 600
     hotlabel_df1.select("userFeature").dropDuplicates().show(200,false)
 
-    /*
+
     /*
     对用户网站关注行为、标签关注行为、浏览行为和热门标签点击行为数据分别进行标准化处理
      */
@@ -295,7 +295,7 @@ get 'yilan-total_webpage','e7685b22-451a-434e-8489-832561c770d9'
          }
          }.saveAsNewAPIHadoopDataset(jobConf)
    */
-*/
+
     sc.stop()
     spark.stop()
   }
