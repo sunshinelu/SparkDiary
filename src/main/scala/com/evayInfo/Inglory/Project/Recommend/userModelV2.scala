@@ -35,7 +35,7 @@ object userModelV2 {
   def main(args: Array[String]) {
     RecomUtil.SetLogger
 
-    val SparkConf = new SparkConf().setAppName(s"userModelV2") //.setMaster("local[*]").set("spark.executor.memory", "2g")
+    val SparkConf = new SparkConf().setAppName(s"userModelV2").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
@@ -87,7 +87,13 @@ object userModelV2 {
       withColumnRenamed("sum(searchValue)", "value").drop("searchValue")
     val hotlabel_df1 = hotlabelDS.withColumnRenamed("userString", "OPERATOR_ID").
       withColumnRenamed("searchWords", "userFeature")
+//    println("hotlabel_df1 is: " + hotlabel_df1.count())//hotlabel_df1 is: 600
+    hotlabel_df1.select("userFeature").dropDuplicates().show(200,false)
 
+    /*
+    /*
+    对用户网站关注行为、标签关注行为、浏览行为和热门标签点击行为数据分别进行标准化处理
+     */
 
     val df = website_df1.union(category_df1).union(logs_df1).union(hotlabel_df1).
       groupBy("OPERATOR_ID", "userFeature").
@@ -289,7 +295,7 @@ get 'yilan-total_webpage','e7685b22-451a-434e-8489-832561c770d9'
          }
          }.saveAsNewAPIHadoopDataset(jobConf)
    */
-
+*/
     sc.stop()
     spark.stop()
   }
@@ -443,13 +449,13 @@ get 'yilan-total_webpage','e7685b22-451a-434e-8489-832561c770d9'
     }).map(x => {
       val userID = x.CREATE_BY_ID.toString
       //      val reg = """manuallabel=.+(,|})""".r
-      val reg =
-        """manuallabel=.+,""".r
+//      val reg ="""manuallabel=.+,""".r
+      val reg = """manuallabel=([\u4e00-\u9fa5]|[a-zA-Z])+""".r
       val searchWord = reg.findFirstIn(x.PARAMS.toString).toString.replace("Some(manuallabel=", "").replace(",)", "").replace("}", "").replace(")", "")
       val time = x.CREATE_TIME
       val value = 1.0
       HotLabelSchema(userID, searchWord, time, value)
-    }).filter(x => (x.searchWords.length >= 2 && x.searchWords.length <= 10)).map(x => {
+    }).filter(x => (x.searchWords.length >= 2 && x.searchWords.length <= 8)).map(x => {
       val userString = x.userString
       val searchWords = x.searchWords
       val time = x.CREATE_TIME

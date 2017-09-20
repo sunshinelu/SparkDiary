@@ -5,7 +5,8 @@ package com.evayInfo.Inglory.TestCode
  */
 object regTest {
   def main(args: Array[String]) {
-    val hotlabelString = "{manuallabel=政务, sType=index}"
+//    val hotlabelString = "{manuallabel=政务, sType=index}"
+    val hotlabelString =  "{manuallabel=, cuPage=1, xzqhname=中国}"
     //    val reg_hotlabel = """manuallabel=.+(,|})""".r
     val reg_hotlabel =
       """manuallabel=.+,|manuallabel=.+}""".r
