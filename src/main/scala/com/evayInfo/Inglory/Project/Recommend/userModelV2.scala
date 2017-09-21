@@ -91,12 +91,13 @@ object userModelV2 {
 
 
     // 用户计算用户相似性的日志，只计算最近一月的访问情况
+    /*
     val logsSimiRDD = getLogsSimiRDD(logsTable, sc)
     val logsSimiDS = spark.createDataset(logsSimiRDD).na.drop(Array("userString")).
       groupBy("userString", "itemString").
       agg(sum("value")).
       withColumnRenamed("sum(value)", "rating").drop("value") // "userString", "itemString" ,"rating"
-
+*/
     val logs_df1 = logsDS.withColumnRenamed("userString", "OPERATOR_ID").
       withColumnRenamed("itemString", "userFeature").withColumnRenamed("rating", "value")
 
@@ -115,7 +116,7 @@ object userModelV2 {
     /*
     对用户网站关注行为、标签关注行为、浏览行为和热门标签点击行为数据分别进行标准化处理
      */
-
+/*
     // 对浏览行为进行呢标准化
     val l_scaledRange = lit(1) // Range of the scaled variable
     val l_scaledMin = lit(0) // Min value of the scaled variable
@@ -127,7 +128,7 @@ object userModelV2 {
     val lScaled = l_scaledRange * lNormalized + l_scaledMin
     val logs_df2 = logs_df1.withColumn("vScaled", lScaled).
       drop("value").withColumnRenamed("vScaled", "value")
-
+*/
     // 对热门标签点击行为数据进行标准化
     val h_scaledRange = lit(1) // Range of the scaled variable
     val h_scaledMin = lit(1) // Min value of the scaled variable

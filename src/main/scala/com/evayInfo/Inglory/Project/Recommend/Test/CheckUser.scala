@@ -36,7 +36,7 @@ object CheckUser {
     val sc = spark.sparkContext
 
     //    val tableName = "recommender_combined"
-    //    val tableName = "ylzx_cnxh"
+//        val tableName = "ylzx_cnxh"
     //    val tableName = "recommender_als"
     //    val tableName = "recommender_content"
     val tableName = "recommender_user"
@@ -44,6 +44,7 @@ object CheckUser {
 
 
     val myID = "175786f8-1e74-4d6c-94e9-366cf1649721"
+    val simUserId = "e5e16dfb-8dfa-4467-aaa2-7c3081fb55bb"
 
     @transient val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
     //设置查询的表名
