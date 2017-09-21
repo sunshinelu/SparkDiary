@@ -4,8 +4,8 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.feature.MinMaxScaler
 import org.apache.spark.ml.linalg.Vectors
-import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{Row, SparkSession}
 
 /*
 均一化参考链接：https://stackoverflow.com/questions/33924842/minmax-normalization-in-scala
@@ -22,7 +22,7 @@ object NormalizedDemo1 {
   def main(args: Array[String]): Unit = {
     SetLogger
 
-    val SparkConf = new SparkConf().setAppName(s"getHotLabe").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val SparkConf = new SparkConf().setAppName(s"NormalizedDemo1").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
@@ -31,6 +31,9 @@ object NormalizedDemo1 {
       (1L, 0.5), (2L, 10.2), (3L, 5.7), (4L, -11.0), (5L, 22.3)
     )).toDF("k", "v")
 
+    /*
+    方法1：
+     */
     val (vMin, vMax) = df.agg(min($"v"), max($"v")).first match {
       case Row(x: Double, y: Double) => (x, y)
     }
@@ -54,7 +57,9 @@ object NormalizedDemo1 {
 +---+-----+--------------------+
      */
 
-
+    /*
+    方法2:
+     */
     val vectorizeCol = udf( (v:Double) => Vectors.dense(Array(v)) )
     val df2 = df.withColumn("vVec", vectorizeCol(df("v")))
     val scaler = new MinMaxScaler()
@@ -63,7 +68,8 @@ object NormalizedDemo1 {
       .setMax(1)
       .setMin(-1)
 
-    scaler.fit(df2).transform(df2).show
+    val df3 = scaler.fit(df2).transform(df2)
+    df3.show()
     /*
 +---+-----+-------+--------------------+
 |  k|    v|   vVec|             vScaled|
@@ -75,6 +81,13 @@ object NormalizedDemo1 {
 |  5| 22.3| [22.3]|               [1.0]|
 +---+-----+-------+--------------------+
      */
+
+    df3.printSchema()
+
+    //    val reversVectorizeCol = udf{ (v:Vector) => v}
+    //    val df4 = df3.withColumn("vScaled2", df3("vScaled").cast("double"))
+    //    df4.show()
+
 
       sc.stop()
     spark.stop()

@@ -8,8 +8,9 @@ object regTest {
 //    val hotlabelString = "{manuallabel=政务, sType=index}"
     val hotlabelString =  "{manuallabel=, cuPage=1, xzqhname=中国}"
     //    val reg_hotlabel = """manuallabel=.+(,|})""".r
+    //    val reg_hotlabel = """manuallabel=.+,|manuallabel=.+}""".r
     val reg_hotlabel =
-      """manuallabel=.+,|manuallabel=.+}""".r
+      """manuallabel=([\u4e00-\u9fa5]|[a-zA-Z])+""".r
     val hotlabel = reg_hotlabel.findFirstIn(hotlabelString).toString.replace("Some(manuallabel=", "").replace(",)", "").replace("}", "").replace(")", "")
 
     println("hotlabel is: " + hotlabel)
