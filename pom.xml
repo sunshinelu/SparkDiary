@@ -388,6 +388,31 @@
             <version>1.5.0</version>
         </dependency>
 
+        <!-- 解决java.lang.NoClassDefFoundError: org/apache/http/message/TokenParser 问题 START-->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>4.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>1.7.1</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpmime -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <!-- <version>4.5.1</version> -->
+            <version>4.3.6</version>
+        </dependency>
+        <!-- 解决java.lang.NoClassDefFoundError: org/apache/http/message/TokenParser 问题 OVER-->
+
     </dependencies>
 
     <build>

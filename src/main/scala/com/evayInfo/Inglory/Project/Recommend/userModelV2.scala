@@ -65,10 +65,10 @@ object userModelV2 {
 
     val website_df1 = website_df.select("OPERATOR_ID", "COLUMN_ID").
       withColumnRenamed("COLUMN_ID", "userFeature").
-      withColumn("value", lit(0.5)).na.drop().dropDuplicates() //增大网站标签权重
+      withColumn("value", lit(1.0)).na.drop().dropDuplicates() //增大网站标签权重
     val category_df1 = category_df.select("OPERATOR_ID", "CATEGORY_NAME").
         withColumnRenamed("CATEGORY_NAME", "userFeature").
-        withColumn("value", lit(0.5)).na.drop().dropDuplicates()
+        withColumn("value", lit(1.0)).na.drop().dropDuplicates()
 
     val logsRDD = getLogsRDD(logsTable, sc)
     val logsDS_temp = spark.createDataset(logsRDD).na.drop(Array("userString")).
@@ -144,8 +144,8 @@ object userModelV2 {
     /*
     数据合并
      */
-    //    val df = website_df1.union(category_df1).union(logs_df2).union(hotlabel_df2).
-    val df = website_df1.union(logs_df1).union(hotlabel_df2).
+    val df = website_df1.union(category_df1).union(logs_df1).union(hotlabel_df2).
+//    val df = website_df1.union(logs_df1).union(hotlabel_df2).
       groupBy("OPERATOR_ID", "userFeature").
       agg(sum("value")).drop("value").
       withColumnRenamed("sum(value)", "value")
@@ -421,7 +421,7 @@ get 'yilan-total_webpage','e7685b22-451a-434e-8489-832561c770d9'
 
         //val rating = rValue(time, value)
         LogView2(userString, itemString, time, rating)
-      })
+      }).filter(_.value > 0)
 
     hbaseRDD
   }
