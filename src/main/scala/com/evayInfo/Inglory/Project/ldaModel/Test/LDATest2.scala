@@ -37,7 +37,7 @@ object LDATest2 {
     import spark.implicits._
 
     //load stopwords file
-    val stopwordsFile = "data/Stopwords.dic"
+    val stopwordsFile = "file:///Users/sunlu/Documents/workspace/IDEA/Github/SparkDiary/data/Stopwords.dic"
     val stopwords = sc.textFile(stopwordsFile).collect().toList
 
     //connect mysql database
