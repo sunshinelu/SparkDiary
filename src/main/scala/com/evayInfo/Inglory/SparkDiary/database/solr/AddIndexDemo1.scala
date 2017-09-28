@@ -214,6 +214,7 @@ object AddIndexDemo1 {
   }
 
   def main(args: Array[String]) {
+
     // 对相关文章构建索引
     val solrUrl_similarArticleRec: String = "http://192.168.37.11:8983/solr/solr-yilan-similarArticleRec"
     val tableName_similarArticle: String = "ylzx_xgwz"
@@ -221,13 +222,14 @@ object AddIndexDemo1 {
     purgAllIndex(solrUrl_similarArticleRec)
     addIndex_SimilarArticle(results_similarArticle, solrUrl_similarArticleRec)
 
+    /*
     // 对猜你喜欢构建索引
     val solrUrl_guessYouLikeRec: String = "http://192.168.37.11:8983/solr/solr-yilan-guessYouLikeRec"
     val tableName_guessYouLike: String = "ylzx_cnxh"
     val results_guessYouLike: ResultScanner = getAllRows(tableName_guessYouLike)
     purgAllIndex(solrUrl_guessYouLikeRec)
     addIndex_GuessYouLike(results_guessYouLike, solrUrl_guessYouLikeRec)
-
+*/
   }
 
 
