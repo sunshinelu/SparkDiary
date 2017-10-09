@@ -13,6 +13,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SparkConf, SparkContext}
 
+
 /**
  * Created by sunlu on 17/10/9.
  * 查看yilan-total-analysis_webpage表
@@ -55,6 +56,7 @@ object checkAnalysisData {
     val nDaysAgo = dateFormat.format(cal.getTime())
     val nDaysAgoL = dateFormat.parse(nDaysAgo).getTime
 
+    //    @transient
     val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
     //设置查询的表名
     conf.set(TableInputFormat.INPUT_TABLE, ylzxTable) //设置输入表名 第一个参数yeeso-test-ywk_webpage
@@ -66,7 +68,7 @@ object checkAnalysisData {
     scan.addColumn(Bytes.toBytes("f"), Bytes.toBytes("mod")) //time
     scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("websitename")) //websitename
     scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("c")) //content
-    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("column_id ")) //column_id
+    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("column_id")) //column_id
     conf.set(TableInputFormat.SCAN, convertScanToString(scan))
 
     val hBaseRDD = sc.newAPIHadoopRDD(conf, classOf[TableInputFormat],
@@ -93,7 +95,7 @@ object checkAnalysisData {
 
         val websitename_1 = if (null != x._5) Bytes.toString(x._5) else ""
         val content_1 = Bytes.toString(x._6)
-        val column_id = if (null != x._7) Bytes.toString(x._5) else ""
+        val column_id = if (null != x._7) Bytes.toString(x._7) else "NULL"
         (urlID_1, title_1, manuallabel_1, time, websitename_1, content_1, column_id)
       }
       }.filter(x => {
@@ -118,12 +120,26 @@ object checkAnalysisData {
 
     val tableName = "yilan-total-analysis_webpage"
 
-    val ylzxRDD = getYlzxYRDD2(tableName, 1, sc)
+    val ylzxRDD = getYlzxYRDD2(tableName, 20, sc)
     val ylzxDS = spark.createDataset(ylzxRDD).dropDuplicates(Array("title", "time", "columnId")).drop("columnId")
+    ylzxDS.select("itemString", "columnId").show(6, false)
+    ylzxDS.filter($"columnId" =!= "NULL").select("itemString", "columnId").show(6, false)
+    ylzxDS.filter($"itemString".contains("edf89aae-e381-4203-b77b-a137a1a57968")).
+      select("itemString", "columnId").show(6, false)
 
-    val test1 = ylzxDS.filter($"columnId" === "")
+
+    val test1 = ylzxDS.filter($"columnId" === "NULL")
     test1.show(5, false)
     println("the number of null in columnId is: " + test1.count())
+
+    val test2 = ylzxDS.filter($"itemString" === "edf89aae-e381-4203-b77b-a137a1a57968")
+    test2.select("itemString", "columnId").show(false)
+
+    val test3 = ylzxDS.filter($"columnId" === "440b42e6-6029-49ae-bb0a-2b242e85cb54")
+    test3.select("itemString", "columnId").show(false)
+
+    val test4 = ylzxDS.filter($"columnId".contains("440b42e6-6029-49ae-bb0a-2b242e85cb54"))
+    test4.select("itemString", "columnId").show(false)
 
     sc.stop()
     spark.stop()
