@@ -118,7 +118,7 @@ object MinHashLSHExample2 {
     +---+---+-------+
      */
     val df4 = model.approxSimilarityJoin(df, df_filter, 1.0).select("datasetA.id", "datasetB.id", "distCol")
-    df4.show(false)
+    df4.toDF("id1", "id2", "dist").orderBy($"id2", $"id1") show (false)
     /*
     +---+---+-------+
     |id |id |distCol|
