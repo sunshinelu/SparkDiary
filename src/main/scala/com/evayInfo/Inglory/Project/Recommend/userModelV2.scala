@@ -24,7 +24,7 @@ import org.apache.spark.{SparkConf, SparkContext}
  * 使用`YLZX_NRGL_OPER_CATEGORY`表中的 `OPERATOR_ID`列和`CATEGORY_NAME`列，
  `YLZX_NRGL_MYSUB_WEBSITE_COL` 表中的`OPERATOR_ID`和`COLUMN_ID`列
 用户浏览日志
- 用户热门标签点击日志
+用户热门标签点击日志
 计算用户相似性。
  做基于用户的推荐
  */
