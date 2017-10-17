@@ -100,11 +100,13 @@ object checkAnalysisData {
         val websitename_1 = if (null != x._5) Bytes.toString(x._5) else ""
         val content_1 = Bytes.toString(x._6)
         val column_id = if (null != x._7) Bytes.toString(x._7) else ""
-        val sfzs = if (null != x._7) Bytes.toString(x._7) else ""
-        val sfcj = if (null != x._8) Bytes.toString(x._8) else ""
+        val sfzs = if (null != x._8) Bytes.toString(x._8) else ""
+        val sfcj = if (null != x._9) Bytes.toString(x._9) else ""
         (urlID_1, title_1, manuallabel_1, time, websitename_1, content_1, column_id, sfzs, sfcj)
       }
-      }.filter(_._2.length >= 2).filter(_._8 != "0").filter(_._9 != "1").
+      }.filter(_._2.length >= 2).
+      filter(_._8 != "0").
+      filter(_._9 != "1").
       filter(x => x._4 >= nDaysAgoL).map(x => {
       //x._4 <= todayL &
       val date: Date = new Date(x._4)
@@ -128,6 +130,7 @@ object checkAnalysisData {
 
     val ylzxRDD = getYlzxYRDD2(tableName, 20, sc)
     val ylzxDS = spark.createDataset(ylzxRDD).dropDuplicates(Array("title", "time", "columnId")).drop("columnId")
+
     ylzxDS.select("itemString", "columnId").show(6, false)
     ylzxDS.filter($"columnId" =!= "NULL").select("itemString", "columnId").show(6, false)
     ylzxDS.filter($"itemString".contains("edf89aae-e381-4203-b77b-a137a1a57968")).
