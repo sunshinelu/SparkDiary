@@ -69,6 +69,8 @@ object checkAnalysisData {
     scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("websitename")) //websitename
     scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("c")) //content
     scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("column_id")) //column_id
+    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("sfzs")) //sfzs是否展示：1表示展示，0表示不展示
+    scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("sfcj")) //sfcj是否采集：1表示重复采集，0表示未重复采集
     conf.set(TableInputFormat.SCAN, convertScanToString(scan))
 
     val hBaseRDD = sc.newAPIHadoopRDD(conf, classOf[TableInputFormat],
@@ -83,7 +85,9 @@ object checkAnalysisData {
       val webName = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("websitename")) //websitename列
       val content = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("c")) //content列
       val column_id = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("column_id")) // column_id列
-      (urlID, title, manuallabel, time, webName, content, column_id)
+      val sfzs = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("sfzs")) //sfzs
+      val sfcj = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("sfcj")) //sfcj
+      (urlID, title, manuallabel, time, webName, content, column_id, sfzs, sfcj)
     }
     }.filter(x => null != x._2 & null != x._3 & null != x._4 & null != x._5 & null != x._6).
       map { x => {
@@ -95,12 +99,14 @@ object checkAnalysisData {
 
         val websitename_1 = if (null != x._5) Bytes.toString(x._5) else ""
         val content_1 = Bytes.toString(x._6)
-        val column_id = if (null != x._7) Bytes.toString(x._7) else "NULL"
-        (urlID_1, title_1, manuallabel_1, time, websitename_1, content_1, column_id)
+        val column_id = if (null != x._7) Bytes.toString(x._7) else ""
+        val sfzs = if (null != x._7) Bytes.toString(x._7) else ""
+        val sfcj = if (null != x._8) Bytes.toString(x._8) else ""
+        (urlID_1, title_1, manuallabel_1, time, websitename_1, content_1, column_id, sfzs, sfcj)
       }
-      }.filter(x => {
-      x._2.length >= 2
-    }).filter(x => x._4 <= todayL & x._4 >= nDaysAgoL).map(x => {
+      }.filter(_._2.length >= 2).filter(_._8 != "0").filter(_._9 != "1").
+      filter(x => x._4 >= nDaysAgoL).map(x => {
+      //x._4 <= todayL &
       val date: Date = new Date(x._4)
       val time = dateFormat.format(date)
       val content = x._6.replace("&nbsp;", "").replaceAll("\\uFFFD", "").replaceAll("([\\ud800-\\udbff\\udc00-\\udfff])", "")
@@ -140,6 +146,9 @@ object checkAnalysisData {
 
     val test4 = ylzxDS.filter($"columnId".contains("440b42e6-6029-49ae-bb0a-2b242e85cb54"))
     test4.select("itemString", "columnId").show(false)
+
+    val test5 = ylzxDS.filter($"title".contains("从农业大数据看农业未来发展新方向"))
+    test5.select("itemString", "title").show(false)
 
     sc.stop()
     spark.stop()
