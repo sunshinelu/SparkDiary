@@ -3,7 +3,7 @@ package com.evayInfo.Inglory.TestCode
 import java.util
 
 import org.ansj.app.keyword.{KeyWordComputer, Keyword}
-import org.ansj.splitWord.analysis.ToAnalysis
+import org.ansj.splitWord.analysis.{NlpAnalysis, ToAnalysis}
 import org.ansj.util.MyStaticValue
 import org.apache.log4j.{Level, Logger}
 
@@ -38,9 +38,12 @@ object ansjTest {
     [大数据/userDefine, hello/en, 工/n, 信/n, 处/n, 女/b, 干事/n, 每月/r, 经过/p, 下属/v, 科室/n, 都/d, 要/v, 亲口/d, 交代/v, 24口/m, 交换机/n, 等/u, 技术性/n, 器件/n, 的/uj, 安装/v, 工作/vn]
 
      */
-    val s2 = "Hadoop常见问题及解决方法大数据"
+    val s2 = "Hadoop常见问题及解决方法大数据" +
+      "让中国开发者更容易地使用TensorFlow打造人工智能应用"
     val seg2 = ToAnalysis.parse(s2)
     println(seg2)
+    val seg2_2 = NlpAnalysis.parse(s2)
+    println(seg2_2)
 
     val kwc = new KeyWordComputer(5)
     val title = "维基解密否认斯诺登接受委内瑞拉庇护"
