@@ -27,9 +27,9 @@ import org.apache.spark.storage.StorageLevel
  *
 spark-submit --class com.evayInfo.Inglory.Project.Recommend.Wu.WuRecommender \
 --master yarn \
---num-executors 4 \
---executor-cores 2 \
---executor-memory 4g \
+--num-executors 6 \
+--executor-cores 4 \
+--executor-memory 8 \
 --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
 /root/lulu/Progect/Test/SparkDiary.jar
 
@@ -90,6 +90,7 @@ object WuRecommender {
     val ds5 = ds4.withColumn("norm", bround(((ds4("rating") - minValue) / (maxValue - minValue)), 4))
 
     ds5.persist(StorageLevel.MEMORY_AND_DISK_SER)
+    ds4.unpersist()
 
     //RDD to RowRDD
     val alsRDD = ds5.select("userID", "urlID", "norm").rdd.map { row => (row(0), row(1), row(2)) }.map { x =>
@@ -116,6 +117,7 @@ object WuRecommender {
     val topProductsDF = spark.createDataset(topProductsRowRDD)
 
     topProductsDF.persist(StorageLevel.MEMORY_AND_DISK_SER)
+
     val (als_Min, als_Max) = topProductsDF.agg(min($"als_rating"), max($"als_rating")).first match {
       case Row(x: Double, y: Double) => (x, y)
     }
@@ -128,6 +130,7 @@ object WuRecommender {
 
     val topProductsDF_norm = topProductsDF.withColumn("als_norm", bround(als_Scaled, 4)).drop("als_rating")
 
+    topProductsDF.unpersist()
 
     /*
     item-based recommender
@@ -170,7 +173,7 @@ object WuRecommender {
     val item_df3 = item_df1.join(item_df2, Seq("userID", "doc2ID"), "left").
       filter(col("whether").isNull).drop("whether").withColumnRenamed("doc2ID", "urlID")
 
-    item_df3.persist(StorageLevel.MEMORY_AND_DISK)
+    item_df3.persist(StorageLevel.MEMORY_AND_DISK_SER)
     val (item_Min, item_Max) = item_df3.agg(min($"item_rating"), max($"item_rating")).first match {
       case Row(x: Double, y: Double) => (x, y)
     }
@@ -204,7 +207,7 @@ object WuRecommender {
     val joinDF4 = joinDF3.withColumn("rn", row_number.over(w)).where($"rn" <= 10)
     val joinDF5 = joinDF4.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
 
-    joinDF5.persist(StorageLevel.MEMORY_AND_DISK_SER)
+    item_df3.unpersist()
 
     val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
     //如果outputTable表存在，则删除表；如果不存在则新建表。
@@ -257,11 +260,11 @@ object WuRecommender {
       }.saveAsNewAPIHadoopDataset(jobConf) //.saveAsNewAPIHadoopDataset(job.getConfiguration)
 
 
-    ds4.unpersist()
+
     ds5.unpersist()
-    topProductsDF.unpersist()
-    item_df3.unpersist()
-    joinDF5.unpersist()
+
+
+
 
 
 
