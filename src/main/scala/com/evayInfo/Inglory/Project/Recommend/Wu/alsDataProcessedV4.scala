@@ -152,7 +152,7 @@ object alsDataProcessedV4 {
     //    val logsDStake = logsDS.take(3)   //[be446473-b69e-4ff9-be31-d804d77b15ac,8182d8ad-9be5-4ea6-a351-daa599a3c643]
     //search用户ID和文章ID计数，value
     val ds1 = logsDS.groupBy("userString", "itemString").agg(count("userString")).withColumnRenamed("count(userString)", "value")
-    val ds1col = ds1.count
+    //    val ds1col = ds1.count
     //    val ds1take = ds1.take(3)  //[2b03592d-96a7-4812-9de2-d80ab690231e,f52bd6df-0dc8-424b-a3f1-a65400f7d465,1]
     //string to number
     val userID = new StringIndexer().setInputCol("userString").setOutputCol("userID").fit(ds1) //hdfs://cluster2/wuzb/log_2017-08-06.log:0+476529
@@ -172,7 +172,7 @@ object alsDataProcessedV4 {
 
     //Min-Max Normalization[-1,1]
     val minMax = ds4.agg(max("value"), min("value")).withColumnRenamed("max(value)", "max").withColumnRenamed("min(value)", "min") //取出value值得最大最小值[max: double, min: double]
-    val minmaxtake = minMax.first() //[41.0,1.0]
+    //    val minmaxtake = minMax.first() //[41.0,1.0]
     val maxValue = minMax.select("max").rdd.map { case Row(d: Double) => d }.first //[43fbb93d-5a67-4a73-8173-158f8bb0d052,f52bd6df-0dc8-424b-a3f1-a65400f7d465,41.0,2,0]
 
     val minValue = minMax.select("min").rdd.map { case Row(d: Double) => d }.first
