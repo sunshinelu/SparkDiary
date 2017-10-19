@@ -9,12 +9,7 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
-/**
- * Created by sunlu on 17/10/19.
- * 查看推荐结果
- */
-class CheckRecommTable {
-
+object CheckRecommResult {
 
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)
@@ -22,30 +17,25 @@ class CheckRecommTable {
     System.setProperty("spark.ui.showConsoleProgress", "false")
     Logger.getRootLogger().setLevel(Level.OFF)
   }
-
   def convertScanToString(scan: Scan) = {
     val proto = ProtobufUtil.toScan(scan)
     Base64.encodeBytes(proto.toByteArray)
   }
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
+
+    SetLogger
 
     //bulid environment
-    val SparkConf = new SparkConf().setAppName(s"CheckRecommTable").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val SparkConf = new SparkConf().setAppName(s"CheckRecommResult").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
 
-    val ylzxTable = "wu_recommend"
+//    val ylzxTable = "wu_recommend"
+    val ylzxTable = "ylzx_cnxh"
     val myID = "175786f8-1e74-4d6c-94e9-366cf1649721"
 
-    /*
-    直接在spark－shell下直接运行时会出现如下错误：
-    Caused by: java.io.NotSerializableException: org.apache.hadoop.conf.Configuration
-   解决方案：
-   @transient
-     */
-
-    @transient val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
+    val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
     //设置查询的表名
     conf.set(TableInputFormat.INPUT_TABLE, ylzxTable) //设置输入表名
 
@@ -79,10 +69,22 @@ class CheckRecommTable {
       }
       }.filter(x => x._1.contains(myID))
 
-    hbaseRDD.count()
-    hbaseRDD.collect()
-
+    println(hbaseRDD.count())
+    hbaseRDD.collect().foreach(println)
+/*
+10
+(175786f8-1e74-4d6c-94e9-366cf1649721,73e3b18e-4e1f-4a80-8812-1e75daa3c7e9,1,2017年上半年建材工业经济运行简况)
+(175786f8-1e74-4d6c-94e9-366cf1649721,6e94ae81-e383-4076-bcf2-6381302f25fb,10,BCG报告：中国互联网偏重商业创新，但AI领域已转向技术创新)
+(175786f8-1e74-4d6c-94e9-366cf1649721,4cde36f1-4212-4fe0-9fbb-0872d726dbec,2,关于2017年度陕西省国际科技合作基地认定申报指南)
+(175786f8-1e74-4d6c-94e9-366cf1649721,c3df1ae5-3d7b-46f3-8b58-5256f0a22d98,3,材料界“奥斯卡”隆重启动 2017新材料最大丰收企业都有谁？)
+(175786f8-1e74-4d6c-94e9-366cf1649721,cn.gov.miit.www:http/n1146290/n1146402/n1146440/c5645093/content.html,4,科技司调研广东省制造业创新中心建设工作)
+(175786f8-1e74-4d6c-94e9-366cf1649721,0de705f2-6260-4b46-a329-6b4d924efbc5,5,T112017在京举行——数据驱动指数级行业升级)
+(175786f8-1e74-4d6c-94e9-366cf1649721,f097eca2-870a-4135-96c2-2a2a00ee5b13,6,中国城市地产大数据实验室在深圳成立)
+(175786f8-1e74-4d6c-94e9-366cf1649721,9e112868-e010-4995-bf9d-0452aaf48806,7,北京将推动政府采购更多面向云计算和大数据服务领域)
+(175786f8-1e74-4d6c-94e9-366cf1649721,ae32d0fe-5130-45b8-92be-20eba6558bed,8,住房和城乡建设部督导我市黑臭水体治理工作)
+(175786f8-1e74-4d6c-94e9-366cf1649721,354f50b1-0472-4b4f-9c0c-6a3041047446,9,全力做好安保维稳各项工作)
+ */
+    sc.stop()
+    spark.stop()
   }
-
-
 }

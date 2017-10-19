@@ -33,7 +33,7 @@ spark-submit --class com.evayInfo.Inglory.Project.Recommend.Wu.WuRecommender \
 --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar \
 /root/lulu/Progect/Test/SparkDiary.jar
 
- *
+ * 运行成功！ 运行时间：1hrs, 44mins, 2sec
  */
 object WuRecommender {
 
