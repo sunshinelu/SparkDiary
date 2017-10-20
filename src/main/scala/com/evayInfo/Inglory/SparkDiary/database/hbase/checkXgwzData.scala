@@ -13,7 +13,6 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import org.apache.spark.storage.StorageLevel
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
@@ -170,7 +169,7 @@ object checkXgwzData {
     val df2 = df1.join(segDF, df1("doc2") === segDF("rowkey")).
       withColumnRenamed("rowkey", "doc2ID").withColumnRenamed("segWords", "doc2Title")
 
-    df2.persist(StorageLevel.MEMORY_AND_DISK_SER)
+    //df2.persist(StorageLevel.MEMORY_AND_DISK_SER)
 
     df2.filter($"simiScore" >= 0.95).select("doc1Title", "doc2Title", "simiScore").show(false)
 
@@ -178,6 +177,9 @@ object checkXgwzData {
 
     df2.filter($"simiScore" >= 0.7 && $"simiScore" <= 0.8).select("doc1Title", "doc2Title", "simiScore").show(false)
 
+
+    df2.filter($"simiScore" === 0).select("doc1Title", "doc2Title", "simiScore").show(false)
+    df2.filter($"simiScore" > 0.0).select(min($"simiScore")).show(false)
 
     println("count xgwzDS: " + xgwzDS.count())
     //996714

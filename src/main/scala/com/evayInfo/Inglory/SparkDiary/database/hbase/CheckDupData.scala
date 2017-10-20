@@ -11,6 +11,7 @@ import org.apache.hadoop.hbase.protobuf.ProtobufUtil
 import org.apache.hadoop.hbase.util.{Base64, Bytes}
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -109,7 +110,7 @@ object CheckDupData {
 
   }
 
-  def getYlzxRDD(ylzxTable: String, sc: SparkContext): RDD[YlzxSchema] = {
+  def getYlzxRDD(ylzxTable: String, sc: SparkContext): RDD[YlzxDSchema] = {
 
     val conf = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
     //设置查询的表名
@@ -121,6 +122,7 @@ object CheckDupData {
     scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("websitename")) //websitename
     scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("c")) //content
     scan.addColumn(Bytes.toBytes("p"), Bytes.toBytes("column_id"))
+    scan.addColumn(Bytes.toBytes("f"), Bytes.toBytes("mod")) //time
     conf.set(TableInputFormat.SCAN, convertScanToString(scan))
 
     val hBaseRDD = sc.newAPIHadoopRDD(conf, classOf[TableInputFormat],
@@ -133,21 +135,24 @@ object CheckDupData {
       val webName = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("websitename")) //websitename列
       val content = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("c")) //content列
       val column_id = v.getValue(Bytes.toBytes("p"), Bytes.toBytes("column_id"))
-      (urlID, title, webName, content, column_id)
+      val time = v.getValue(Bytes.toBytes("f"), Bytes.toBytes("mod")) //时间列
+      (urlID, title, webName, content, column_id, time)
     }
-    }.filter(x => null != x._2 & null != x._3 & null != x._4 & null != x._5).
+    }.filter(x => null != x._2 & null != x._3 & null != x._4 & null != x._5 & null != x._6).
       map { x => {
         val urlID_1 = Bytes.toString(x._1)
         val title_1 = Bytes.toString(x._2).replaceAll("【.+】", "")
         val websitename_1 = Bytes.toString(x._3)
         val content_1 = Bytes.toString(x._4).replace("&nbsp;", "").replaceAll("\\uFFFD", "").replaceAll("([\\ud800-\\udbff\\udc00-\\udfff])", "")
         val column_id = Bytes.toString(x._5)
+        //时间格式转化
+        val time = Bytes.toLong(x._6)
         //每篇文章提取5个关键词
         val kwc = new KeyWordComputer(5)
         val keywords = kwc.computeArticleTfidf(title_1, content_1).toArray.map(_.toString.split("/")).
           filter(_.length >= 2).map(_ (0)).toList.mkString(" ")
         val combinedWords = title_1 + keywords
-        YlzxSchema(urlID_1, title_1, websitename_1, combinedWords, column_id)
+        YlzxDSchema(urlID_1, title_1, websitename_1, combinedWords, column_id, time)
       }
       }.filter(_.title.length >= 2)
 
@@ -183,6 +188,17 @@ object CheckDupData {
     val t1 = ylzxDf.withColumn("value", lit(1)).groupBy("title").
       agg(sum("value")).filter($"sum(value)" > 1)
     t1.collect().foreach(println)
+
+
+    val ylzxRDD2 = getYlzxRDD(ylzxTable, sc)
+    val ylzxDf2 = spark.createDataset(ylzxRDD2)
+    val w = Window.partitionBy($"title", $"combinedContent", $"columnId").orderBy($"time".desc)
+    //取除去 Top1之外的数据（这部分数据为重复数据）
+    val dupDF2 = ylzxDf2.withColumn("rn", row_number.over(w)).where($"rn" > 1) //.drop("rn")
+    dupDF2.select("itemString").write.mode(SaveMode.Overwrite).csv("/personal/sunlu/ylzx/dup2")
+
+
+
 
     sc.stop()
     spark.stop()

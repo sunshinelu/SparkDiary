@@ -9,8 +9,8 @@ import org.apache.spark.sql.SparkSession
  * Created by sunlu on 17/10/19.
  * 链接MongoDB参考链接：
  *
- * http://www.cnblogs.com/wwxbi/p/7170679.html
- * http://m.blog.csdn.net/github_36869152/article/details/71762699
+ * Spark连接MongoDB之Scala： http://www.cnblogs.com/wwxbi/p/7170679.html
+ * mongo-spark-connector笔记：http://m.blog.csdn.net/github_36869152/article/details/71762699
  *
  */
 object ConnMongoDBdemo1 {
