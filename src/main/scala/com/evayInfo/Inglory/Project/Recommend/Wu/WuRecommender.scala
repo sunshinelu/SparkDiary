@@ -23,7 +23,8 @@ import org.apache.spark.storage.StorageLevel
 /**
  * Created by sunlu on 17/10/19.
  * 吴子宾构建构建推荐模型思路
- *
+ * als recommend model + item-based recommend model
+ * (In item-based model, using als model generate doc features, and then using cosine calculate doc-doc similarity)
  *
 spark-submit --class com.evayInfo.Inglory.Project.Recommend.Wu.WuRecommender \
 --master yarn \
@@ -135,6 +136,7 @@ object WuRecommender {
     /*
     item-based recommender
      */
+    // generate doc features
     val productFeatures = alsModel.productFeatures.map {
       case (id: Int, vec: Array[Double]) => {
         val vector = Vectors.dense(vec)
@@ -142,6 +144,9 @@ object WuRecommender {
       }
     }
 
+    /*
+    using cosine calculate doc-doc similarity
+     */
     /* The minimum cosine similarity threshold for each document pair */
     val threshhold = 0.5.toDouble
     val upper = 1.0
@@ -185,7 +190,7 @@ object WuRecommender {
     val item_df4 = item_df3.withColumn("item_norm", bround(item_Scaled, 4)).drop("item_rating")
 
     /*
-    combine als result and item-based model result
+    combine als model result and item-based model result
      */
 
     val combined_df1 = topProductsDF_norm.join(item_df4, Seq("userID", "urlID"), "outer").
@@ -195,14 +200,15 @@ object WuRecommender {
       withColumnRenamed("sum(weight)", "rating")
 
 
+    // get doc information
     val userLab = ds5.select("userString", "userID").dropDuplicates
     val itemLab = ds5.select("itemString", "urlID").dropDuplicates
-
 
     val joinDF1 = combined_df1.join(userLab, Seq("userID"), "left")
     val joinDF2 = joinDF1.join(itemLab, Seq("urlID"), "left")
     val joinDF3 = joinDF2.join(ylzxDS, Seq("itemString"), "left").na.drop()
 
+    // secondary sort
     val w = Window.partitionBy("userString").orderBy(col("rating").desc)
     val joinDF4 = joinDF3.withColumn("rn", row_number.over(w)).where($"rn" <= 10)
     val joinDF5 = joinDF4.select("userString", "itemString", "rating", "rn", "title", "manuallabel", "time")
@@ -259,14 +265,7 @@ object WuRecommender {
       }
       }.saveAsNewAPIHadoopDataset(jobConf) //.saveAsNewAPIHadoopDataset(job.getConfiguration)
 
-
-
     ds5.unpersist()
-
-
-
-
-
 
     sc.stop()
     spark.stop()
