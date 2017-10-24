@@ -45,7 +45,7 @@ object ansjTest {
       "让中国开发者更容易地使用TensorFlow打造人工智能应用" +
       "为什么Python发展得如此之快？" +
       "Spark1.6升级2.x防踩坑指南"
-    val seg2 = ToAnalysis.parse(s2)
+    val seg2 = ToAnalysis.parse(s2).toString
     println("seg2 is: " + seg2)
     val seg2_2 = NlpAnalysis.parse(s2)
     println(seg2_2)

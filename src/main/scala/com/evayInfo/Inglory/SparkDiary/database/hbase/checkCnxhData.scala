@@ -77,7 +77,10 @@ object checkCnxhData {
       }.filter(x => x._1.contains(myID))
 
     hbaseRDD.count()
-    hbaseRDD.collect()
+    hbaseRDD.collect().foreach(println)
+
+    sc.stop()
+    spark.stop()
 
   }
 }
