@@ -31,6 +31,7 @@ object ansjTest {
 
     //在用词典未加载前可以通过,代码方式方式来加载
     MyStaticValue.userLibrary = "library/userDefine.dic"
+    //    MyStaticValue.userLibrary = "/Users/sunlu/Workspaces/DataSets/NLP/userDic_20171023.txt"
     val s = "合并Spark社区代码的正确姿势"
     val seg1 = ToAnalysis.parse(s)
     println(seg1)
@@ -38,9 +39,12 @@ object ansjTest {
     [大数据/userDefine, hello/en, 工/n, 信/n, 处/n, 女/b, 干事/n, 每月/r, 经过/p, 下属/v, 科室/n, 都/d, 要/v, 亲口/d, 交代/v, 24口/m, 交换机/n, 等/u, 技术性/n, 器件/n, 的/uj, 安装/v, 工作/vn]
 
      */
+    //    MyStaticValue.userLibrary = "/root/lulu/Progect/NLP/userDic_20171024.txt"// bigdata7路径
+
     val s2 = "Hadoop常见问题及解决方法大数据" +
       "让中国开发者更容易地使用TensorFlow打造人工智能应用" +
-      "为什么Python发展得如此之快？"
+      "为什么Python发展得如此之快？" +
+      "Spark1.6升级2.x防踩坑指南"
     val seg2 = ToAnalysis.parse(s2)
     println("seg2 is: " + seg2)
     val seg2_2 = NlpAnalysis.parse(s2)

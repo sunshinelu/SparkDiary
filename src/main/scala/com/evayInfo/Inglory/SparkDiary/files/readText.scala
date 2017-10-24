@@ -1,5 +1,9 @@
 package com.evayInfo.Inglory.SparkDiary.files
 
+import org.apache.log4j.{Level, Logger}
+import org.apache.spark.SparkConf
+import org.apache.spark.sql.SparkSession
+
 /**
  * Created by sunlu on 17/8/17.
  */
@@ -24,4 +28,29 @@ object readText {
       }).filter(_.itemString.length >= 10)
    */
 
+  def SetLogger = {
+    Logger.getLogger("org").setLevel(Level.OFF)
+    Logger.getLogger("com").setLevel(Level.OFF)
+    System.setProperty("spark.ui.showConsoleProgress", "false")
+    Logger.getRootLogger().setLevel(Level.OFF)
+  }
+
+
+  def main(args: Array[String]) {
+    SetLogger
+
+    val conf = new SparkConf().setAppName(s"readFiles") //.setMaster("local[*]").set("spark.executor.memory", "2g")
+    val spark = SparkSession.builder().config(conf).getOrCreate()
+    val sc = spark.sparkContext
+    import spark.implicits._
+
+    val filepath = "file:///root/lulu/Progect/NLP/userDic_20171024.txt"
+    val cidian = sc.textFile(filepath)
+    val cidianDF = cidian.toDF("word")
+    cidianDF.filter($"word".contains("者更")).show(false)
+
+
+    sc.stop()
+    spark.stop()
+  }
 }
