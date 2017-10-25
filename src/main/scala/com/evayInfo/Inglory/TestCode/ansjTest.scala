@@ -44,7 +44,8 @@ object ansjTest {
     val s2 = "Hadoop常见问题及解决方法大数据" +
       "让中国开发者更容易地使用TensorFlow打造人工智能应用" +
       "为什么Python发展得如此之快？" +
-      "Spark1.6升级2.x防踩坑指南"
+      "Spark1.6升级2.x防踩坑指南" +
+      "十九大【权威发布】中国共产党第十九届中央委员会候补委员名单"
     val seg2 = ToAnalysis.parse(s2).toString
     println("seg2 is: " + seg2)
     val seg2_2 = NlpAnalysis.parse(s2)

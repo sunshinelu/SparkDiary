@@ -1,6 +1,7 @@
 package com.evayInfo.Inglory.NLP
 
 import com.hankcs.hanlp.HanLP
+import com.hankcs.hanlp.tokenizer.NLPTokenizer
 
 /**
  * Created by sunlu on 17/9/1.
@@ -21,6 +22,11 @@ object HanLPDemo1 {
     val keywordList = HanLP.extractKeyword(content, 5).toArray().mkString(";")
     println(keywordList)
 
+    /*
+    NLP分词
+     */
+    val termList = NLPTokenizer.segment("大数据时代当城市数据和社会关系被可视化，每个人都可能是福尔摩斯")
+    println(termList)
 
   }
 
