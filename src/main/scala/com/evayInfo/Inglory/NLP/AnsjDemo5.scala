@@ -54,17 +54,20 @@ object AnsjDemo5 {
     userDefineList.foreach(x => {
       UserDefineLibrary.insertWord(x, "userDefine", 1000)
     })
-
-        MyStaticValue.userLibrary = "/root/lulu/Progect/NLP/userDic_20171024.txt"// bigdata7路径
      */
+//        MyStaticValue.userLibrary = "/root/software/NLP/userDic_20171024.txt"// bigdata7路径
 
-    UserDefineLibrary.contains("十九大")
+
+//    UserDefineLibrary.contains("十九大")
+//    UserDefineLibrary.loadLibrary(UserDefineLibrary.FOREST,"/root/software/NLP/userDic_20171024.txt")
+    //http://blog.csdn.net/jo_joo/article/details/53689710
+//    UserDefineLibrary.removeWord("十九大")
 
     //----添加自定义词典----
-    val dicfile = raw"/root/lulu/Progect/NLP/userDic_20171024.txt" //ExtendDic为一个文本文件的名字，里面每一行存放一个词
-    for (word <- Source.fromFile(dicfile).getLines) {
-      UserDefineLibrary.insertWord(word, "userDefine", 1000)
-    }
+//    val dicfile = raw"/root/software/NLP/userDic_20171024.txt" //ExtendDic为一个文本文件的名字，里面每一行存放一个词
+//    for (word <- Source.fromFile(dicfile).getLines) {
+//      UserDefineLibrary.insertWord(word, "userDefine", 1000)
+//    }
 
     //定义UDF
     //分词、词性过滤
@@ -74,17 +77,21 @@ object AnsjDemo5 {
       val segContent = title + " " + content
 
       // Insert user defined words
-      //      userDefineList.foreach(x => {
-      //        UserDefineLibrary.insertWord(x, "userDefine", 1000)
-      //      })
+            userDefineList.foreach(x => {
+              UserDefineLibrary.insertWord(x, "userDefine", 1000)
+            })
 
       //      MyStaticValue.userLibrary = "/root/lulu/Progect/NLP/userDic_20171024.txt"
       //----添加自定义词典----
-      val dicfile = raw"/root/lulu/Progect/NLP/userDic_20171024.txt" //ExtendDic为一个文本文件的名字，里面每一行存放一个词
-      for (word <- Source.fromFile(dicfile).getLines) {
-        UserDefineLibrary.insertWord(word, "userDefine", 1000)
-      }
-
+//      val dicfile = raw"/root/lulu/Progect/NLP/userDic_20171024.txt" //ExtendDic为一个文本文件的名字，里面每一行存放一个词
+//      for (word <- Source.fromFile(dicfile).getLines) {
+//        UserDefineLibrary.insertWord(word, "userDefine", 1000)
+//      }
+//      MyStaticValue.userLibrary = "/root/software/NLP/userDic_20171024.txt"// bigdata7路径
+//      println(UserDefineLibrary.contains("十九大"))
+//      UserDefineLibrary.insertWord("十九大", "userDefine", 1000)
+//      UserDefineLibrary.insertWord("大数据", "userDefine", 1000)
+//      UserDefineLibrary.loadLibrary(UserDefineLibrary.FOREST,"/root/software/NLP/userDic_20171024.txt")
       val segWords = ToAnalysis.parse(segContent).toArray.map(_.toString.split("/")).
         filter(_.length >= 2).filter(x => x(1).contains("n") || x(1).contains("userDefine") || x(1).contains("m")).
         map(_ (0)).toList.
