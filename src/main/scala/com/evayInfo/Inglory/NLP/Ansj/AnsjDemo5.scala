@@ -1,14 +1,11 @@
-package com.evayInfo.Inglory.NLP
+package com.evayInfo.Inglory.NLP.Ansj
 
 import org.ansj.library.UserDefineLibrary
 import org.ansj.splitWord.analysis.ToAnalysis
-import org.ansj.util.MyStaticValue
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-
-import scala.io.Source
 
 /**
  * Created by sunlu on 17/10/25.
@@ -68,6 +65,11 @@ object AnsjDemo5 {
 //    for (word <- Source.fromFile(dicfile).getLines) {
 //      UserDefineLibrary.insertWord(word, "userDefine", 1000)
 //    }
+
+//    var forest:Forest = null
+//    forest = Library.makeForest(WordSegmentTest.class.getResourceAsStream("/library/userLibrary.dic"))//加载字典文件
+
+
 
     //定义UDF
     //分词、词性过滤

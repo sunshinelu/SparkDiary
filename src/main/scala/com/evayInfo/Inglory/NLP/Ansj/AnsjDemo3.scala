@@ -1,9 +1,8 @@
-package com.evayInfo.Inglory.NLP
+package com.evayInfo.Inglory.NLP.Ansj
 
 import org.ansj.app.keyword.KeyWordComputer
 import org.ansj.recognition.NatureRecognition
 import org.ansj.splitWord.analysis.ToAnalysis
-import org.ansj.util.MyStaticValue
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession

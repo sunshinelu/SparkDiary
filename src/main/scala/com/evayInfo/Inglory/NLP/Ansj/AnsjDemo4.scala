@@ -1,17 +1,15 @@
-package com.evayInfo.Inglory.NLP
+package com.evayInfo.Inglory.NLP.Ansj
 
 import org.ansj.library.UserDefineLibrary
 import org.ansj.splitWord.analysis.ToAnalysis
-import org.ansj.util.MyStaticValue
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.feature._
-import org.apache.spark.ml.linalg.Vector
-import org.apache.spark.mllib.linalg.Vectors
-import org.apache.spark.mllib.linalg.distributed.{IndexedRowMatrix, IndexedRow}
-import org.apache.spark.sql.{Row, SparkSession}
-import org.apache.spark.sql.functions._
 import org.apache.spark.ml.linalg.{Vector => MLVector}
+import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.mllib.linalg.distributed.{IndexedRow, IndexedRowMatrix}
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{Row, SparkSession}
 
 /**
  * Created by sunlu on 17/10/25.
@@ -96,20 +94,20 @@ object AnsjDemo4 {
 
 //    val wordsTotal = df2.groupBy("words").agg(sum("tag"))// 每个词的总词频
     val wordsInDocTotal = df2.withColumn("tag1", lit(1.0)).groupBy("id","words").
-  agg(sum("tag1"))//.withColumnRenamed("w","sum(tag1)")//每篇文章、每个词的词频
-    val docsTotal = df2.withColumn("tag2", lit(1.0)).groupBy("id").agg(sum("tag2"))//.withColumnRenamed("sum_w","sum(tag2)")//每篇文章词的总数
+  agg(sum("tag1")).withColumnRenamed("sum(tag1)","w")//每篇文章、每个词的词频
+    val docsTotal = df2.withColumn("tag2", lit(1.0)).groupBy("id").agg(sum("tag2")).withColumnRenamed("sum(tag2)","sum_w")//每篇文章词的总数
     val docTotal = df2.select("id").distinct().count// 文章数据量
     val wordToDoc = wordsInDocTotal.
-        withColumn("tag3", lit(1.0)).groupBy("words").agg(sum("tag3"))//.withColumnRenamed("doc","sum(tag3)")// 词对应的文章数据
+        withColumn("tag3", lit(1.0)).groupBy("words").agg(sum("tag3")).withColumnRenamed("sum(tag3)", "doc")// 词对应的文章数据
 
     val df3 = df2.withColumn("total", lit(docTotal))
     val df4 = wordsInDocTotal.join(df3, Seq("id","words"),"left").
       join(docsTotal, Seq("id"), "left").
       join(wordToDoc, Seq("words"), "left").na.drop()
-//    val df4 = df3.withColumn("if", $"w" / $"sum_w").
-//      withColumn("idf", log($"total" / $"doc")).withColumn("tf-idf", $"tf" * "idf")
-    val df5 = df4.withColumn("tf", $"sum(tag1)" / $"sum(tag2)").
-      withColumn("idf", log($"total" / $"sum(tag3)")).withColumn("tf_idf", $"tf" * $"idf")
+    val df5 = df4.withColumn("tf", $"w" / $"sum_w").
+      withColumn("idf", log($"total" / $"doc")).withColumn("tf_idf", $"tf" * $"idf")
+//    val df5 = df4.withColumn("tf", $"sum(tag1)" / $"sum(tag2)").
+//      withColumn("idf", log($"total" / $"sum(tag3)")).withColumn("tf_idf", $"tf" * $"idf")
     df5.select("id", "words","tf", "idf","tf_idf")show(false)
 
     /*

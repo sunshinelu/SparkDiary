@@ -1,8 +1,7 @@
-package com.evayInfo.Inglory.NLP
+package com.evayInfo.Inglory.NLP.Ansj
 
 import org.ansj.library.UserDefineLibrary
 import org.ansj.splitWord.analysis.ToAnalysis
-import org.ansj.util.MyStaticValue
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
@@ -27,7 +26,6 @@ object AnsjDemo6 {
       set("spark.Kryoserializer.buffer.max", "2048mb")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
-    import spark.implicits._
 
 
     val rdd = sc.parallelize(Seq(

@@ -1,4 +1,5 @@
-package com.evayInfo.Inglory.NLP
+package com.evayInfo.Inglory.NLP.HanLP
+
 
 import com.hankcs.hanlp.HanLP
 import com.hankcs.hanlp.tokenizer.NLPTokenizer

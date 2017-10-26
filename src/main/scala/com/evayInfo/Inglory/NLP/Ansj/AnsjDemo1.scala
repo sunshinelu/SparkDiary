@@ -1,4 +1,4 @@
-package com.evayInfo.Inglory.NLP
+package com.evayInfo.Inglory.NLP.Ansj
 
 import java.util
 
