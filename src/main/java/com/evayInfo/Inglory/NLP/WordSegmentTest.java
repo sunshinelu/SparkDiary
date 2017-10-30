@@ -1,5 +1,6 @@
 package com.evayInfo.Inglory.NLP;
 
+/*
 import org.ansj.domain.Term;
 import org.ansj.splitWord.analysis.NlpAnalysis;
 import org.ansj.util.MyStaticValue;
@@ -8,7 +9,7 @@ import org.nlpcn.commons.lang.tire.domain.Forest;
 import org.nlpcn.commons.lang.tire.library.Library;
 
 import java.util.List;
-
+*/
 /**
  * Created by sunlu on 17/10/26.
  */
