@@ -5,33 +5,14 @@ import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
 /**
- * Created by sunlu on 17/11/1.
+ * Created by sunlu on 17/11/3.
+ * 将长表转换成宽表，类似R语言中reshape2包中cast函数
  * 参考链接：
  * http://kirillpavlov.com/blog/2016/02/21/top-5-features-released-in-spark-1.6/
  * https://databricks.com/blog/2016/02/09/reshaping-data-with-pivot-in-apache-spark.html
- *
-+----+----+-----+
-|key1|key2|value|
-+----+----+-----+
-|one |A   |1    |
-|one |B   |2    |
-|one |C   |4    |
-|two |A   |5    |
-|two |B   |6    |
-|two |C   |7    |
-+----+----+-----+
-
- 转成
-
-+----+---+---+---+
-|key1|A  |B  |C  |
-+----+---+---+---+
-|two |5  |6  |7  |
-|one |1  |2  |4  |
-+----+---+---+---+
-
+ * Pivoting Data in SparkSQL: https://svds.com/pivoting-data-in-sparksql/
  */
-object AdjacencyMatrixDemo1 {
+object castDemo {
 
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)
@@ -44,7 +25,7 @@ object AdjacencyMatrixDemo1 {
 
     SetLogger
 
-    val sparkConf = new SparkConf().setAppName(s"AdjacencyMatrixDemo1").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val sparkConf = new SparkConf().setAppName(s"castDemo").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
@@ -54,17 +35,38 @@ object AdjacencyMatrixDemo1 {
     )).toDF("key1", "key2", "value")
 
     df.show(false)
-
+/*
++----+----+-----+
+|key1|key2|value|
++----+----+-----+
+|one |A   |1    |
+|one |B   |2    |
+|one |C   |4    |
+|two |A   |5    |
+|two |B   |6    |
+|two |C   |7    |
++----+----+-----+
+ */
     df.groupBy("key1").pivot("key2").sum("value").show(false)
-
+/*
++----+---+---+---+
+|key1|A  |B  |C  |
++----+---+---+---+
+|two |5  |6  |7  |
+|one |1  |2  |4  |
++----+---+---+---+
+ */
 
     val groupedData = df.groupBy("key1")
 
     groupedData.pivot("key2").sum("value").show(false)
-
-
-    sc.stop()
-    spark.stop()
+/*
++----+---+---+---+
+|key1|A  |B  |C  |
++----+---+---+---+
+|two |5  |6  |7  |
+|one |1  |2  |4  |
++----+---+---+---+
+ */
   }
-
 }

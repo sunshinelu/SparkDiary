@@ -7,7 +7,7 @@ import org.apache.spark.sql.functions._
 
 /**
  * Created by sunlu on 17/11/2.
- *
+ * 长宽表转换之宽表转长表
  * 参考链接：
  * Transpose column to row with Spark：https://stackoverflow.com/questions/37864222/transpose-column-to-row-with-spark
 +---+-----+-----+-----+-----+

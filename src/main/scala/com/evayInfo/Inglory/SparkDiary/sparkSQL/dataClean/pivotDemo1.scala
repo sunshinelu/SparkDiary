@@ -9,6 +9,8 @@ import org.apache.spark.sql.functions._
  * Created by sunlu on 17/11/2.
  * 参考链接：
  * Pivoting Data in SparkSQL: https://svds.com/pivoting-data-in-sparksql/
+ *
+ * 长宽表转换之长表转款表
  */
 object pivotDemo1 {
 
