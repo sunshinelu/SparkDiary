@@ -13,6 +13,7 @@ import scala.collection.mutable.ArrayBuffer
 
 /**
  * Created by sunlu on 17/11/3.
+ * 解决新增一列递增列问题
  */
 object stringTest {
   def SetLogger = {
