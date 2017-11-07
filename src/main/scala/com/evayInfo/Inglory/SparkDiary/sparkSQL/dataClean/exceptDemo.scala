@@ -26,12 +26,38 @@ object exceptDemo {
     val df1ColumnsName = Seq("id", "s1", "s2")
     val df1 = sc.parallelize(Seq((1, "a", "a"), (2, "b", "b"), (3, "c", "c"), (4, "d", "d"))).toDF(df1ColumnsName: _*)
     df1.show()
+    /*
+ +---+---+---+
+| id| s1| s2|
++---+---+---+
+|  1|  a|  a|
+|  2|  b|  b|
+|  3|  c|  c|
+|  4|  d|  d|
++---+---+---+
+     */
 
 
     val df2ColumnsName = Seq("id", "s1", "s2")
     val df2 = sc.parallelize(Seq((1, "a", "a"), (2, "b", "b"))).toDF(df2ColumnsName: _*)
     df2.show()
+    /*
++---+---+---+
+| id| s1| s2|
++---+---+---+
+|  1|  a|  a|
+|  2|  b|  b|
++---+---+---+
+     */
     df1.except(df2).show()
+    /*
+  +---+---+---+
+| id| s1| s2|
++---+---+---+
+|  4|  d|  d|
+|  3|  c|  c|
++---+---+---+
+     */
 
 
     val df3ColumnsName = Seq("id")
@@ -63,12 +89,38 @@ object exceptDemo {
 
     println("df3 leftanti结果为：")
     df3.join(df1, Seq("id"), "leftanti").show()
+    /*
+ df3 leftanti结果为：
++---+
+| id|
++---+
++---+
+     */
 
 
     println("left_outer结果为：")
-    df1.join(df3, Seq("id"), "left_outer").show
+    df1.join(df3, Seq("id"), "left_outer").show()
+    /*
+ left_outer结果为：
++---+---+---+
+| id| s1| s2|
++---+---+---+
+|  1|  a|  a|
+|  3|  c|  c|
+|  4|  d|  d|
+|  2|  b|  b|
++---+---+---+
+     */
 
     df3.show()
+    /*
++---+
+| id|
++---+
+|  1|
+|  2|
++---+
+     */
     //    df1.except(df3).show()
 
     sc.stop()
