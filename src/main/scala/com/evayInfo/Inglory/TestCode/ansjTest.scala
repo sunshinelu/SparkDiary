@@ -46,7 +46,8 @@ object ansjTest {
       "为什么Python发展得如此之快？" +
       "Spark1.6升级2.x防踩坑指南" +
       "十九大【权威发布】中国共产党第十九届中央委员会候补委员名单" +
-      "大数据告诉你：90后的钱都花哪儿了？"
+      "大数据告诉你：90后的钱都花哪儿了？" +
+      "数据库高可用方案PK：选择Oracle还是MySQL"
     val seg2 = ToAnalysis.parse(s2).toString
     println("seg2 is: " + seg2)
     val seg2_2 = NlpAnalysis.parse(s2)

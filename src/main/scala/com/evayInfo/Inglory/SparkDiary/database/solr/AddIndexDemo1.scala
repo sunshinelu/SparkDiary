@@ -21,8 +21,8 @@ object AddIndexDemo1 {
   }
 
   /**
-    * 获取HBASE表中的所有结果集
-    */
+   * 获取HBASE表中的所有结果集
+   */
   @throws(classOf[IOException])
   def getAllRows(tableName: String): ResultScanner = {
     getHbaseCon
@@ -33,8 +33,8 @@ object AddIndexDemo1 {
   }
 
   /**
-    * 删除所有的索引
-    */
+   * 删除所有的索引
+   */
   private def purgAllIndex(solrUrl: String) {
     var solrClient: SolrClient = null
     try {
@@ -70,11 +70,11 @@ object AddIndexDemo1 {
   }
 
   /**
-    * 对相似文章结果表（ylzx_xgwz）建立索引
-    */
+   * 对相似文章结果表（ylzx_xgwz）建立索引
+   */
   def addIndex_SimilarArticle(results: ResultScanner, solrUrl_similarArticleRec: String) {
     var solrClient: SolrClient = null
-    purgAllIndex(solrUrl_similarArticleRec)
+//    purgAllIndex(solrUrl_similarArticleRec)
     solrClient = new HttpSolrClient(solrUrl_similarArticleRec)
     try {
       val it: Iterator[Result] = results.iterator
@@ -147,7 +147,7 @@ object AddIndexDemo1 {
    */
   def addIndex_GuessYouLike(results: ResultScanner, solrUrl_guessYouLikeRec: String) {
     var solrClient: SolrClient = null
-    purgAllIndex(solrUrl_guessYouLikeRec)
+//    purgAllIndex(solrUrl_guessYouLikeRec)
     solrClient = new HttpSolrClient(solrUrl_guessYouLikeRec)
     try {
       val it: Iterator[Result] = results.iterator
@@ -163,7 +163,8 @@ object AddIndexDemo1 {
         val rating: String = new String(result.getValue("info".getBytes, "rating".getBytes), "utf-8")
         val title: String = new String(result.getValue("info".getBytes, "title".getBytes), "utf-8")
         val userID: String = new String(result.getValue("info".getBytes, "userID".getBytes), "utf-8")
-        val rn: String = new String(result.getValue("info".getBytes, "rn".getBytes), "utf-8")
+        //        val rn: String = new String(result.getValue("info".getBytes, "rn".getBytes), "utf-8")
+        val rn: Int = new String(result.getValue("info".getBytes, "rn".getBytes)).toInt
         if (title != null && title.length > 0) {
           i += 1
           document.addField("id", rowKey)
@@ -219,7 +220,7 @@ object AddIndexDemo1 {
     val solrUrl_similarArticleRec: String = "http://192.168.37.11:8983/solr/solr-yilan-similarArticleRec"
     val tableName_similarArticle: String = "ylzx_xgwz"
     val results_similarArticle: ResultScanner = getAllRows(tableName_similarArticle)
-    purgAllIndex(solrUrl_similarArticleRec)
+//    purgAllIndex(solrUrl_similarArticleRec)
     addIndex_SimilarArticle(results_similarArticle, solrUrl_similarArticleRec)
 
     /*
