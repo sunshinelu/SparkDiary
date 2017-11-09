@@ -41,13 +41,15 @@ object ansjTest {
      */
     //    MyStaticValue.userLibrary = "/root/lulu/Progect/NLP/userDic_20171024.txt"// bigdata7路径
 
-    val s2 = "Hadoop常见问题及解决方法大数据" +
-      "让中国开发者更容易地使用TensorFlow打造人工智能应用" +
-      "为什么Python发展得如此之快？" +
-      "Spark1.6升级2.x防踩坑指南" +
-      "十九大【权威发布】中国共产党第十九届中央委员会候补委员名单" +
-      "大数据告诉你：90后的钱都花哪儿了？" +
-      "数据库高可用方案PK：选择Oracle还是MySQL"
+//    val s2 = "Hadoop常见问题及解决方法大数据" +
+//      "让中国开发者更容易地使用TensorFlow打造人工智能应用" +
+//      "为什么Python发展得如此之快？" +
+//      "Spark1.6升级2.x防踩坑指南" +
+//      "十九大【权威发布】中国共产党第十九届中央委员会候补委员名单" +
+//      "大数据告诉你：90后的钱都花哪儿了？" +
+//      "数据库高可用方案PK：选择Oracle还是MySQL"
+    val s2 = "谷歌发布TensorFlow1.4版本：支持分布式训练，迎来三大新变化" +
+  "在生产环境使用Kafka构建和部署大规模机器学习"
     val seg2 = ToAnalysis.parse(s2).toString
     println("seg2 is: " + seg2)
     val seg2_2 = NlpAnalysis.parse(s2)
