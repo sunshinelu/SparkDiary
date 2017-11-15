@@ -334,7 +334,7 @@
         <dependency>
             <groupId>com.hankcs</groupId>
             <artifactId>hanlp</artifactId>
-            <version>portable-1.3.5</version>
+            <version>portable-1.5.0</version>
         </dependency>
 
         <!-- mysql -->
