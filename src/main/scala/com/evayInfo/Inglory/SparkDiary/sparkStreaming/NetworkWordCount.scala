@@ -43,21 +43,21 @@ org.apache.spark.sql.SparkSession$Builder.getOrCreate(SparkSession.scala:860)
 */
     val conf = new SparkConf().setMaster("local[2]").setAppName("NetworkWordCount")
     val ssc = new StreamingContext(conf, Seconds(10))
+//    val ssc = new StreamingContext(sc, Seconds(10))
 
     // Create a DStream that will connect to hostname:port, like localhost:9999
-    val lines = ssc.socketTextStream("localhost", 9999)
+    val lines = ssc.socketTextStream("192.168.37.16", 9999)//192.168.37.16  localhost
 
     // Split each line into words
     val words = lines.flatMap(_.split(" "))
     // Count each word in each batch
-    val pairs = words.map(word => (word, getNowDate()))
+    val pairs = words.map(word => (word, 1))
     val wordCounts = pairs.reduceByKey(_ + _)//.map(x => (x._1, x._2,getNowDate())
 
     // Print the first ten elements of each RDD generated in this DStream to the console
-    println(getNowDate())
+//    println(getNowDate())
     wordCounts.print()
-
-
+    wordCounts.saveAsTextFiles("")
 
     ssc.start()             // Start the computation
     ssc.awaitTermination()  // Wait for the computation to terminate

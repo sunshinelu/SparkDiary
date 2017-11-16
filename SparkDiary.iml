@@ -37,7 +37,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="Maven: edu.stanford.nlp:stanford-corenlp:models-chinese:3.6.0" level="project" />
     <orderEntry type="library" name="Maven: javax.ws.rs:javax.ws.rs-api:2.0" level="project" />
     <orderEntry type="library" name="Maven: javax.inject:javax.inject:1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.hadoop:hadoop-hdfs:2.6.0" level="project" />
@@ -416,5 +415,14 @@
     <orderEntry type="library" name="Maven: org.nd4j:nd4j-common:0.8.0" level="project" />
     <orderEntry type="library" name="Maven: org.deeplearning4j:dl4j-spark_2.11:0.8.0_spark_2" level="project" />
     <orderEntry type="library" name="Maven: org.datavec:datavec-spark_2.11:0.8.0_spark_2" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/library" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

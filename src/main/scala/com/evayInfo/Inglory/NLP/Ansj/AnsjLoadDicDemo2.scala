@@ -1,6 +1,5 @@
 package com.evayInfo.Inglory.NLP.Ansj
 
-import org.ansj.library.UserDefineLibrary
 import org.ansj.splitWord.analysis.ToAnalysis
 import org.ansj.util.MyStaticValue
 import org.apache.log4j.{Level, Logger}
@@ -9,27 +8,21 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
 /**
- * Created by sunlu on 17/10/30.
+ * Created by sunlu on 17/11/16.
+ * 测试，将library添加到classpath中
+ * 参考连接：https://www.codelast.com/%E5%8E%9F%E5%88%9B%E5%A6%82%E4%BD%95%E6%B7%BB%E5%8A%A0%E4%B8%80%E4%B8%AA%E6%96%87%E4%BB%B6%E7%9B%AE%E5%BD%95%E5%88%B0intellij%E9%A1%B9%E7%9B%AE%E7%9A%84classpath%E4%B8%AD/
  *
- * 测试：
- * 将“大数据”和“十九大”添加到library/default.dic文件中，并添加library.properties文件，在文件中指定词典的路径
- *
- * 测试代码
+ *  * 测试代码
 spark-submit \
---class com.evayInfo.Inglory.NLP.Ansj.AnsjLoadDicDemo1 \
+--class com.evayInfo.Inglory.NLP.Ansj.AnsjLoadDicDemo2 \
 --master yarn \
 --deploy-mode client \
 --num-executors 2 \
 --executor-cores 1 \
 --executor-memory 1g \
 /root/lulu/Progect/Test/SparkDiary-1.0-SNAPSHOT-jar-with-dependencies.jar
-
- *
- * 结论：
- * 在本地测试成功将“大数据”和“十九大”分词，在yarn模式下不能识别“大数据”和“十九大”。
- *
  */
-object AnsjLoadDicDemo1 {
+object AnsjLoadDicDemo2 {
 
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)
@@ -43,7 +36,7 @@ object AnsjLoadDicDemo1 {
 
     SetLogger
 
-    val sparkConf = new SparkConf().setAppName(s"AnsjLoadDicDemo1").//setMaster("local[*]").
+    val sparkConf = new SparkConf().setAppName(s"AnsjLoadDicDemo1").setMaster("local[*]").
       set("spark.executor.memory", "2g").
       set("spark.Kryoserializer.buffer.max", "2048mb")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
@@ -59,8 +52,13 @@ object AnsjLoadDicDemo1 {
 
     // load stop words
     val stopwordsFile = "/personal/sunlu/lulu/yeeso/Stopwords.dic"
-//    val stopwordsFile = "file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/Stopwords.dic"
+//        val stopwordsFile = "file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/Stopwords.dic"
     val stopwords = sc.textFile(stopwordsFile).collect().toList
+
+    //在用词典未加载前可以通过,代码方式方式来加载
+//    MyStaticValue.userLibrary = "userDefine.dic"
+//    MyStaticValue.userLibrary =  "/Users/sunlu/Documents/workspace/IDEA/SparkDiary/library/userDefine.dic"
+    MyStaticValue.userLibrary =  "library/userDefine.dic"
 
     //定义UDF
     //分词、词性过滤
@@ -74,7 +72,7 @@ object AnsjLoadDicDemo1 {
         map(_ (0)).toList.
         filter(word => word.length >= 2 & !stopwords.contains(word)).mkString(" ")
 
-//      val segWords2 = ToAnalysis.parse(segContent).toString
+      //      val segWords2 = ToAnalysis.parse(segContent).toString
       val result = segWords match {
         case r if (r.length >= 2) => r
         case _ => "NULL" // Seq("null")
