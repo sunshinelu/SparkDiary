@@ -21,6 +21,10 @@ spark-submit \
 --executor-cores 1 \
 --executor-memory 1g \
 /root/lulu/Progect/Test/SparkDiary-1.0-SNAPSHOT-jar-with-dependencies.jar
+
+ * 结论：
+ * 在本地测试成功将“大数据”和“十九大”分词，在yarn模式下不能识别“大数据”和“十九大”。
+ *
  */
 object AnsjLoadDicDemo2 {
 
