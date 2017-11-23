@@ -21,6 +21,15 @@
         <hadoop.version>2.6.0</hadoop.version>
         <hbase.version>0.98.4-hadoop2</hbase.version>
         <corenlp.version>3.6.0</corenlp.version>
+
+        <nd4j.version>0.9.1</nd4j.version>
+        <dl4j.version>0.9.1</dl4j.version>
+        <datavec.version>0.9.1</datavec.version>
+        <arbiter.version>0.9.1</arbiter.version>
+        <rl4j.version>0.9.1</rl4j.version>
+        <!-- For Spark examples: change the _1 to _2 to switch between Spark 1 and Spark 2 -->
+        <dl4j.spark.version>0.9.1_spark_2</dl4j.spark.version>
+        <datavec.spark.version>0.9.1_spark_2</datavec.spark.version>
     </properties>
 
     <repositories>
@@ -375,7 +384,7 @@
             <artifactId>json</artifactId>
             <version>20160810</version>
         </dependency>
-        <!--&lt;!&ndash; https://mvnrepository.com/artifact/net.sf.json-lib/json-lib &ndash;&gt;-->
+        <!-- https://mvnrepository.com/artifact/net.sf.json-lib/json-lib -->
         <!--<dependency>-->
             <!--<groupId>net.sf.json-lib</groupId>-->
             <!--<artifactId>json-lib</artifactId>-->
@@ -454,22 +463,22 @@
         <dependency>
             <groupId>org.deeplearning4j</groupId>
             <artifactId>deeplearning4j-core</artifactId>
-            <version>0.8.0</version>
+            <version>${dl4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.nd4j</groupId>
             <artifactId>nd4j-native-platform</artifactId>
-            <version>0.8.0</version>
+            <version>${nd4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.datavec</groupId>
             <artifactId>datavec-api</artifactId>
-            <version>0.8.0</version>
+            <version>${datavec.version}</version>
         </dependency>
         <dependency>
             <groupId>org.deeplearning4j</groupId>
             <artifactId>dl4j-spark_2.11</artifactId>
-            <version>0.8.0_spark_2</version>
+            <version>${dl4j.spark.version}</version>
         </dependency>
         <!--#深度学习包#-->
 
