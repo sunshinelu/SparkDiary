@@ -2,12 +2,13 @@ package com.evayInfo.Inglory.SparkDiary.mllib.features
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
-import org.apache.spark.mllib.feature.{IDF, HashingTF}
-import org.apache.spark.mllib.linalg.DenseMatrix
+import org.apache.spark.mllib.feature.{HashingTF, IDF}
+import org.apache.spark.mllib.linalg.{SparseVector => SV}
 import org.apache.spark.sql.SparkSession
 
 /**
  * Created by sunlu on 17/11/1.
+ * 使用RDD计算tfidf，然后从稀疏矩阵中提取每个词对用的权重
  */
 object TfIdfDemo1 {
   def SetLogger = {
@@ -51,6 +52,9 @@ index of love is: 0
  */
     val index_t2 = hashingTF.indexOf(0)
     println("index of 0 is: "+ index_t2)
+    /*
+    index of 0 is: 11
+     */
 
     tfidf.map(x => {
       val d = x.toDense
@@ -66,6 +70,44 @@ index of love is: 0
 
      */
 
+    //提取出作为矩阵的关键词
+    val mapWords = documents.flatMap(x => x).map(w => (hashingTF.indexOf(w),w)).collect.toMap
+    mapWords.foreach(println)
+    /*
+(0,love)
+(5,you)
+(10,a)
+(1,is)
+(9,girl)
+(13,am)
+(2,I)
+(18,boy)
+(16,mom)
+(8,hello)
+(19,word)
+     */
+    val bcWords = tf.context.broadcast(mapWords)
+    val token = tfidf.map{
+      case SV(size, indices, values) =>
+        val words = indices.map(index => bcWords.value.getOrElse(index,"null"))
+        words.zip(values).sortBy(-_._2)//.take(nWord).map(x=>x._1)
+          .toSeq
+    }.flatMap(x => x).reduceByKey(_ + _).sortBy(-_._2)//.collect//.distinct
+    println("提取出作为矩阵的关键词:")
+    token.foreach(println)
+    /*
+(girl,1.252762968495368)
+(boy,2.5418935811616112)
+(love,1.252762968495368)
+(is,1.6945957207744073)
+(word,1.252762968495368)
+(am,1.6945957207744073)
+(mom,1.252762968495368)
+(I,0.7707533991362918)
+(hello,1.678847363806268)
+(you,1.678847363806268)
+(a,1.3458889464848516)
+     */
 
     sc.stop()
     spark.stop()
