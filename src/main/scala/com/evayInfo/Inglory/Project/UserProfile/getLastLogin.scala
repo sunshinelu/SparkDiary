@@ -37,7 +37,7 @@ object getLastLogin {
     val loginDS = spark.createDataset(loginRDD).na.drop()
 
     //将loginDS保存到mysql数据库中
-    val url2 = "jdbc:mysql://172.16.10.108:3306/ylzx?useUnicode=true&characterEncoding=UTF-8"
+    val url2 = "jdbc:mysql://localhost:3306/ylzx?useUnicode=true&characterEncoding=UTF-8"
     //使用"?useUnicode=true&characterEncoding=UTF-8"以防止出现存入MySQL数据库中中文乱码情况
     val prop2 = new Properties()
     prop2.setProperty("user", "root")
