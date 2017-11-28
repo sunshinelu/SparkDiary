@@ -94,7 +94,7 @@ object Retention {
     LAST_LOGIN：最近登陆时间
      */
 
-    val lastloginDF = loginDF.sort(col("loginTime"))
+    val lastloginDF = loginDF.orderBy(-col("loginTime"))
     lastloginDF.show(false)
     lastloginDF.printSchema()
 
