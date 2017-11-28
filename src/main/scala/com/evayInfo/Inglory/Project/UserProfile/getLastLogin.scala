@@ -34,7 +34,7 @@ object getLastLogin {
     val mysqlTable = "YLZX_LAST_LOGIN"
 
     val loginRDD  = getLoginRDD(hbaseTable, sc)
-    val loginDS = spark.createDataset(loginRDD)
+    val loginDS = spark.createDataset(loginRDD).na.drop()
 
     //将loginDS保存到mysql数据库中
     val url2 = "jdbc:mysql://172.16.10.108:3306/ylzx?useUnicode=true&characterEncoding=UTF-8"

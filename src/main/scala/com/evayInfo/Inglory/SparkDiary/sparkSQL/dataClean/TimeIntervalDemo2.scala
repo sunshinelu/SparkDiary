@@ -61,6 +61,11 @@ object TimeIntervalDemo2 {
     df6.show()
     df6.printSchema()
 
+    // 新增加一天
+    val df7 = df4.withColumn("dateadd", date_add(col("currTime"), 1))
+    df7.show(false)
+    df7.printSchema()
+
     sc.stop()
     spark.stop()
   }

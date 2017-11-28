@@ -14,8 +14,12 @@ import org.apache.spark.sql.functions._
  * 所需数据
  * 用户信息表：`AC_OPERATOR`
           START_DATE：注册时间
-          LAST_LOGIN：最近登陆时间
+          LAST_LOGIN：最近登陆时间(表中此列无数据)
 
+从t_hbaseSink表中获取用户的登陆时间数据
+  读取t_hbaseSink表中的用户ID和登陆时间，并将结果保存到mysql数据库中（YLZX_LAST_LOGIN）
+  userID:用户ID
+  loginTime:登陆时间（yyyy-MM-dd）
 
  */
 object Retention {
@@ -36,7 +40,8 @@ object Retention {
     import spark.implicits._
 
     // 表名
-    val tableName = "AC_OPERATOR"
+    val registTable = "AC_OPERATOR"
+    val loginTable = "YLZX_LAST_LOGIN"
 
     // 链接mysql数据库
     val url1 = "jdbc:mysql://localhost:3306/ylzx?useUnicode=true&characterEncoding=UTF-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
@@ -46,7 +51,8 @@ object Retention {
     prop1.setProperty("password", "root")
 
     // 读取数据
-    val operatorDF = spark.read.jdbc(url1, tableName, prop1)
+    val registDF = spark.read.jdbc(url1, registTable, prop1)
+    val loginDF = spark.read.jdbc(url1, loginTable, prop1).withColumnRenamed("userID", "OPERATOR_ID").na.drop()
 
     /*
     分析不同时间段用户注册情况(按月统计)
@@ -55,7 +61,7 @@ object Retention {
     START_DATE：注册时间
      */
 
-    val df1 = operatorDF.select("OPERATOR_ID","START_DATE").
+    val df1 = registDF.select("OPERATOR_ID","START_DATE").
       withColumn("START_DATE_day", date_format($"START_DATE", "yyyy-MM")).na.drop().
       withColumn("tag",lit(1)).groupBy("START_DATE_day").agg(sum("tag")).withColumnRenamed("sum(tag)","sum").
       sort($"START_DATE_day")
@@ -88,12 +94,14 @@ object Retention {
     LAST_LOGIN：最近登陆时间
      */
 
-    val df2 = operatorDF.select("OPERATOR_ID","START_DATE","LAST_LOGIN")
+    val lastloginDF = loginDF.sort(col("loginTime"))
+    lastloginDF.show(false)
+    lastloginDF.printSchema()
+
+    val df2 = registDF.select("OPERATOR_ID","START_DATE").join(loginDF, Seq("OPERATOR_ID"), "left")
       // 获取当前时间
     .withColumn("currTime", current_timestamp()).withColumn("currTime", date_format($"currTime", "yyyy-MM-dd HH:mm:ss")).na.drop()
 //      .withColumn("diff", (datediff(col("currTime"), col("START_DATE")) + 1)/(datediff(col("currTime"), col("LAST_LOGIN")) + 1))
-   // 获取
-    .withColumn("diff", datediff(col("currTime"), col("START_DATE")))
     df2.show(false)
     df2.printSchema()
 
