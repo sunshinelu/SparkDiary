@@ -9,6 +9,7 @@ import vegas.sparkExt._
 /**
  * Created by sunlu on 17/11/29.
  * https://github.com/vegas-viz/Vegas
+ * http://nbviewer.jupyter.org/github/aishfenton/Vegas/blob/master/notebooks/jupyter_example.ipynb
  */
 object vegasDemo2 {
   def SetLogger = {
