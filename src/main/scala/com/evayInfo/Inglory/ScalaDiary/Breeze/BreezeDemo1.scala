@@ -1,4 +1,4 @@
-package com.evayInfo.Inglory.SparkDiary.Breeze
+package com.evayInfo.Inglory.ScalaDiary.Breeze
 
 import breeze.linalg._
 import breeze.numerics._
