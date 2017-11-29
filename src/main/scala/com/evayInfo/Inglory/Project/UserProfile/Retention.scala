@@ -2,9 +2,11 @@ package com.evayInfo.Inglory.Project.UserProfile
 
 import java.util.Properties
 
+import breeze.linalg.DenseVector
+import breeze.plot._
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions._
 
 /**
@@ -210,6 +212,15 @@ object Retention {
      */
 
     retentionDF.toJSON.show(false)
+
+    val f = Figure()
+    val p = f.subplot(0)
+    val x = retentionDF.select("time").rdd.map{case Row(x: String) => x}.collect()
+    val x1 = DenseVector(x)
+    val y = DenseVector(retentionDF.select("value").rdd.map{case Row(y: Double) => y}.collect())
+    println(y)
+    p += hist(y,20)
+    p.title = "A normal distribution"
 
     sc.stop()
     spark.stop()
