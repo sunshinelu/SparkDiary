@@ -280,6 +280,7 @@ object Retention {
     frame.pack()
     frame.setVisible(true)
 
+    Thread.sleep(5000)// 解决无法保存图片问题
     val  width = 640 /* Width of the image */
     val height = 480 /* Height of the image */
     val BarChart = new File( "result/Retention.jpeg" )
