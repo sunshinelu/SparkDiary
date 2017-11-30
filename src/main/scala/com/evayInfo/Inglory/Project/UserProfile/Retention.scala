@@ -1,6 +1,8 @@
 package com.evayInfo.Inglory.Project.UserProfile
 
+import java.io.File
 import java.util.Properties
+import javax.swing.JFrame
 
 import breeze.linalg.DenseVector
 import breeze.plot._
@@ -8,6 +10,12 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions._
+import org.jfree.chart.{ChartUtilities, ChartPanel, ChartFactory}
+import org.jfree.chart.axis.{CategoryLabelPositions, CategoryAxis}
+import org.jfree.chart.plot.{CategoryPlot, PlotOrientation}
+import org.jfree.data.category.DefaultCategoryDataset
+import vegas._
+import vegas.sparkExt._
 
 /**
  * Created by sunlu on 17/11/28.
@@ -213,6 +221,7 @@ object Retention {
 
     retentionDF.toJSON.show(false)
 
+    /*
     val f = Figure()
     val p = f.subplot(0)
     val x = retentionDF.select("time").rdd.map{case Row(x: String) => x}.collect()
@@ -221,6 +230,60 @@ object Retention {
     println(y)
     p += hist(y,20)
     p.title = "A normal distribution"
+*/
+
+    /*
+    // 使用Vegas作图(success)
+    val plot = Vegas("Retention Pop").withDataFrame(retentionDF).
+      encodeX("time", Nom).
+      encodeY("value", Quant).
+      mark(Bar)
+
+    plot.show
+*/
+
+    val dataset = new DefaultCategoryDataset()
+//    retentionDF.rdd.map{case Row(time:String, value:Double) =>
+//      val value2 = value * 100
+//      (value2,time )
+////      dataset.addValue(value, time, time)
+////      new DefaultCategoryDataset()
+//    }.foreach(x => {
+//      dataset.addValue(x._1, x._2, x._2)
+//      println(x._2)
+//    })
+
+    val x = retentionDF.select("value").map{case Row(value:Double) => value * 100}.collect()
+    val y = retentionDF.select("time").map{case Row(time:String) => time}.collect()
+    for(i <- 0 to x.length-1 ){
+      dataset.addValue(x(i), y(i), y(i))
+    }
+
+    val barChart = ChartFactory.createBarChart(
+      "留存率分析",
+      "Category", "留存率(%)",
+      dataset,
+      PlotOrientation.VERTICAL,
+      true, true, false)
+
+    // 修改图片样式
+    val plot: CategoryPlot = barChart.getCategoryPlot
+    val domainAxis: CategoryAxis = plot.getDomainAxis
+    domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45)//横坐标倾斜45度
+
+
+    val frame = new JFrame("Hello Retention")
+    frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE )
+
+    frame.setSize(640,420)
+    frame.add( new ChartPanel(barChart) )
+    frame.pack()
+    frame.setVisible(true)
+
+    val  width = 640 /* Width of the image */
+    val height = 480 /* Height of the image */
+    val BarChart = new File( "result/Retention.jpeg" )
+    ChartUtilities.saveChartAsJPEG( BarChart , barChart , width , height )
 
     sc.stop()
     spark.stop()
