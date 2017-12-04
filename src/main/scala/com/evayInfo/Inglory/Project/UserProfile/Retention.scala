@@ -66,6 +66,9 @@ object Retention {
     val registDF = spark.read.jdbc(url1, registTable, prop1)
     val loginDF = spark.read.jdbc(url1, loginTable, prop1).withColumnRenamed("userID", "OPERATOR_ID").na.drop()
 
+//    println("registDF is; " + registDF.count())
+//    println("registDF is; " + loginDF.select("OPERATOR_ID").dropDuplicates().count())
+
     /*
     分析不同时间段用户注册情况(按月统计)
     所需字段：
@@ -260,7 +263,7 @@ object Retention {
     }
 
     val barChart = ChartFactory.createBarChart(
-      "留存率分析",
+      "留存分析",
       "Category", "留存率(%)",
       dataset,
       PlotOrientation.VERTICAL,

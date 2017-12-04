@@ -1,11 +1,8 @@
 package com.evayInfo.Inglory.ScalaDiary.Breeze
 
-import breeze.plot.Figure
+import breeze.linalg._
 import breeze.stats.hist
 import org.scalatest.FunSuite
-import breeze.linalg._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
 /**
  * Created by sunlu on 17/11/29.
@@ -19,8 +16,8 @@ object BreezeVizDemo2 extends FunSuite {
 
 
       val result = hist(testDV, 3)
-     result.hist == DenseVector(2.0,2.0,1.0)
-     result.binEdges == DenseVector(0.0, 5.0/3.0, 2*5.0/3.0, 5.0)
+//     result.hist == DenseVector(2.0,2.0,1.0)
+//     result.binEdges == DenseVector(0.0, 5.0/3.0, 2*5.0/3.0, 5.0)
 
 
 
