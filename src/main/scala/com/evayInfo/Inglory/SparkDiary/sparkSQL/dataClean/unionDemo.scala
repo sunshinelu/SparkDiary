@@ -45,7 +45,17 @@ object unionDemo {
 |  6|  r|  e|
 +---+---+---+
      */
-
+    println("max")
+    df3.groupBy("x2").max("x1").show()
+/*
++---+-------+
+| x2|max(x1)|
++---+-------+
+|  d|      5|
+|  a|      4|
+|  r|      6|
++---+-------+
+ */
 
     val df4 = sc.parallelize(Seq((1, "a", "c"), (2, "d", "f"), (3, "r", "e"))).toDF("x1", "x3", "x2")
     val df5 = df1.union(df4)
