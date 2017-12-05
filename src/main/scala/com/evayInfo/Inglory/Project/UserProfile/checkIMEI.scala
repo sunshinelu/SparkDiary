@@ -72,7 +72,7 @@ object checkIMEI {
         val parmas = Bytes.toString(x._4)
         LogView(userID, creatTimeL, creatTimeS, requestURL, parmas)
       }
-      }
+      }.filter(x => x.REQUEST_URI.contains("init.do") )
 
     hbaseRDD
   }
@@ -84,6 +84,7 @@ object checkIMEI {
     val SparkConf = new SparkConf().setAppName(s"checkIMEI").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
+    import spark.implicits._
 
     // 获取日志数据
     val logsTable = "t_hbaseSink"
