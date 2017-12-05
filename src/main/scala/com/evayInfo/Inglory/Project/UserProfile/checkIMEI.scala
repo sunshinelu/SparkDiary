@@ -1,6 +1,7 @@
 package com.evayInfo.Inglory.Project.UserProfile
 
 import java.text.SimpleDateFormat
+import java.util.Calendar
 
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Scan
@@ -72,10 +73,13 @@ object checkIMEI {
         val parmas = Bytes.toString(x._4)
         LogView(userID, creatTimeL, creatTimeS, requestURL, parmas)
       }
-      }.filter(x => x.REQUEST_URI.contains("init.do") )
+      }.filter(x => x.REQUEST_URI.contains("init") || x.REQUEST_URI.contains("PushId") ||
+      x.PARAMS.contains("init") || x.PARAMS.contains("IMEI"))
 
     hbaseRDD
   }
+
+
 
   def main(args: Array[String]) {
     SetLogger
@@ -90,7 +94,8 @@ object checkIMEI {
     val logsTable = "t_hbaseSink"
     val logsRDD = getLogsRDD(logsTable, sc)
     val logsDS = spark.createDataset(logsRDD).select("CREATE_BY_ID","REQUEST_URI", "PARAMS")
-    logsDS.show(false)
+    logsDS.filter($"REQUEST_URI".contains("updatePushIdByToken.do")).show(false)
+
 
     sc.stop()
     spark.stop()

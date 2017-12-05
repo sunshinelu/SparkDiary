@@ -2,6 +2,7 @@ package com.evayInfo.Inglory.SparkDiary.sparkSQL.dataClean
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions._
 
 /**
   * Created by sunlu on 17/6/27.
@@ -62,9 +63,32 @@ object unionDemo {
 |  3|  r|  e|
 +---+---+---+
      */
+
+    df5.withColumn("label", lit(1)).groupBy("x2").agg(sum("label")).show(false)
+    /*
++---+----------+
+|x2 |sum(label)|
++---+----------+
+|d  |2         |
+|a  |2         |
+|r  |2         |
++---+----------+
+     */
+
     val df6 = df1.unionAll(df4)
     df6.show()
-
+/*
++---+---+---+
+| x1| x2| x3|
++---+---+---+
+|  1|  a|  c|
+|  2|  d|  f|
+|  3|  r|  e|
+|  1|  a|  c|
+|  2|  d|  f|
+|  3|  r|  e|
++---+---+---+
+ */
 
     sc.stop()
     spark.stop()
