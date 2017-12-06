@@ -116,6 +116,22 @@ object ReplaceDemo {
 +----+----+----+----+----+
  */
 
+    df4.withColumn("col5", regexp_replace($"col4","0","false"))
+      .withColumn("col5", regexp_replace($"col5","1","true")).show(false)
+/*
++----+----+----+----+-----+
+|col1|col2|col3|col4|col5 |
++----+----+----+----+-----+
+|a   |1   |3   |0   |false|
+|a   |2   |3   |0   |false|
+|a   |3   |3   |1   |true |
+|b   |1   |2   |0   |false|
+|b   |2   |2   |1   |true |
++----+----+----+----+-----+
+ */
+
+
+
     sc.stop()
     spark.stop()
   }
