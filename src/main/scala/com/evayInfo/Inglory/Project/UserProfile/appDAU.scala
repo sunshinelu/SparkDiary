@@ -126,7 +126,7 @@ object appDAU {
     SetLogger
 
     //bulid environment
-    val SparkConf = new SparkConf().setAppName(s"appDAU").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val SparkConf = new SparkConf().setAppName(s"appDAU")//.setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
@@ -164,13 +164,13 @@ object appDAU {
       val pushId = reg.findFirstIn(arg).toString.replace("Some(pushId=", "").replace(")", "").replace("})", "")
       val result = pushId match {
         case r if r.length >= 1 => r
-        case _ => ""
+        case _ => "null"
       }
       result
     }
     val getPushIdUdf = udf((arg:String) => getPushId(arg))
     val iosDF = df1.filter($"REQUEST_URI".contains("updatePushIdByToken.do")).
-      withColumn("phoneId", getPushIdUdf($"PARAMS")).filter(length($"phoneId") >= 5)
+      withColumn("phoneId", getPushIdUdf($"PARAMS")).filter($"phoneId" =!= "null")//.filter(length($"phoneId") >= 5)
     val iosUser = iosDF.select("phoneId").na.drop().dropDuplicates().count().toInt
 //    println("iOS用户的访问数为：" + iosUser)
     // iOS用户的访问数为：20
@@ -185,13 +185,13 @@ object appDAU {
       val IMEI = reg.findFirstIn(arg).toString.replace("Some(IMEI=", "").replace(")", "").replace("})", "")
       val result = IMEI match {
         case r if r.length >= 1 => r
-        case _ => ""
+        case _ => "null"
       }
       result
     }
     val getIMEIUdf = udf((arg:String) => getIMEI(arg))
     val androidDF = df1.filter($"REQUEST_URI".contains("init") && $"PARAMS".contains("IMEI")).
-      withColumn("phoneId", getIMEIUdf($"PARAMS")).filter(length($"phoneId") >= 5)
+      withColumn("phoneId", getIMEIUdf($"PARAMS")).filter($"phoneId" =!= "null")//.filter(length($"phoneId") >= 5)
     val androidUser = androidDF.select("phoneId").na.drop().dropDuplicates().count().toInt
 //    println("androidD用户的访问数为：" + androidUser)
     // androidD用户的访问数为：12
@@ -207,10 +207,26 @@ object appDAU {
 //    val appRegUser = iosRegUser + androidRegUser
 //    println("昨天app用户的全部访问用户数中注册用户数为：" + appRegUser)
     // 昨天app用户的全部访问用户数中注册用户数为：19
-    val appRegDF = iosDF.select("CREATE_BY_ID", "phoneId").union(androidDF.select("CREATE_BY_ID", "phoneId"))
-    val appRegUserNumber = appRegDF.select("CREATE_BY_ID").dropDuplicates().count().toInt
-//    appRegDF.withColumn("label",lit(1)).groupBy("CREATE_BY_ID").agg(sum("label")).show(false)
-
+    val appRegDF = iosDF.select("CREATE_BY_ID", "phoneId").union(androidDF.select("CREATE_BY_ID", "phoneId")).na.drop().dropDuplicates()
+    val appRegUserNumber = appRegDF.select("CREATE_BY_ID").filter(length($"CREATE_BY_ID") >= 5).dropDuplicates().count().toInt
+//    appRegDF.filter(length($"CREATE_BY_ID") >= 5).withColumn("label",lit(1)).groupBy("CREATE_BY_ID").agg(sum("label")).show(false)
+/*
++------------------------------------+----------+
+|CREATE_BY_ID                        |sum(label)|
++------------------------------------+----------+
+|f4d21395-f9a7-4a40-8e63-aa04c2f73a5d|1         |
+|308842ec-bb92-4f9b-b490-bdce63ec8484|1         |
+|be446473-b69e-4ff9-be31-d804d77b15ac|2         |
+|6324063a-deaa-4e67-81aa-916c888c2abe|2         |
+|cbb69e75-f2d4-4e02-b6b0-0e89f4d237bd|2         |
+|f531aded-bd09-4574-8826-4482bd918f91|1         |
+|ff57b490-9d1d-4d11-957b-45b525816a85|2         |
+|cf119f54-9b3d-40d9-b124-749deb160dc6|1         |
+|3db170dd-89b9-454c-ad97-e90b6890cc15|1         |
+|81d5b969-832f-458c-9041-e4ad7273ed73|1         |
+|826e767e-8e7c-40b4-8c9f-5b605b28b80e|1         |
++------------------------------------+----------+
+ */
 
     /*
     获取注册用户数
@@ -238,8 +254,8 @@ object appDAU {
     val yesterday  = getYesterday()
     val resultTable = "YLZX_USERPROFILE_appDAU"
     val dauDF = spark.createDataFrame(Seq(DAUschema(iosUser,iosRegUser,androidUser,androidRegUser,
-      appUsers,appRegUserNumber,regisUserNumber,dau,yesterday)))
-      .withColumn("currTime", current_timestamp()).withColumn("currTime", date_format($"currTime", "yyyy-MM-dd HH:mm:ss"))
+      appUsers,appRegUserNumber,regisUserNumber,dau,yesterday))).
+      withColumn("currTime", current_timestamp()).withColumn("currTime", date_format($"currTime", "yyyy-MM-dd HH:mm:ss"))
 
     //将retentionDF保存到mysql数据库中
     val url2 = "jdbc:mysql://192.168.37.18:3306/recommender_test?useUnicode=true&characterEncoding=UTF-8"
