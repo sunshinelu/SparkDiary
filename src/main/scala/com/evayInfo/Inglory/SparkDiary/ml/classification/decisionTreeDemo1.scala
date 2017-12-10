@@ -11,6 +11,7 @@ import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
 
 /**
  * Created by sunlu on 17/12/8.
+ * spark官网决策树分类模型
  */
 object decisionTreeDemo1 {
   def SetLogger = {
