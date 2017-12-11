@@ -171,11 +171,12 @@ object appDAU {
     val getPushIdUdf = udf((arg:String) => getPushId(arg))
     val iosDF = df1.filter($"REQUEST_URI".contains("updatePushIdByToken.do")).
       withColumn("phoneId", getPushIdUdf($"PARAMS")).filter($"phoneId" =!= "null")//.filter(length($"phoneId") >= 5)
+    iosDF.persist()
     val iosUser = iosDF.select("phoneId").na.drop().dropDuplicates().count().toInt
 //    println("iOS用户的访问数为：" + iosUser)
     // iOS用户的访问数为：20
 
-    val iosRegUser = iosDF.select("CREATE_BY_ID").na.drop().dropDuplicates().count().toInt
+    val iosRegUser = iosDF.select("CREATE_BY_ID").filter(length($"CREATE_BY_ID") >= 5).na.drop().dropDuplicates().count().toInt
 //    println("iOS注册用户的访问数为：" + iosRegUser)
     // iOS注册用户的访问数为：11
 
@@ -192,11 +193,12 @@ object appDAU {
     val getIMEIUdf = udf((arg:String) => getIMEI(arg))
     val androidDF = df1.filter($"REQUEST_URI".contains("init") && $"PARAMS".contains("IMEI")).
       withColumn("phoneId", getIMEIUdf($"PARAMS")).filter($"phoneId" =!= "null")//.filter(length($"phoneId") >= 5)
+    androidDF.persist()
     val androidUser = androidDF.select("phoneId").na.drop().dropDuplicates().count().toInt
 //    println("androidD用户的访问数为：" + androidUser)
     // androidD用户的访问数为：12
 
-    val androidRegUser = androidDF.select("CREATE_BY_ID").na.drop().dropDuplicates().count().toInt
+    val androidRegUser = androidDF.select("CREATE_BY_ID").filter(length($"CREATE_BY_ID") >= 5).na.drop().dropDuplicates().count().toInt
 //    println("androidD注册用户的访问数为：" + androidRegUser)
     // androidD注册用户的访问数为：8
 
@@ -208,7 +210,9 @@ object appDAU {
 //    println("昨天app用户的全部访问用户数中注册用户数为：" + appRegUser)
     // 昨天app用户的全部访问用户数中注册用户数为：19
     val appRegDF = iosDF.select("CREATE_BY_ID", "phoneId").union(androidDF.select("CREATE_BY_ID", "phoneId")).na.drop().dropDuplicates()
-    val appRegUserNumber = appRegDF.select("CREATE_BY_ID").filter(length($"CREATE_BY_ID") >= 5).dropDuplicates().count().toInt
+    val appRegUserNumber = appRegDF.select("CREATE_BY_ID").
+      filter(length($"CREATE_BY_ID") >= 5).
+      dropDuplicates().count().toInt
 //    appRegDF.filter(length($"CREATE_BY_ID") >= 5).withColumn("label",lit(1)).groupBy("CREATE_BY_ID").agg(sum("label")).show(false)
 /*
 +------------------------------------+----------+
