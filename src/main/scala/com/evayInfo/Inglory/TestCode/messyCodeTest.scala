@@ -40,17 +40,22 @@ object messyCodeTest {
     val s4 = new java.lang.String(s3.getBytes(), "UTF-8")
     println("utf-8 to gbk to utf8 is: " + s4)
 
+
+
     val t1 = sc.textFile("file:////Users/sunlu/Desktop/test.txt").
 //      map(x => (new java.lang.String(x.getBytes("GBK"),"UTF-8"), x.getBytes().length))
 //    map(x => new String(x.getBytes, 0, x.getBytes().length, "GB2312"))
- map(x => new String(x.getBytes(), "UTF-8"))
+// map(x => new String(x.getBytes(), "UTF-8"))
+    map(x => new String(x.getBytes, 0, x.length, "GB2312"))
+    println("=======t1 is ======")
     t1.collect().foreach(println)
 
     val t2 = Source.fromFile("/Users/sunlu/Desktop/test.txt", "GB2312").getLines().toList
     t2.foreach(println)
 
-    val t3 = sc.textFile("file:////Users/sunlu/Desktop/test2.txt")
-    t3.collect().foreach(println)
+    val t3 = sc.textFile("file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/sentimentDic/weibo2/0_simplifyweibo.txt")
+//    t3.collect().foreach(println)
+    println(t3.count())
 
     val strby = s.getBytes("GB2312")
     val Str2 = new java.lang.String(strby,"utf-8")

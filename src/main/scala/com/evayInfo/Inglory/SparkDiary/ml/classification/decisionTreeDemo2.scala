@@ -34,7 +34,7 @@ object decisionTreeDemo2 {
 //      new String( new String(arg.getBytes(), "GB2312").getBytes(), "GBK")
 //    new java.lang.String(arg.getBytes(), "GB2312")
 //      new String(new String(arg.getBytes(), "GB2312").getBytes(), "UTF-8")
-      new String(arg.getBytes,0, arg.length, "GB2312")
+      new String(arg.getBytes,0, arg.length, "UTF-8")
 
 //    new String(arg.getBytes, "utf8")
 //new java.lang.String(new java.lang.String(arg.getBytes(), "GBK").getBytes("GBK"),"UTF-8")
@@ -43,22 +43,22 @@ object decisionTreeDemo2 {
     val getCode = udf((arg:String) => arg.getBytes().length)
 
     // load sentiment datasets
-    val label_0 = spark.read.format("text").load("file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/sentimentDic/weibo/0_simplifyweibo.txt").
-      toDF("content").withColumn("Lable", lit("喜悦")).
-      withColumn("content2", toUDF8($"content")).
-      withColumn("code" , getCode($"content"))
-    val label_1 = spark.read.format("text").load("file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/sentimentDic/weibo/1_simplifyweibo.txt").
-      toDF("content").withColumn("Lable", lit("愤怒")).
-      withColumn("content2", toUDF8($"content")).
-      withColumn("code" , getCode($"content"))
-    val label_2 = spark.read.format("text").load("file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/sentimentDic/weibo/2_simplifyweibo.txt").
-      toDF("content").withColumn("Lable", lit("厌恶")).
-      withColumn("content2", toUDF8($"content")).
-      withColumn("code" , getCode($"content"))
-    val label_3 = spark.read.format("text").load("file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/sentimentDic/weibo/3_simplifyweibo.txt").
-      toDF("content").withColumn("Lable", lit("低落")).
-      withColumn("content2", toUDF8($"content")).
-      withColumn("code" , getCode($"content"))
+    val label_0 = spark.read.format("text").load("file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/sentimentDic/weibo2/0_simplifyweibo.txt").
+      toDF("content").withColumn("Lable", lit("喜悦"))//.
+//      withColumn("content2", toUDF8($"content")).
+//      withColumn("code" , getCode($"content"))
+    val label_1 = spark.read.format("text").load("file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/sentimentDic/weibo2/1_simplifyweibo.txt").
+      toDF("content").withColumn("Lable", lit("愤怒"))//.
+//      withColumn("content2", toUDF8($"content")).
+//      withColumn("code" , getCode($"content"))
+    val label_2 = spark.read.format("text").load("file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/sentimentDic/weibo2/2_simplifyweibo.txt").
+      toDF("content").withColumn("Lable", lit("厌恶"))//.
+//      withColumn("content2", toUDF8($"content")).
+//      withColumn("code" , getCode($"content"))
+    val label_3 = spark.read.format("text").load("file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/sentimentDic/weibo2/3_simplifyweibo.txt").
+      toDF("content").withColumn("Lable", lit("低落"))//.
+//      withColumn("content2", toUDF8($"content")).
+//      withColumn("code" , getCode($"content"))
 
     // load stop words
     val stopwordsFile: String = "file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/Stopwords.dic"
@@ -70,9 +70,9 @@ object decisionTreeDemo2 {
     // split training set and tset set
     val Array(trainDF, testDF) = df.randomSplit(Array(0.005,0.999))
 
-   println("training set is: " + trainDF.count())
-    trainDF.show()
-    /*
+//   println("training set is: " + trainDF.count())
+//    trainDF.show()
+
     // seg words
         val SegwordsUDF = udf((content:String) => content.split(" ").map(_.split("/")(0)).filter(x => ! stopwords.contains(x)).toSeq)
     val segDF = trainDF.withColumn("seg", SegwordsUDF($"content"))
@@ -153,7 +153,7 @@ object decisionTreeDemo2 {
     // Make predictions.
     val predictions = model.transform(tfidfData)
     predictions.printSchema()
-*/
+
     sc.stop()
     spark.stop()
 
