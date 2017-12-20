@@ -25,7 +25,7 @@ object decisionTreeDemo2 {
   def main(args: Array[String]) {
 
     //bulid environment
-    val SparkConf = new SparkConf().setAppName(s"decisionTreeDemo2").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val SparkConf = new SparkConf().setAppName(s"decisionTreeDemo2").setMaster("local[*]").set("spark.executor.memory", "4g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
@@ -68,14 +68,15 @@ object decisionTreeDemo2 {
     val df = label_0.union(label_1).union(label_2).union(label_3)
 
     // split training set and tset set
-    val Array(trainDF, testDF) = df.randomSplit(Array(0.005,0.999))
+    val Array(trainDF, testDF) = df.randomSplit(Array(0.0001,0.9999))
 
-//   println("training set is: " + trainDF.count())
+   println("training set is: " + trainDF.count())
 //    trainDF.show()
 
     // seg words
         val SegwordsUDF = udf((content:String) => content.split(" ").map(_.split("/")(0)).filter(x => ! stopwords.contains(x)).toSeq)
     val segDF = trainDF.withColumn("seg", SegwordsUDF($"content"))
+    segDF.show()
 
     /*
  calculate tf-idf value
@@ -153,6 +154,7 @@ object decisionTreeDemo2 {
     // Make predictions.
     val predictions = model.transform(tfidfData)
     predictions.printSchema()
+    predictions.show(false)
 
     sc.stop()
     spark.stop()
