@@ -11,6 +11,8 @@ import org.apache.spark.sql.SparkSession
 /**
  * Created by sunlu on 17/12/20.
  * 《图解Spark》第九章Spark MLlib（P338）
+ * http://mangocool.com/1476675638181.html
+ * https://stackoverflow.com/questions/38664972/why-is-unable-to-find-encoder-for-type-stored-in-a-dataset-when-creating-a-dat
  */
 object SpamMessageClassifier {
 
