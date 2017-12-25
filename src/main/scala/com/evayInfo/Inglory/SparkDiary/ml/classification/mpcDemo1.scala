@@ -23,7 +23,7 @@ object mpcDemo1 {
     val sc = spark.sparkContext
     import spark.implicits._
 
-    val filePath = "file:///D:\\Workspace\\IDEA\\GitHub\\SparkDiary\\data\\sample_multiclass_classification_data.txt"
+    val filePath = "file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/sample_multiclass_classification_data.txt"
 
     // Load the data stored in LIBSVM format as a DataFrame.
     val data = spark.read.format("libsvm")

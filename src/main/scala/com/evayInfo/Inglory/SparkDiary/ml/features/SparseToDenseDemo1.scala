@@ -54,7 +54,7 @@ object SparseToDenseDemo1 {
     val hashingTF = new HashingTF().
       setInputCol("segWords").
       setOutputCol("rawFeatures").
-      setNumFeatures(20)
+      setNumFeatures(20)// 默认数值为262144
 
     val featurizedData = hashingTF.transform(segDF)
     // alternatively, CountVectorizer can also be used to get term frequency vectors
@@ -80,6 +80,7 @@ object SparseToDenseDemo1 {
     }
     vector.collect().foreach(println)
     /*
+(size, [indices], [values])
 (20,[0,18,19],[0.28768207245178085,0.6931471805599453,0.6931471805599453])
 (20,[6,10,11],[0.6931471805599453,0.6931471805599453,0.28768207245178085])
 (20,[0,2,11,16],[0.5753641449035617,0.6931471805599453,0.28768207245178085,0.6931471805599453])
