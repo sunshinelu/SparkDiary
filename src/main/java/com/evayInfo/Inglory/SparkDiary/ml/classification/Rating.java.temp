@@ -1,0 +1,65 @@
+package com.evayInfo.Inglory.SparkDiary.ml.classification;
+
+/**
+ * Created by sunlu on 17/12/26.
+ * 参考链接：
+ *  Spark2.0机器学习系列之1：基于Pipeline、交叉验证、ParamMap的模型选择和超参数调优
+ * http://blog.csdn.net/qq_34531825/article/details/52334436
+ */
+public class Rating {
+    /*
+    private Integer userId;
+    private Integer movieId;
+    private double rating;
+    private long timestamp;
+
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public Integer getMovieId() {
+        return movieId;
+    }
+
+    public double getRating() {
+        return rating;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
+    public void setMovieId(Integer movieId) {
+        this.movieId = movieId;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public static void parseRating(String str){
+        String[] fields = str.split("::");
+        assert(fields.length ==4);
+        new Rating(Integer.parseInt(fields[0]), Integer.parseInt(fields[1]), Double.parseDouble(fields[2]), Long.parseLong(fields[3]));
+    }
+
+    /*
+    case class Rating(userId: Int, movieId: Int, rating: Float, timestamp: Long)
+def parseRating(str: String): Rating = {
+  val fields = str.split("::")
+  assert(fields.size == 4)
+  Rating(fields(0).toInt, fields(1).toInt, fields(2).toFloat, fields(3).toLong)
+}
+
+     */
+
+}
