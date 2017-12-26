@@ -81,7 +81,22 @@ object NaiveBayesDemo1 {
     val model = new NaiveBayes().
       setLabelCol("label").
       setFeaturesCol("features").
+      setThresholds(Array(1.0,1.0,1.0,1.0)).
       fit(trainDF)
+    println("thresholds is: ")
+    println(model.thresholds.hashCode())
+//    1216730462  => 0.24675324675324675
+//    9327262  =>  0.2524271844660194
+
+
+    println("Smoothing is: ")
+    println(model.getSmoothing)
+    //
+
+    println("thresholds is: ")
+    println(model.getThresholds.toList)
+
+
     // Select example rows to display.
     val predictions = model.transform(testDF)
     predictions.printSchema()
@@ -105,6 +120,7 @@ object NaiveBayesDemo1 {
       .setMetricName("accuracy")
     val accuracy = evaluator.evaluate(predictions)
     println("Test set accuracy = " + accuracy)
+    // Test set accuracy = 0.24705882352941178
 
 
     sc.stop()
