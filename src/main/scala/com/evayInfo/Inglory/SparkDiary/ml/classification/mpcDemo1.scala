@@ -31,6 +31,8 @@ object mpcDemo1 {
     data.printSchema()
     data.show()
 
+    data.select("label").dropDuplicates().show()
+
     // Split the data into train and test
     val splits = data.randomSplit(Array(0.6, 0.4), seed = 1234L)
     val train = splits(0)
@@ -50,6 +52,19 @@ object mpcDemo1 {
 
     // train the model
     val model = trainer.fit(train)
+
+    println("get model's params: ")
+    println(model.explainParams())
+    /*
+get model's params:
+featuresCol: features column name (default: features)
+labelCol: label column name (default: label)
+predictionCol: prediction column name (default: prediction)
+     */
+
+    println("get model's layer:")
+    println(model.layers.toList)
+
 
     // compute accuracy on the test set
     val result = model.transform(test)

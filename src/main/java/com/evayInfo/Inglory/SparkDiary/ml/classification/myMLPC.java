@@ -21,10 +21,12 @@ public class myMLPC {
                 .builder()
                 .appName("MLPC")
                 .master("local[4]")
-                .config("spark.sql.warehouse.dir","file///:G:/Projects/Java/Spark/spark-warehouse" )
+//                .config("spark.sql.warehouse.dir","file///:G:/Projects/Java/Spark/spark-warehouse" )
                 .getOrCreate();
-        String path="G:/Projects/CgyWin64/home/pengjy3/softwate/spark-2.0.0-bin-hadoop2.6/"
-                + "data/mllib/sample_multiclass_classification_data.txt";
+//        String path="G:/Projects/CgyWin64/home/pengjy3/softwate/spark-2.0.0-bin-hadoop2.6/"
+//                + "data/mllib/sample_multiclass_classification_data.txt";
+        String path= "file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/sample_multiclass_classification_data.txt";
+
         //屏蔽日志
         Logger.getLogger("org.apache.spark").setLevel(Level.ERROR);
         Logger.getLogger("org.eclipse.jetty.server").setLevel(Level.OFF);

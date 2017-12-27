@@ -96,6 +96,19 @@ object NaiveBayesDemo1 {
     println("thresholds is: ")
     println(model.getThresholds.toList)
 
+    println("explainParams is: ")
+    println(model.explainParams())
+/*
+featuresCol: features column name (default: features, current: features)
+labelCol: label column name (default: label, current: label)
+modelType: The model type which is a string (case-sensitive). Supported options: multinomial (default) and bernoulli. (default: multinomial)
+predictionCol: prediction column name (default: prediction)
+probabilityCol: Column name for predicted class conditional probabilities. Note: Not all models output well-calibrated probability estimates! These probabilities should be treated as confidences, not precise probabilities (default: probability)
+rawPredictionCol: raw prediction (a.k.a. confidence) column name (default: rawPrediction)
+smoothing: The smoothing parameter. (default: 1.0)
+thresholds: Thresholds in multi-class classification to adjust the probability of predicting each class. Array must have length equal to the number of classes, with values > 0 excepting that at most one value may be 0. The class with largest value p/t is predicted, where p is the original probability of that class and t is the class's threshold (current: [D@9e2b199)
+weightCol: weight column name. If this is not set or empty, we treat all instance weights as 1.0 (undefined)
+ */
 
     // Select example rows to display.
     val predictions = model.transform(testDF)
