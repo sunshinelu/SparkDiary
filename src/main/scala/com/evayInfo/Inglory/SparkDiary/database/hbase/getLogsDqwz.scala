@@ -183,16 +183,18 @@ object getLogsDqwz {
     val monthL = dateFormat.parse(month).getTime
 
     val df4 = logsDS.filter($"timeL" >= monthL)
-    df4.count()
+//    df4.count()
 
     val df5 = df4.withColumn("tag", lit(1)).
       groupBy("userID","timeL").agg(sum("tag"))
-    df5.show(false)
+//    df5.show(false)
+
 //     val df6 = df5.agg(min("sum(tag)"), max("sum(tag)"))
 
     val clickRate = df5.filter($"sum(tag)" <= 5).withColumn("clickRate", $"sum(tag)" / 5).agg(mean("clickRate")).first().get(0)
 // 0.5428571428571429
 
+    println("统计的用户数量为：" + df5.count())
     println("易览资讯－猜你喜欢模型点击率为：" + clickRate)
 
 /*
