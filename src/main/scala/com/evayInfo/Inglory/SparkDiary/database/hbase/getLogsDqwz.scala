@@ -18,6 +18,7 @@ import org.apache.spark.sql.functions._
  * Created by sunlu on 18/1/15.
  * 读取用户行为日志获取用户在“猜你喜欢”模块的点击情况
  * 读取猜你喜欢推荐结果（此方法不可行，因为未记录历史推荐数据）
+ * 以“猜你喜欢”的点击率为推荐结果的准确率
  */
 object getLogsDqwz {
 
@@ -198,6 +199,15 @@ object getLogsDqwz {
 
     println("统计的用户数量为：" + df5.count())
     println("易览资讯－猜你喜欢模型点击率为：" + clickRate)
+
+    /*
+时间：2018年01月17日 11:43
+scala>     println("统计的用户数量为：" + df5.count())
+统计的用户数量为：14
+
+scala>     println("易览资讯－猜你喜欢模型点击率为：" + clickRate)
+易览资讯－猜你喜欢模型点击率为：0.5428571428571429
+     */
 
 /*
     val cnxhTable = "ylzx_cnxh"
