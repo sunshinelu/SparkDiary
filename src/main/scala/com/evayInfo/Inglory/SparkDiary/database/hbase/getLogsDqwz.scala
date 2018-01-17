@@ -191,7 +191,9 @@ object getLogsDqwz {
 
 //     val df6 = df5.agg(min("sum(tag)"), max("sum(tag)"))
 
-    val clickRate = df5.filter($"sum(tag)" <= 5).withColumn("clickRate", $"sum(tag)" / 5).agg(mean("clickRate")).first().get(0)
+    val clickRate = df5.filter($"sum(tag)" <= 5).
+      withColumn("clickRate", $"sum(tag)" / 5).
+      agg(mean("clickRate")).first().get(0)
 // 0.5428571428571429
 
     println("统计的用户数量为：" + df5.count())
