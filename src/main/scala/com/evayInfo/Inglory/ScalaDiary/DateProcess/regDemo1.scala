@@ -5,6 +5,10 @@ package com.evayInfo.Inglory.ScalaDiary.DateProcess
  *
  * 使用正则表达式提取字符串中 中括号里面的内容和删除中括号里面的内容
  *
+jdbc_url=jdbc:mysql://192.168.37.104:33333/IngloryBDP?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull
+jdbc_username=root
+jdbc_password=root
+ *
  */
 object regDemo1 {
 
