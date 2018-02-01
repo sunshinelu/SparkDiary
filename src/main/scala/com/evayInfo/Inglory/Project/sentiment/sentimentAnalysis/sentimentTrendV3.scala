@@ -7,10 +7,20 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.{SaveMode, Row, SparkSession}
 import org.apache.spark.sql.functions._
+import org.apache.spark.storage.StorageLevel
 
 /**
  * Created by sunlu on 18/1/31.
  * 根据李总的要求重新对舆情数据进行分析
+ *
+spark-submit \
+--class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV3 \
+--master yarn \
+--num-executors 8 \
+--executor-cores 6 \
+--executor-memory 4g \
+--jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/software/extraClass/mysql-connector-java-5.1.17.jar \
+/root/lulu/Progect/sentiment/SparkDiary.jar
  */
 object sentimentTrendV3 {
   def SetLogger = {
@@ -94,25 +104,30 @@ object sentimentTrendV3 {
     //      val slaveDF = df5.na.drop(Array("title", "content")).select("articleId", "content")
 
     val df6 = df5.filter(length(col("title")) >= 2).filter(length(col("content")) >= 2).dropDuplicates(Array("articleId"))
-    df6.persist()
+//    df6.persist()
 
 
     mysqlUtil.truncateMysql(url2, user2, password2, allTable)
     
-    df6.coalesce(1).write.format("jdbc")
-      .mode(SaveMode.Append)
-      .option("dbtable", allTable)
-      .option("url", url2)
-      .option("user", user2)
-      .option("password", password2)
-      //.option("numPartitions", "10")
-      .save()
+    df6
+//    .coalesce(1)
+    .write.
+    format("jdbc")
+    .mode(SaveMode.Append)
+    .option("dbtable", allTable)
+    .option("url", url2)
+    .option("user", user2)
+    .option("password", password2)
+    .option("numPartitions", "10")
+    .save()
 
     val all_df = mysqlUtil.getMysqlData(spark, url2, user2, password2, allTable)
+    all_df.persist(StorageLevel.MEMORY_AND_DISK_SER)
 
     val masterDF = all_df.drop("content")//.dropDuplicates(Array("articleId"))
     val slaveDF = all_df.select("articleId", "content")//.dropDuplicates(Array("articleId"))
 
+    println("start save table " + masterTable)
     masterDF.write.format("jdbc")
       .mode(SaveMode.Append)
       .option("dbtable", masterTable)
@@ -121,7 +136,9 @@ object sentimentTrendV3 {
       .option("password", password2)
       .option("numPartitions", "5")
       .save()
+    println("succed save table " + masterTable)
 
+    println("start save table " + slaveTable)
     slaveDF.write.format("jdbc")
       .mode(SaveMode.Append)
       .option("dbtable", slaveTable)
@@ -130,7 +147,7 @@ object sentimentTrendV3 {
       .option("password", password2)
       .option("numPartitions", "5")
       .save()
-
+    println("succed save table " + slaveTable)
 
     sc.stop()
     spark.stop()
