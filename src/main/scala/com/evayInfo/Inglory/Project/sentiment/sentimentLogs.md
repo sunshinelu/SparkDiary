@@ -516,3 +516,16 @@ IngloryBDP:`DA_WEIBO`、`DA_WEIBO_COMMENTS`、`DA_WEIXIN`、`DA_SEED`、`DA_BLOG
     --executor-cores 4 \
     --executor-memory 2g \
     /root/lulu/Progect/sentiment/SparkDiary-1.0-SNAPSHOT-jar-with-dependencies.jar
+    
+ 时间：2018年02月01日：
+ 
+在slave6中运行（运行成功）
+
+    spark-submit \
+    --class com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis.sentimentTrendV3 \
+    --master yarn \
+    --num-executors 8 \
+    --executor-cores 6 \
+    --executor-memory 6g \
+    --jars /root/software/extraClass/ansj_seg-3.7.6-all-in-one.jar,/root/software/extraClass/mysql-connector-java-5.1.17.jar \
+    /root/lulu/Progect/sentiment/SparkDiary.jar

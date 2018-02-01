@@ -57,9 +57,9 @@ object sentimentTrendV3 {
     val url2 = "jdbc:mysql://192.168.37.18:3306/bbs?useUnicode=true&characterEncoding=UTF-8"
     val user2 = "root"
     val password2 = "root"
-    val masterTable = "yq_article"
-    val slaveTable = "yq_content"
-    val allTable = "t_yq_all"
+    val articleTable = "yq_article_new"
+    val contentTable = "yq_content_new"
+    val allTable = "yq_all_new"
 
     val df_weibo = dc_weibo.getWeiboData2(spark, url1, user1, password1, weiboAtable, weiboCtable)
     val df_weixin = dc_weixin.getWeixinData(spark, url1, user1, password1, weixinTable)
@@ -67,7 +67,7 @@ object sentimentTrendV3 {
     val df_search = dc_search.getSearchData(spark, url1, user1, password1, searchTable)
     val df_menhu = dc_menhu.getMenhuData(spark, url1, user1, password1, menhuTable)
     val df_bolg = dc_blog.getBlogData(spark, url1, user1, password1, blogTable)
-    val id_df = mysqlUtil.getMysqlData(spark, url2, user2, password2, masterTable).select("ARTICLEID")
+    val id_df = mysqlUtil.getMysqlData(spark, url2, user2, password2, articleTable).select("ARTICLEID")
 
     val df = df_weibo.union(df_weixin).union(df_luntan).union(df_search).union(df_menhu).union(df_bolg).
       filter(length(col("time")) === 19).join(id_df, Seq("ARTICLEID"), "leftanti")
@@ -134,27 +134,27 @@ object sentimentTrendV3 {
     val masterDF = all_df.drop("content")//.dropDuplicates(Array("articleId"))
     val slaveDF = all_df.select("articleId", "content")//.dropDuplicates(Array("articleId"))
 
-    println("start save table " + masterTable)
+    println("start save table " + articleTable)
     masterDF.write.format("jdbc")
       .mode(SaveMode.Append)
-      .option("dbtable", masterTable)
+      .option("dbtable", articleTable)
       .option("url", url2)
       .option("user", user2)
       .option("password", password2)
       .option("numPartitions", "5")
       .save()
-    println("succed save table " + masterTable)
+    println("succed save table " + articleTable)
 
-    println("start save table " + slaveTable)
+    println("start save table " + contentTable)
     slaveDF.write.format("jdbc")
       .mode(SaveMode.Append)
-      .option("dbtable", slaveTable)
+      .option("dbtable", contentTable)
       .option("url", url2)
       .option("user", user2)
       .option("password", password2)
       .option("numPartitions", "5")
       .save()
-    println("succed save table " + slaveTable)
+    println("succed save table " + contentTable)
 
     sc.stop()
     spark.stop()
