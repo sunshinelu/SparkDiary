@@ -1,5 +1,7 @@
 package com.evayInfo.Inglory.Project.sentiment.sentimentAnalysis
 
+import java.util.UUID
+
 import com.evayInfo.Inglory.Project.sentiment.dataClean._
 import com.evayInfo.Inglory.util.mysqlUtil
 import org.ansj.splitWord.analysis.ToAnalysis
@@ -106,10 +108,15 @@ object sentimentTrendV3 {
     val df6 = df5.filter(length(col("title")) >= 2).filter(length(col("content")) >= 2).dropDuplicates(Array("articleId"))
 //    df6.persist()
 
+    def uuidFunc():String={
+      val uuid = UUID.randomUUID().toString().toLowerCase()
+      uuid
+    }
+    val uuidUDF = udf(() => uuidFunc())
 
     mysqlUtil.truncateMysql(url2, user2, password2, allTable)
     
-    df6
+    df6.withColumn("id",uuidUDF())
 //    .coalesce(1)
     .write.
     format("jdbc")
