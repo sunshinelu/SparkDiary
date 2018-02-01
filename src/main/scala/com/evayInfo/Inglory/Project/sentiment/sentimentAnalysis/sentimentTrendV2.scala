@@ -97,6 +97,7 @@ object sentimentTrendV2 {
     val df6 = df5.filter(length(col("title")) >= 2).filter(length(col("content")) >= 2).dropDuplicates(Array("articleId"))
     val allTable = "t_yq_all"
 
+    df6.persist()
     mysqlUtil.truncateMysql(url1, user1, password1, allTable)
 
     println("df6的数量为：" + df6.count)

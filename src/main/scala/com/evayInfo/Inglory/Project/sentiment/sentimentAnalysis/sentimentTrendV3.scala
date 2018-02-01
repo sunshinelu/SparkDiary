@@ -5,29 +5,14 @@ import com.evayInfo.Inglory.util.mysqlUtil
 import org.ansj.splitWord.analysis.ToAnalysis
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
+import org.apache.spark.sql.{SaveMode, Row, SparkSession}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{Row, SaveMode, SparkSession}
 
 /**
-  * Created by sunlu on 17/8/3.
-  * * 获取微博、微信、论坛贴吧、博客、搜索引擎、网站门户
-  *
-  *
-  * 结果保存在SUMMARYARTICLE表中：
-  * `SUMMARYARTICLE`
-  * `ARTICLEID`：文章id
-  * `TITLE`：文章标题
-  * `CONTENT`：文章内容
-  * `SOURCE`：文章来源
-  * `KEYWORD`：标签:台湾  扶贫
-  * `SCORE` ：文章得分
-  * `LABEL`：标签：正类、负类、中性、严重
-  * `TIME`：文章发表时间
-  * `SYSTIME`：分析时间
-  * `IS_COMMENT`：是否是评论 0：否 1：是
-  */
-object sentimentTrendV1 {
-
+ * Created by sunlu on 18/1/31.
+ * 根据李总的要求重新对舆情数据进行分析
+ */
+object sentimentTrendV3 {
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)
     Logger.getLogger("com").setLevel(Level.OFF)
@@ -36,18 +21,15 @@ object sentimentTrendV1 {
   }
 
   def main(args: Array[String]) {
-
     SetLogger
 
-    val conf = new SparkConf().setAppName(s"sentimentTrendV1") //.setMaster("local[*]").set("spark.executor.memory", "2g")
+    val conf = new SparkConf().setAppName(s"sentimentTrendV3") //.setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(conf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
 
-    //    val url = "jdbc:mysql://localhost:3306/bbs"
-    val url1 = "jdbc:mysql://192.168.37.18:3306/IngloryBDP?useUnicode=true&characterEncoding=UTF-8"
-    //    val url1 = "jdbc:mysql://192.168.37.18:3306/IngloryBDP?useUnicode=true&characterEncoding=UTF-8&" +
-    //      "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+    val url1 = "jdbc:mysql://192.168.37.104:33333/IngloryBDP?useUnicode=true&characterEncoding=UTF-8"// +
+//      "?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull"
     val user1 = "root"
     val password1 = "root"
 
@@ -60,9 +42,6 @@ object sentimentTrendV1 {
     val menhuTable = "DA_SEED"
     val blogTable = "DA_BLOG"
 
-
-    //    val url2 = "jdbc:mysql://192.168.37.18:3306/bbs?useUnicode=true&characterEncoding=UTF-8&" +
-    //      "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
     val url2 = "jdbc:mysql://192.168.37.18:3306/bbs?useUnicode=true&characterEncoding=UTF-8"
     val user2 = "root"
     val password2 = "root"
@@ -80,10 +59,6 @@ object sentimentTrendV1 {
 
     val df = df_weibo.union(df_weixin).union(df_luntan).union(df_search).union(df_menhu).union(df_bolg).
       filter(length(col("time")) === 19).join(id_df, Seq("ARTICLEID"), "leftanti")
-
-    //    val x = df.count()
-
-    //    if (x > 0) {
 
     //获取正类、负类词典。posnegDF在join时使用；posnegList在词过滤时使用。
     val posnegDF = spark.read.format("CSV").option("header", "true").load("/personal/sunlu/Project/sentiment/posneg.csv")
@@ -119,74 +94,47 @@ object sentimentTrendV1 {
     //      val slaveDF = df5.na.drop(Array("title", "content")).select("articleId", "content")
 
     val df6 = df5.filter(length(col("title")) >= 2).filter(length(col("content")) >= 2).dropDuplicates(Array("articleId"))
-        df6.persist()
+    df6.persist()
 
 
-    /*
-    println("df6的数量为：" + df6.count)
-    println("masterDF的数量为：" + masterDF.count)
-    println("slaveDF的数量为：" + slaveDF.count)
-
-    println("df6的分区数为：" + df6.rdd.partitions.size)
-    println("masterDF的分区数为：" + masterDF.rdd.partitions.size)
-    println("slaveDF的分区数为：" + slaveDF.rdd.partitions.size)
-
-*/
-
-    // truncate Mysql Table
-//    mysqlUtil.truncateMysql(url2, user2, password2, masterTable)
-//    mysqlUtil.truncateMysql(url2, user2, password2, slaveTable)
     mysqlUtil.truncateMysql(url2, user2, password2, allTable)
-   /*
-    // save Mysql Data
-    //    mysqlUtil.saveMysqlData(slaveDF, url2, user2, password2, slaveTable, "append")
-    //    mysqlUtil.saveMysqlData(masterDF, url2, user2, password2, masterTable, "append")
-    mysqlUtil.saveMysqlData(df6, url2, user2, password2, allTable, "append")
+    
+    df6.coalesce(1).write.format("jdbc")
+      .mode(SaveMode.Append)
+      .option("dbtable", allTable)
+      .option("url", url2)
+      .option("user", user2)
+      .option("password", password2)
+      //.option("numPartitions", "10")
+      .save()
 
     val all_df = mysqlUtil.getMysqlData(spark, url2, user2, password2, allTable)
 
-    val masterDF = all_df.drop("content")
-    val slaveDF = all_df.select("articleId", "content")
-    mysqlUtil.saveMysqlData(slaveDF, url2, user2, password2, slaveTable, "append")
-    mysqlUtil.saveMysqlData(masterDF, url2, user2, password2, masterTable, "append")
+    val masterDF = all_df.drop("content")//.dropDuplicates(Array("articleId"))
+    val slaveDF = all_df.select("articleId", "content")//.dropDuplicates(Array("articleId"))
 
-*/
-        df6.write.format("jdbc")
-          .mode(SaveMode.Append)
-          .option("dbtable", allTable)
-          .option("url", url2)
-          .option("user", user2)
-          .option("password", password2)
-          .option("numPartitions", "10")
-          .save()
+    masterDF.write.format("jdbc")
+      .mode(SaveMode.Append)
+      .option("dbtable", masterTable)
+      .option("url", url2)
+      .option("user", user2)
+      .option("password", password2)
+      .option("numPartitions", "5")
+      .save()
 
-        val all_df = mysqlUtil.getMysqlData(spark, url2, user2, password2, allTable)
-
-        val masterDF = all_df.drop("content")//.dropDuplicates(Array("articleId"))
-        val slaveDF = all_df.select("articleId", "content")//.dropDuplicates(Array("articleId"))
-
-        masterDF.write.format("jdbc")
-          .mode(SaveMode.Append)
-          .option("dbtable", masterTable)
-          .option("url", url2)
-          .option("user", user2)
-          .option("password", password2)
-          .option("numPartitions", "5")
-          .save()
-
-        slaveDF.write.format("jdbc")
-          .mode(SaveMode.Append)
-          .option("dbtable", slaveTable)
-          .option("url", url2)
-          .option("user", user2)
-          .option("password", password2)
-          .option("numPartitions", "5")
-          .save()
+    slaveDF.write.format("jdbc")
+      .mode(SaveMode.Append)
+      .option("dbtable", slaveTable)
+      .option("url", url2)
+      .option("user", user2)
+      .option("password", password2)
+      .option("numPartitions", "5")
+      .save()
 
 
     sc.stop()
     spark.stop()
 
-
   }
+
 }
