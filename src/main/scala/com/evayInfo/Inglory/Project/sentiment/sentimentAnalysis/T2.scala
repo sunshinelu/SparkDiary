@@ -67,12 +67,24 @@ object T2 {
       .save()
     println("succed save table " + contentTable_New)
 
-
-    val article2_df = all_df.drop("content").union(article_df).withColumn("id",uuidUDF())
+    all_df.printSchema()
+    article_df.printSchema()
+    //    val article2_df = all_df.drop("content").join(article_df,Seq("articleId"),"full").withColumn("id",uuidUDF())
     //.dropDuplicates(Array("articleId"))
 
     println("start save table " + articleTable_New)
-    article2_df.write.format("jdbc")
+    all_df.drop("content").withColumn("id",uuidUDF()).write.format("jdbc")
+      .mode(SaveMode.Append)
+      .option("dbtable", articleTable_New)
+      .option("url", url2)
+      .option("user", user2)
+      .option("password", password2)
+      .option("numPartitions", "5")
+      .save()
+    println("succed save table " + articleTable_New)
+
+    println("start save table " + articleTable_New)
+    article_df.withColumn("id",uuidUDF()).write.format("jdbc")
       .mode(SaveMode.Append)
       .option("dbtable", articleTable_New)
       .option("url", url2)
