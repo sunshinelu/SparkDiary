@@ -83,7 +83,6 @@ object stringTest {
 //    val df3 = df2.union(id)
 //    df3.show(false)
 
-
     sc.stop()
     spark.stop()
   }

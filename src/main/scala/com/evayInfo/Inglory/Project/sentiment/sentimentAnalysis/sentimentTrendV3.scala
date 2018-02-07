@@ -51,7 +51,7 @@ object sentimentTrendV3 {
     val luntanAtable = "DA_BBSARTICLE"
     val luntanCtable = "DA_BBSCOMMENT"
     val searchTable = "DA_BAIDUARTICLE"
-    val menhuTable = "DA_SEED"
+    val menhuTable = "DA_SEED_201802"
     val blogTable = "DA_BLOG"
 
     val url2 = "jdbc:mysql://192.168.37.18:3306/bbs?useUnicode=true&characterEncoding=UTF-8"
