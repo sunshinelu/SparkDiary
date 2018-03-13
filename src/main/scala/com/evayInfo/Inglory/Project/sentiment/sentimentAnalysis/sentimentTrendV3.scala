@@ -4,6 +4,7 @@ import java.util.UUID
 
 import com.evayInfo.Inglory.Project.sentiment.dataClean._
 import com.evayInfo.Inglory.util.mysqlUtil
+import org.ansj.library.UserDefineLibrary
 import org.ansj.splitWord.analysis.ToAnalysis
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
@@ -57,8 +58,8 @@ object sentimentTrendV3 {
     val url2 = "jdbc:mysql://192.168.37.18:3306/bbs?useUnicode=true&characterEncoding=UTF-8"
     val user2 = "root"
     val password2 = "root"
-    val articleTable = "yq_article_new"
-    val contentTable = "yq_content_new"
+    val articleTable = "yq_article"
+    val contentTable = "yq_content"
     val allTable = "yq_all_new"
 
     val df_weibo = dc_weibo.getWeiboData2(spark, url1, user1, password1, weiboAtable, weiboCtable)
@@ -69,12 +70,21 @@ object sentimentTrendV3 {
     val df_bolg = dc_blog.getBlogData(spark, url1, user1, password1, blogTable)
     val id_df = mysqlUtil.getMysqlData(spark, url2, user2, password2, articleTable).select("ARTICLEID")
 
+//    println("weixin is: " + df_weixin.count())
+
     val df = df_weibo.union(df_weixin).union(df_luntan).union(df_search).union(df_menhu).union(df_bolg).
-      filter(length(col("time")) === 19).join(id_df, Seq("ARTICLEID"), "leftanti")
+      filter(length(col("time")) === 19).join(id_df, Seq("ARTICLEID"), "leftanti").filter(length(col("content")) >= 1)
+
+//    println("df weixin is: " +  df.filter($"source".contains("WEIXIN")).count())
 
     //获取正类、负类词典。posnegDF在join时使用；posnegList在词过滤时使用。
     val posnegDF = spark.read.format("CSV").option("header", "true").load("/personal/sunlu/Project/sentiment/posneg.csv")
     val posnegList = posnegDF.select("term").dropDuplicates().rdd.map { case Row(term: String) => term }.collect().toList
+
+    // 将posnegList添加到词典中
+    posnegList.foreach(x => {
+      UserDefineLibrary.insertWord(x, "userDefine", 1000)
+    })
 
     //load stopwords file
     val stopwordsFile = "/personal/sunlu/Project/sentiment/Stopwords.dic"
@@ -85,28 +95,57 @@ object sentimentTrendV3 {
     val segWorsd = udf((content: String) => {
       ToAnalysis.parse(content).toArray.map(_.toString.split("/")).
         filter(_.length >= 2).map(_ (0)).toList.
-        filter(word => word.length >= 1 & !stopwords.contains(word)).filter(word => posnegList.contains(word))
+        filter(word => word.length >= 1 & !stopwords.contains(word))//.filter(word => posnegList.contains(word))
         .toSeq.mkString(" ")
     })
 
+    def segWords(content:String):String ={
+      val words = ToAnalysis.parse(content).toArray.map(_.toString.split("/")).
+        filter(_.length >= 1).map(_ (0)).toList.
+//        filter(word => word.length >= 1 & !stopwords.contains(word)).filter(word => posnegList.contains(word))
+        filter(word => word.length >= 1 & posnegList.contains(word))
+        .toSeq
+      val result = words match {
+        case r if (r.length >= 1) => r.mkString(" ")
+        case _ => "NULL"
+      }
+      result
+    }
+    val segWordsUdf = udf((content:String) => segWords(content))
+
+
     val df1 = df.select("articleId", "contentPre").na.drop().
-      withColumn("segWords", segWorsd(column("contentPre")))
+//      withColumn("segWords", segWorsd(column("contentPre")))
+      withColumn("segWords", segWordsUdf(column("contentPre")))
 
     val df2 = df1.explode("segWords", "tokens") { segWords: String => segWords.split(" ") }
-    //    df2.printSchema()
+//        df2.printSchema()
 
-    val df3 = df2.join(posnegDF, df2("tokens") === posnegDF("term"), "left").na.drop()
+
+    //    val df3 = df2.join(posnegDF, df2("tokens") === posnegDF("term"), "left").na.drop()
+    val df3 = df2.join(posnegDF, df2("tokens") === posnegDF("term"), "left").na.fill(Map("weight" -> 0))
+
     val df4 = df3.groupBy("articleId").agg(sum("weight")).withColumnRenamed("sum(weight)", "score")
+
+
 
     val df5 = df4.join(df, Seq("articleId"), "left").drop("contentPre").
       //      withColumn("IS_COMMENT", col("IS_COMMENT").cast("string")).
       withColumn("systime", current_timestamp()).withColumn("systime", date_format($"systime", "yyyy-MM-dd HH:mm:ss"))
 
+//    println("df5 weixin is: " +  df5.filter($"source".contains("WEIXIN")).count())
+
+
     //      val mainDF = df5.na.drop(Array("title", "content")).drop("content")
     //      val slaveDF = df5.na.drop(Array("title", "content")).select("articleId", "content")
 
-    val df6 = df5.filter(length(col("title")) >= 2).filter(length(col("content")) >= 2).dropDuplicates(Array("articleId"))
+    val df6 = df5.filter(length(col("title")) >= 1)
+    // .filter(length(col("content")) >= 1)
+    .dropDuplicates(Array("articleId"))
 //    df6.persist()
+
+//    println("df6 weixin is: " +  df6.filter($"source".contains("WEIXIN")).count())
+
 
     def uuidFunc():String={
       val uuid = UUID.randomUUID().toString().toLowerCase()
