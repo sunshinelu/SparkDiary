@@ -13,5 +13,9 @@ object singleWords {
 
     val s = "今天天气很好！"
     println(s.toCharArray.toList)// List(今, 天, 天, 气, 很, 好, ！)
+    val s2 = s.toCharArray.toList
+    val s3 = s2.mkString(" ")
+    println("将中文字符串分成一个字一个字结果为：" + s3)
+
   }
 }
