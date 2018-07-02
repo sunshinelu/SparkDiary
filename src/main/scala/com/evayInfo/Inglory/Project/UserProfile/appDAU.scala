@@ -132,7 +132,9 @@ object appDAU {
     import spark.implicits._
 
     // 获取日志数据
-    val logsTable = "t_hbaseSink"
+//    val logsTable = "t_hbaseSink"
+    // 2018年07月02日改为表：ylzx_logs_20180702
+    val logsTable = "ylzx_logs_20180702"
     val logsRDD = getLogsRDD(logsTable, sc)
     val logsDS = spark.createDataset(logsRDD)
 

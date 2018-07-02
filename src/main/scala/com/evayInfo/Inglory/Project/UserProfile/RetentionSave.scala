@@ -43,7 +43,9 @@ object RetentionSave {
 
     // 表名
     val registTable = "AC_OPERATOR"
-    val hbaseTable = "t_hbaseSink"
+//    val hbaseTable = "t_hbaseSink"
+    // 2018年07月02日改为表：ylzx_logs_20180702
+    val hbaseTable = "ylzx_logs_20180702"
     val mysqlTable = "YLZX_USERPROFILE_RETENTION"
 
     // 链接mysql数据库
