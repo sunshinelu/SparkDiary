@@ -55,6 +55,7 @@ object checkUserIp {
     //bulid environment
     val spark = SparkSession.builder.appName("checkUserIp").getOrCreate()
     val sc = spark.sparkContext
+    import spark.implicits._
 
     val logsTable = "t_hbaseSink"
 

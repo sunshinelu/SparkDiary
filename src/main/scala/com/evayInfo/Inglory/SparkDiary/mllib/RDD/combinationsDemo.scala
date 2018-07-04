@@ -6,6 +6,7 @@ import org.apache.spark.sql.SparkSession
 
 /**
  * Created by sunlu on 17/9/1.
+ * spark 二元组操作
  */
 object combinationsDemo {
 
