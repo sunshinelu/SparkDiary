@@ -28,9 +28,9 @@ object readCSV {
     val ds1 = spark.read.csv("")
     spark.read.format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat").option("header", true).option("delimiter", ";").load("")
 
-    val df = spark.read.option("header", true).csv("path")
+    val df = spark.read.option("header", true).csv("path")// 读取csv文件，含表头
 */
-
+    // 读取csv文件，含表头
     val ColumnsName = Seq("words", "words2")
     val df1 = spark.read.option("header", true).option("delimiter", ",").
       csv("file:///Users/sunlu/Documents/workspace/IDEA/Github/SparkDiary/data/country.csv").toDF(ColumnsName: _*)
