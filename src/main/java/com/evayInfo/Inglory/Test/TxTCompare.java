@@ -90,7 +90,8 @@ public class TxTCompare {
         String a = "中华人民共和国";
         String b = "中华人名共和国";
         String[] result = getHighLightDifferent(a,b);
-        System.out.println(result);
+        System.out.println(result[0]);
+        System.out.println(result[1]);
         System.out.println(Arrays.toString(result));
 
 
