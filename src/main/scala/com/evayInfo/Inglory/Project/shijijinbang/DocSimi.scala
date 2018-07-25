@@ -5,10 +5,14 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.ml.feature.{MinHashLSH, IDF, HashingTF}
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions._
+import scala.collection.JavaConverters._
 
 /**
  * Created by sunlu on 18/7/24.
  * calculate document similarity
+ *
+ * java集合和scala集合互转
+ * https://www.cnblogs.com/lixiaolun/p/5542450.html
  */
 class DocSimi extends Serializable{
 
@@ -28,7 +32,7 @@ class DocSimi extends Serializable{
     segWords
   }
 
-  def DocSimiJaccard(docList: List[(Int, String)]): List[(Int, Int, Double)] = {
+  def DocSimiJaccard(docList: java.util.List[(Int, String)]): java.util.List[(Int, Int, Double)] = {
     SetLogger
     //bulid environment
     val spark = SparkSession.builder.appName("DocSimiJaccard").master("local[*]").getOrCreate()
@@ -36,7 +40,7 @@ class DocSimi extends Serializable{
     import spark.implicits._
 
     // load list and turn list to RDD
-    val rdd1 = sc.parallelize(docList).map(x => (x._1, x._2))
+    val rdd1 = sc.parallelize(docList.asScala).map(x => (x._1, x._2))
 
     // convert rdd to dataframe
     val colName = Seq("id","txt")
@@ -93,7 +97,7 @@ using Jaccard Distance calculate doc-doc similarity
     val result_list = result_df.rdd.map{case Row(doc1Id:Int, doc2Id:Int,docSimi:Double) => (doc1Id, doc2Id, docSimi)}.collect().toList
     sc.stop()
     spark.stop()
-    return result_list
+    return result_list.asJava
 
   }
 

@@ -4,6 +4,7 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
+import scala.collection.JavaConverters._
 
 /**
  * Created by sunlu on 18/7/23.
@@ -38,13 +39,13 @@ object GenerateList {
     val df2 = df1.withColumn("id", row_number().over(w1))
 //    df2.show(false)
 
-    val list1 = df2.rdd.map{case Row(txt:String, id:Int) => (id, txt)}.collect().toList
+    val list1 = df2.rdd.map{case Row(txt:String, id:Int) => (id, txt)}.collect().toList.asJava
 
-    for (i <- list1) {
+    for (i <- list1.asScala) {
       println(i)
     }
 
-    val rdd1 = sc.parallelize(list1).map(x => ListSchema(x._1,x._2))
+    val rdd1 = sc.parallelize(list1.asScala).map(x => ListSchema(x._1,x._2))
 
     val df3 = spark.createDataset(rdd1)
 
@@ -54,7 +55,7 @@ object GenerateList {
     val result_list = docSimiDemo1.DocSimiJaccard(list1)
 
     println ("===============")
-    for (i <- result_list){
+    for (i <- result_list.asScala){
       println(i)
     }
 
