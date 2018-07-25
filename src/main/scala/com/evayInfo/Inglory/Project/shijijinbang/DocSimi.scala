@@ -28,8 +28,20 @@ class DocSimi extends Serializable{
   using ansj seg words
    */
   def segWords(txt:String):String = {
-    val segWords = ToAnalysis.parse(txt).toArray().map(_.toString.split("/")).map(_ (0)).toSeq.mkString(" ")
-    segWords
+//    val segWords = ToAnalysis.parse(txt).toArray().map(_.toString.split("/")).map(_ (0)).toSeq.mkString(" ")
+//     segWords
+    /*
+    解决分词时文档中有 “/”的报错的问题
+    参考资料：
+    ansj分词教程
+    https://blog.csdn.net/a360616218/article/details/75268959
+     */
+    val wordseg = ToAnalysis.parse(txt)
+    var result = ""
+    for (i <- 0 to wordseg.size() - 1){
+      result = result + " " +  wordseg.get(i).getName()
+    }
+    result
   }
 
   def DocSimiJaccard(docList: java.util.List[(Int, String)]): java.util.List[(Int, Int, Double)] = {
