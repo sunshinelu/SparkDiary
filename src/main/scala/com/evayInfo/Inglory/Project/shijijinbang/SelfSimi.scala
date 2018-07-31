@@ -20,6 +20,10 @@ object SelfSimi {
   }
 
   def main(args: Array[String]) {
+    // 获取当前时间
+    val d0 = new java.util.Date()
+    println("任务启动时间 " + d0.getTime)
+
     SetLogger
     //bulid environment
     val spark = SparkSession.builder.appName("SelfSimi").master("local[*]").getOrCreate()
@@ -36,9 +40,24 @@ object SelfSimi {
     val df2 = df1.withColumn("id", row_number().over(w1))
     df2.show(false)
 
+    /*
+    using ansj seg words
+     */
     def segWords(txt:String):String = {
-      val segWords = ToAnalysis.parse(txt).toArray().map(_.toString.split("/")).map(_ (0)).toSeq.mkString(" ")
-      segWords
+      //    val segWords = ToAnalysis.parse(txt).toArray().map(_.toString.split("/")).map(_ (0)).toSeq.mkString(" ")
+      //     segWords
+      /*
+      解决分词时文档中有 “/”的报错的问题
+      参考资料：
+      ansj分词教程
+      https://blog.csdn.net/a360616218/article/details/75268959
+       */
+      val wordseg = ToAnalysis.parse(txt)
+      var result = ""
+      for (i <- 0 to wordseg.size() - 1){
+        result = result + " " +  wordseg.get(i).getName()
+      }
+      result
     }
     val segWordsUDF = udf((txt: String) => segWords(txt))
 
@@ -47,6 +66,10 @@ object SelfSimi {
 
     // 对word_seg中的数据以空格为分隔符转化成seq
     val df4 = df3.withColumn("seg_words_seq", split($"seg_words"," ")).drop("txt").drop("seg_words")
+
+    // 获取当前时间
+    val d1 = new java.util.Date()
+    println("分词后时间 " + d1.getTime)
 
     /*
    calculate tf-idf value
@@ -64,6 +87,11 @@ object SelfSimi {
     val idfModel = idf.fit(featurizedData)
 
     val tfidfData = idfModel.transform(featurizedData)
+
+    // 获取时间
+    val d2 = new java.util.Date()
+    println("计算tf-idf时间： " + d2.getTime)
+
 
     /*
 using Jaccard Distance calculate doc-doc similarity
@@ -87,13 +115,21 @@ using Jaccard Distance calculate doc-doc similarity
     mhSimiDF.select("doc1Id","doc2Id","distCol").filter($"doc1Id" < $"doc2Id").orderBy($"doc1Id".asc,$"distCol".asc).show(200)
 
 
-    print("==============================")
+    println("==============================")
 
 //    docsimi_mh.filter("datasetA.id < datasetB.id").show()
 
-    print("++++++++++++++++++++++++++++++")
+    println("++++++++++++++++++++++++++++++")
 
 //    mhModel.approxSimilarityJoin(tfidfData, tfidfData, 0.6).filter("datasetA.id < datasetB.id").show()
+
+    // 获取时间差
+    val d3 = new java.util.Date()
+    println("计算相似性时间： " + d3.getTime)
+    val diff = d3.getTime - d0.getTime // 返回自此Date对象表示的1970年1月1日，00:00:00 GMT以来的毫秒数。
+    val diffMinutes = diff / (1000) // 时间间隔，单位：秒
+    println("时间间隔(单位：秒): " + diffMinutes)
+
 
     /*
  +-----------------------------------------------------------------------------------------------------------------------------------------------------+---+
