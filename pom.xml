@@ -539,6 +539,26 @@
             <!--<version>0.7</version>-->
         <!--</dependency>-->
 
+        <!-- 中文转拼音-->
+        <!-- https://github.com/belerweb/pinyin4j-->
+        <dependency>
+            <groupId>com.belerweb</groupId>
+            <artifactId>pinyin4j</artifactId>
+            <version>2.5.0</version>
+        </dependency>
+
+        <!-- 读取tif格式图片-->
+        <!-- https://mvnrepository.com/artifact/com.adobe.xmp/xmpcore -->
+        <!--<dependency>-->
+            <!--<groupId>com.adobe.xmp</groupId>-->
+            <!--<artifactId>xmpcore</artifactId>-->
+            <!--<version>5.1.2</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>com.drewnoakes</groupId>-->
+            <!--<artifactId>metadata-extractor</artifactId>-->
+            <!--<version>2.11.0</version>-->
+        <!--</dependency>-->
 
     </dependencies>
 
