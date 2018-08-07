@@ -182,7 +182,6 @@ calculate tf-idf value
     document.map(_._2).saveAsTextFile("/personal/sunlu/Matrix/DenseMatrix_1W_1024_matrix")
 
 
-
     sc.stop()
     spark.stop()
   }
