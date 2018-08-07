@@ -49,6 +49,8 @@ object StringSimiWord2Vec {
     val mysql_Table = "features_word2vec"
 
     /*
+    将array中的每一个数据转为double类型
+    Convert Spark Row to typed Array of Doubles
     https://stackoverflow.com/questions/30354483/convert-spark-row-to-typed-array-of-doubles
      */
     val df1 = spark.read.jdbc(url, mysql_Table, prop)
