@@ -79,10 +79,12 @@ public class CosinDemo2 {
     }
 
     public static void main(String[] args) {
-        String s1 = "我是一个帅哥";
-        String s2 = "帅哥是我";
+        String s1 = "亿云信息聚合政府、人才、企业等海量数据资源，依托“山东省电子政务大数据工程技术研究中心”实现政务大数据挖掘与分析，为公众和政府提供分析研判和辅助决策服务，";//共同推进山东省信息化建设和社会经济发展。"
+
+        String s2 = "亿云信息聚合政府、人才、企业等海量数据资源，依托“山东省电子政务大数据工程技术研究中心”实现政务大数据挖掘与分析，为公众和政府提供分析研判和辅助决策服务，共同推进山东省信息化建设和社会经济发展。";
         CosinDemo2 similarity = new CosinDemo2(s1, s2);
         System.out.println(similarity.sim());
+        //0.9371087648138907
     }
 
 }
