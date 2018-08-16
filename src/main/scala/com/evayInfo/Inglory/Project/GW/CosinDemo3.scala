@@ -1,13 +1,12 @@
 package com.evayInfo.Inglory.Project.GW
 
-import breeze.linalg.DenseVector
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
+import org.apache.spark.ml.linalg.{DenseVector => SDV, Vector => MLVector, Vectors}
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.types.FloatType
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable
 import org.apache.spark.sql.functions._
+
+import scala.collection.mutable.ListBuffer
 
 /**
  * Created by sunlu on 18/8/14.
@@ -60,26 +59,71 @@ object CosinDemo3 {
     val spark = SparkSession.builder().config(conf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
-    val df = spark.createDataFrame(Seq(
+    val df1 = spark.createDataFrame(Seq(
       (0, Array(1.0, 3.0, 3.0)),
       (1, Array(1.0, 2.0, 3.0))
     )).toDF("id", "vec")
-    df.printSchema()
+    df1.printSchema()
 
-    val arr = Vector(1.0, 3.0, 3.0)
+    val t1 = Array(1.0, 3.0, 3.0)
+    val arr1 = Vectors.dense(t1)
+//    val df2 = df1.withColumn("arr", lit(arr1))
+//    val df2 = df1.withColumn("arr", array(t1))
+    val df2 = df1.withColumn("arr", split(lit("1.0, 3.0, 3.0"),","))
+    df2.show()
+    df2.printSchema()
 
+//    def sqdistFunc(v1:MLVector, v2:MLVector):Double = {
+//      Vectors.sqdist(v1, v2)
+//    }
+
+    val sqdisUDF = udf((v1:MLVector, v2:MLVector) => Vectors.sqdist(v1, v2))
+
+    val df3 = df2.withColumn("sqdist", sqdisUDF($"vec",$"arr"))
+    df3.show()
+
+    /*
+
+
+    val arr2 = Vector(1.0, 3.0, 3.0)
 //    val cosin_udf = udf(() => cosvec(col("args"),col("args")))
 //
 //    val df2 = df.withColumn("coSim", udf(cosvec, FloatType)(col("myCol"), Array((lit(v) for v in arr])))
 
-    val arr2 = Array(for(i <- arr) {
+    val arr2 = Array(for(i <- arr2) {
       lit(i)
     })
 
     println(arr2)
 
 //    println(lit(arr))
+*/
 
+    val df = Seq(
+      ("i like blue and red"),
+      ("you pink and blue")
+    ).toDF("word1")
+
+    val actualDF1 = df.withColumn(
+      "colors",
+      array(
+        when(col("word1").contains("blue"), "blue"),
+        when(col("word1").contains("red"), "red"),
+        when(col("word1").contains("pink"), "pink"),
+        when(col("word1").contains("cyan"), "cyan")
+      )
+    )
+    val colors = Array("blue", "red", "pink", "cyan")
+
+    val actualDF2 = df.withColumn(
+      "colors",
+      array(
+        colors.map{ c: String =>
+          when(col("word1").contains(c), c)
+        }: _*
+      )
+    )
+    actualDF2.show(truncate=false)
 
 
 
