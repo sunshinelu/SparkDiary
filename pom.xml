@@ -560,6 +560,15 @@
             <!--<version>2.11.0</version>-->
         <!--</dependency>-->
 
+        <!-- https://mvnrepository.com/artifact/com.cloudera.sparkts/sparkts -->
+        <!-- spark做时间序列-->
+        <dependency>
+            <groupId>com.cloudera.sparkts</groupId>
+            <artifactId>sparkts</artifactId>
+            <version>0.3.0</version>
+        </dependency>
+
+
     </dependencies>
 
 
