@@ -9,6 +9,7 @@ import org.apache.spark.sql.{Row, SparkSession}
  * Created by sunlu on 18/8/21.
  */
 object TimeSeriesDemo1 {
+  /*
 
   def forecast(): Unit ={
     val APP_NAME = "Sales Forecast"
@@ -65,4 +66,5 @@ object TimeSeriesDemo1 {
       }
     }
   }
+  */
 }
