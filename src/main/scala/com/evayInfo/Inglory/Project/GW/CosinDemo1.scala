@@ -64,10 +64,11 @@ object CosinDemo1 {
       cosvec(ints1, ints2)
     }
 
-    val str1 = "这句话和下面那句很像"
-    val str2 = "这句话和下面那句很像"//"我就是下面那句话"
+    val str1 = "这句话和下面那句很像，我就是下面那句话"
+    val str2 = "我就是下面那句话，这句话和下面那句很像"//"我就是下面那句话"
     val d = textCosine(str1, str2)
     println("相似度：" + d)
+    println( "str1 等于str2 吗？" +str1.equals(str2))
 
 
   }
