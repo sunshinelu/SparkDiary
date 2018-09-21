@@ -568,6 +568,12 @@
             <version>0.4.1</version>
         </dependency>
 
+        <!-- java调用python -->
+        <dependency>
+            <groupId>org.python</groupId>
+            <artifactId>jython-standalone</artifactId>
+            <version>2.7.0</version>
+        </dependency>
 
     </dependencies>
 

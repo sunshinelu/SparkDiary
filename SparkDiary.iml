@@ -477,5 +477,6 @@
     <orderEntry type="library" name="Maven: com.belerweb:pinyin4j:2.5.0" level="project" />
     <orderEntry type="library" name="Maven: com.cloudera.sparkts:sparkts:0.4.1" level="project" />
     <orderEntry type="library" name="Maven: org.threeten:threeten-extra:0.9" level="project" />
+    <orderEntry type="library" name="Maven: org.python:jython-standalone:2.7.0" level="project" />
   </component>
 </module>
