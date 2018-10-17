@@ -7,6 +7,7 @@ import org.apache.spark.sql.SparkSession
 /**
  * Created by sunlu on 18/7/4.
  * spark 二元组操作
+ * 两两组成一对
  */
 object combinationsDemo2 {
 
