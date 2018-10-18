@@ -72,9 +72,7 @@ using ansj seg words
     val opt_table = "Sogou_Classification_mini_segWords"
 
     val segWords_udf = udf((ipt : String) => segWords(ipt))
-    val df1 = df.withColumn("seg_words", segWords_udf($"txt")).
-      withColumn("txt",$"txt".cast(LongType)).
-      withColumn("seg_words",$"seg_words".cast(LongType))
+    val df1 = df.withColumn("seg_words", segWords_udf($"txt"))
 
     df1.write.mode(SaveMode.Append).jdbc(url, opt_table, prop)
 

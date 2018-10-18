@@ -7,7 +7,10 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.feature._
+import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.sql._
+import org.apache.spark.ml.linalg.{Vector => MLVector}
+import org.apache.spark.sql.functions._
 
 /**
  * Created by sunlu on 18/10/17.
@@ -70,16 +73,22 @@ class BuildFeatureExtractionModel {
     val cv_model = cv_pipeline.fit(ipt_df)
 
     // save cv_model model
-    cv_model.save(model_path)
+    cv_model.write.overwrite().save(model_path)
 
     // Predict on the sentenceData dataset
     val df_CV = cv_model.transform(ipt_df)
 //    df_CV.show(truncate = false)
     //将结果保存到数据框中
-    df_CV.write.mode("overwrite").jdbc(url, opt_table, prop) //overwrite ; append
+
+    // 列features的array类型转成string类型，因为mysql中没有array类型
+    val MLVectorToString = udf((features:MLVector) => Vectors.fromML(features).toDense.toString())
+
+    val results_df = df_CV.withColumn("features", MLVectorToString($"features")).drop("words")
+
+    results_df.write.mode("overwrite").jdbc(url, opt_table, prop) //overwrite ; append
+
     sc.stop()
     spark.stop()
-
 
   }
 
@@ -117,13 +126,19 @@ class BuildFeatureExtractionModel {
     val ifidf_model = ifidf_pipeline.fit(ipt_df)
 
     // save cv_model model
-    ifidf_model.save(model_path)
+    ifidf_model.write.overwrite().save(model_path)
 
     // Predict on the sentenceData dataset
-    val df_CV = ifidf_model.transform(ipt_df)
-    //    df_CV.show(truncate = false)
+    val df_TFIDF = ifidf_model.transform(ipt_df)
+    //    df_TFIDF.show(truncate = false)
     //将结果保存到数据框中
-    df_CV.write.mode("overwrite").jdbc(url, opt_table, prop) //overwrite ; append
+    // 列features的array类型转成string类型，因为mysql中没有array类型
+    val MLVectorToString = udf((features:MLVector) => Vectors.fromML(features).toDense.toString())
+
+    val results_df = df_TFIDF.withColumn("features", MLVectorToString($"features")).drop("words").drop("rawFeatures")
+
+    results_df.write.mode("overwrite").jdbc(url, opt_table, prop) //overwrite ; append
+
     sc.stop()
     spark.stop()
 
@@ -157,13 +172,19 @@ class BuildFeatureExtractionModel {
     val word2vec_model = word2vec_pipeline.fit(ipt_df)
 
     // save cv_model model
-    word2vec_model.save(model_path)
+    word2vec_model.write.overwrite().save(model_path)
 
     // Predict on the sentenceData dataset
-    val df_CV = word2vec_model.transform(ipt_df)
-    //    df_CV.show(truncate = false)
+    val df_Word2Vec = word2vec_model.transform(ipt_df)
+    //    df_Word2Vec.show(truncate = false)
     //将结果保存到数据框中
-    df_CV.write.mode("overwrite").jdbc(url, opt_table, prop) //overwrite ; append
+    // 列features的array类型转成string类型，因为mysql中没有array类型
+    val MLVectorToString = udf((features:MLVector) => Vectors.fromML(features).toDense.toString())
+
+    val results_df = df_Word2Vec.withColumn("features", MLVectorToString($"features")).drop("words")
+
+    results_df.write.mode("overwrite").jdbc(url, opt_table, prop) //overwrite ; append
+
     sc.stop()
     spark.stop()
 
