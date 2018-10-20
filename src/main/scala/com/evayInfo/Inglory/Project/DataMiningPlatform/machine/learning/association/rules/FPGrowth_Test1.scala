@@ -3,6 +3,7 @@ package com.evayInfo.Inglory.Project.DataMiningPlatform.machine.learning.associa
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
+
 //import org.apache.spark.ml.fpm.FPGrowth
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions._
@@ -55,7 +56,7 @@ object FPGrowth_Test1 {
 
     df1.show()
     df1.printSchema()
-    /*
+/*
     val fpgrowth = new FPGrowth().setItemsCol("items_arr").setMinSupport(0.5).setMinConfidence(0.6)
     val model = fpgrowth.fit(df1)
 

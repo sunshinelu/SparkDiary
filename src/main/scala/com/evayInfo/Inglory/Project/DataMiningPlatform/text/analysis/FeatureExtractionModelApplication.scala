@@ -15,12 +15,13 @@ import org.apache.spark.sql.functions._
  * Created by sunlu on 18/10/17.
  * 功能描述：使用已经构建好的模型生成特征
  * 注意：使用的输入数据的列名需要与构建的模型的列名一致，否则会报错。
- * 输入：模型路径、表名
- * 输出：特征提取后的表名
+ * 输入：模型路径、表名、特征提取后的表名
+ * 输出：特征提取后的表
  *
  */
 class FeatureExtractionModelApplication {
 
+  // 是否输出日志
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)
     Logger.getLogger("com").setLevel(Level.OFF)
@@ -29,6 +30,7 @@ class FeatureExtractionModelApplication {
     Logger.getRootLogger().setLevel(Level.OFF)
   }
 
+  // 链接mysql配置信息
   val url = "jdbc:mysql://localhost:3306/data_mining_DB?useUnicode=true&characterEncoding=UTF-8&" +
     "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
   val user = "root"
@@ -39,21 +41,21 @@ class FeatureExtractionModelApplication {
 
 
   def FeatureExtractionModel_TF_IDF(model_path:String, ipt_table:String, opt_table:String) = {
-    val SparkConf = new SparkConf().setAppName(s"FeatureExtractionModel_WordCount:WordCount").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val SparkConf = new SparkConf().setAppName(s"FeatureExtractionModelApplication:TF_IDF").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
 
     // 读取mysql数据
-    // get ipt_df
     val ipt_df = spark.read.jdbc(url, ipt_table, prop)
 
+    // 加载模型
     val ifidf_model = PipelineModel.load(model_path)
 
 
     // Predict on the sentenceData dataset
     val df_TFIDF = ifidf_model.transform(ipt_df)
-    //    df_TFIDF.show(truncate = false)
+
     //将结果保存到数据框中
     // 列features的array类型转成string类型，因为mysql中没有array类型
     val MLVectorToString = udf((features:MLVector) => Vectors.fromML(features).toDense.toString())
@@ -68,20 +70,20 @@ class FeatureExtractionModelApplication {
   }
 
   def FeatureExtractionModel_Word2Vec(model_path:String, ipt_table:String, opt_table:String) = {
-    val SparkConf = new SparkConf().setAppName(s"FeatureExtractionModel_WordCount:WordCount").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val SparkConf = new SparkConf().setAppName(s"FeatureExtractionModelApplication:Word2Vec").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
 
     // 读取mysql数据
-    // get ipt_df
     val ipt_df = spark.read.jdbc(url, ipt_table, prop)
 
+    // 加载模型
     val word2vec_model = PipelineModel.load(model_path)
 
     // Predict on the sentenceData dataset
     val df_Word2Vec = word2vec_model.transform(ipt_df)
-    //    df_Word2Vec.show(truncate = false)
+
     //将结果保存到数据框中
     // 列features的array类型转成string类型，因为mysql中没有array类型
     val MLVectorToString = udf((features:MLVector) => Vectors.fromML(features).toDense.toString())
@@ -95,15 +97,15 @@ class FeatureExtractionModelApplication {
   }
 
   def FeatureExtractionModel_WordCount(model_path:String, ipt_table:String, opt_table:String) = {
-    val SparkConf = new SparkConf().setAppName(s"FeatureExtractionModel_WordCount:WordCount").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val SparkConf = new SparkConf().setAppName(s"FeatureExtractionModelApplication:WordCount").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
 
     // 读取mysql数据
-    // get ipt_df
     val ipt_df = spark.read.jdbc(url, ipt_table, prop)
 
+    // 加载模型
     val cv_model = PipelineModel.load(model_path)
 
     // Predict on the sentenceData dataset

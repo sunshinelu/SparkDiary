@@ -27,6 +27,8 @@ import org.apache.spark.sql.functions._
  * opt_table:输出表名，String类型
  */
 class BuildFeatureExtractionModel {
+
+  // 是否输出日志
   def SetLogger = {
     Logger.getLogger("org").setLevel(Level.OFF)
     Logger.getLogger("com").setLevel(Level.OFF)
@@ -35,6 +37,7 @@ class BuildFeatureExtractionModel {
     Logger.getRootLogger().setLevel(Level.OFF)
   }
 
+  // 链接mysql配置信息
   val url = "jdbc:mysql://localhost:3306/data_mining_DB?useUnicode=true&characterEncoding=UTF-8&" +
     "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
   val user = "root"
@@ -52,7 +55,6 @@ class BuildFeatureExtractionModel {
     import spark.implicits._
 
     // 读取mysql数据
-    // get ipt_df
     val ipt_df = spark.read.jdbc(url, tableName, prop)
 
     // Split the text into Array
@@ -77,9 +79,8 @@ class BuildFeatureExtractionModel {
 
     // Predict on the sentenceData dataset
     val df_CV = cv_model.transform(ipt_df)
-//    df_CV.show(truncate = false)
-    //将结果保存到数据框中
 
+    //将结果保存到数据框中
     // 列features的array类型转成string类型，因为mysql中没有array类型
     val MLVectorToString = udf((features:MLVector) => Vectors.fromML(features).toDense.toString())
 
@@ -100,7 +101,6 @@ class BuildFeatureExtractionModel {
     import spark.implicits._
 
     // 读取mysql数据
-    // get ipt_df
     val ipt_df = spark.read.jdbc(url, tableName, prop)
 
     // Split the text into Array
@@ -125,12 +125,12 @@ class BuildFeatureExtractionModel {
     // Train the model
     val ifidf_model = ifidf_pipeline.fit(ipt_df)
 
-    // save cv_model model
+    // save ifidf_model model
     ifidf_model.write.overwrite().save(model_path)
 
     // Predict on the sentenceData dataset
     val df_TFIDF = ifidf_model.transform(ipt_df)
-    //    df_TFIDF.show(truncate = false)
+
     //将结果保存到数据框中
     // 列features的array类型转成string类型，因为mysql中没有array类型
     val MLVectorToString = udf((features:MLVector) => Vectors.fromML(features).toDense.toString())
@@ -151,7 +151,6 @@ class BuildFeatureExtractionModel {
     import spark.implicits._
 
     // 读取mysql数据
-    // get ipt_df
     val ipt_df = spark.read.jdbc(url, tableName, prop)
 
     // Split the text into Array
@@ -171,12 +170,12 @@ class BuildFeatureExtractionModel {
     // Train the model
     val word2vec_model = word2vec_pipeline.fit(ipt_df)
 
-    // save cv_model model
+    // save word2vec_model model
     word2vec_model.write.overwrite().save(model_path)
 
     // Predict on the sentenceData dataset
     val df_Word2Vec = word2vec_model.transform(ipt_df)
-    //    df_Word2Vec.show(truncate = false)
+
     //将结果保存到数据框中
     // 列features的array类型转成string类型，因为mysql中没有array类型
     val MLVectorToString = udf((features:MLVector) => Vectors.fromML(features).toDense.toString())
