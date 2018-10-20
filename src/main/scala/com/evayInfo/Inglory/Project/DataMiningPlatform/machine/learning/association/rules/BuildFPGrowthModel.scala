@@ -58,8 +58,6 @@ class BuildFPGrowthModel extends Serializable{
     val ipt_df = spark.read.jdbc(url, ipt_table, prop).select(col_name)
     val ipt_rdd1 = ipt_df.rdd.map { case Row(x: String) => x }
     val ipt_rdd2 = ipt_rdd1.map(s => s.trim.split(' '))
-//    ipt_df.printSchema()
-//    ipt_df.show(truncate = false)
 
     // 建模参数设置
     val minSupport = support // 0.2
@@ -75,8 +73,7 @@ class BuildFPGrowthModel extends Serializable{
     // save fpg_model
     fpg_model.save(sc, model_path)
 
-    // predict function
-
+    // define predict function
     def predic_Func_3(fpg_model: FPGrowthModel[_], ipt: String, sep: String): String = {
       val items = ipt.trim.split(sep).toSet
 
@@ -103,6 +100,7 @@ class BuildFPGrowthModel extends Serializable{
       }
     }
 
+    // using predic_Func_3 funcition predict item for input data
     //    val predict_arr = new ArrayBuffer[Seq[(String, String)]]()
     val predict_arr = new ArrayBuffer[String]()
 
@@ -116,12 +114,13 @@ class BuildFPGrowthModel extends Serializable{
       }
     }
 
-
+    // convert array to dataframe
     val opt_df = sc.parallelize(predict_arr).map { x =>
       val temp = x.split("=>")
       (temp(0), temp(1))
     }.toDF(col_name, "prediction")
 
+    // write data to mysql
     opt_df.write.mode("overwrite").jdbc(url, opt_table, prop) //overwrite ; append
 
 

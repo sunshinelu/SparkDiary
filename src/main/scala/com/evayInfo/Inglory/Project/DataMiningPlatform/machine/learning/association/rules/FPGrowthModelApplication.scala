@@ -57,8 +57,10 @@ class FPGrowthModelApplication {
     val fpg_model = FPGrowthModel.load(sc, model_path)
     // predict function
 
+    // define minConfidence
     val minConfidence = confidence
 
+    // prediction function
     def predic_Func_3(fpg_model: FPGrowthModel[_], ipt: String, sep: String): String = {
       val items = ipt.trim.split(sep).toSet
 
@@ -85,6 +87,7 @@ class FPGrowthModelApplication {
       }
     }
 
+    // using predic_Func_3 funcition predict item for input data
     //    val predict_arr = new ArrayBuffer[Seq[(String, String)]]()
     val predict_arr = new ArrayBuffer[String]()
 
@@ -98,7 +101,7 @@ class FPGrowthModelApplication {
       }
     }
 
-
+    // convert array to dataframe
     val opt_df = sc.parallelize(predict_arr).map { x =>
       val temp = x.split("=>")
       (temp(0), temp(1))
