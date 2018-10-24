@@ -13,6 +13,7 @@ import org.apache.spark.sql.types.DataType
 
 /**
  * Created by sunlu on 18/10/22.
+ * 使用ML构建推荐模型
  */
 object ALStest1 {
 

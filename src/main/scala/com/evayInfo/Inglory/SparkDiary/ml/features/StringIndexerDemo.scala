@@ -2,7 +2,7 @@ package com.evayInfo.Inglory.SparkDiary.ml.features
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
-import org.apache.spark.ml.feature.StringIndexer
+import org.apache.spark.ml.feature.{IndexToString, StringIndexer}
 import org.apache.spark.sql.SparkSession
 
 /**
@@ -23,6 +23,7 @@ object StringIndexerDemo {
     val sparkConf = new SparkConf().setAppName(s"StringIndexerDemo").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     val sc = spark.sparkContext
+    import spark.implicits._
 
 
     val df = spark.createDataFrame(
@@ -33,7 +34,9 @@ object StringIndexerDemo {
       .setInputCol("category")
       .setOutputCol("categoryIndex")
 
-    val indexed = indexer.fit(df).transform(df)
+    val indexed = indexer.fit(df).transform(df)//.
+//      withColumn("categoryIndex_int",$"categoryIndex".cast("int")).
+//      withColumn("categoryIndex_double", $"categoryIndex_int".cast("double"))
     indexed.printSchema()
     /*
 root
@@ -42,6 +45,15 @@ root
  |-- categoryIndex: double (nullable = true)
      */
     indexed.show()
+
+
+    val converter = new IndexToString()
+      .setInputCol("categoryIndex")
+      .setOutputCol("originalCategory")
+
+    val converted = converter.transform(indexed)
+    converted.printSchema()
+    converted.show(truncate = false)
 
 
     sc.stop()

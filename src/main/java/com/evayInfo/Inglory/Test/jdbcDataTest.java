@@ -4,12 +4,10 @@ package com.evayInfo.Inglory.Test;
 import com.sun.javafx.collections.ListListenerHelper;
 import org.apache.hadoop.hive.ql.exec.vector.expressions.gen.StringScalarNotEqualStringGroupColumn;
 import org.apache.spark.SparkConf;
-import org.apache.spark.sql.Column;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.*;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.functions.*;
+
 
 import java.util.*;
 
@@ -57,7 +55,9 @@ public class jdbcDataTest {
 //        Dataset<Row> dataDS = originalDS.filter(originalDS.col("var1").contains("我"));
         Dataset<Row> dataDS = originalDS.where(originalDS.col("var1").contains("我"));
 
-        Dataset<Row> dataDS2 = originalDS.toDF().filter(originalDS.col("var1").contains("我"));
+        Dataset<Row> dataDS2 = originalDS.toDF().filter(functions.not(originalDS.col("var1").contains("我")));
+
+        Dataset<Row> dataDS3 = originalDS.toDF().withColumn("index",functions.monotonically_increasing_id());
 
                 //jdbcDF.select( "id" , "c3" ).show( false)
                         //（2）selectExpr：可以对指定字段进行特殊处理
