@@ -15,8 +15,11 @@ public class ALSModelApplicationTest1 {
         String opt_table_TopNUsersForProducts = "recommenderSys_Demo_Data_sample_TopNUsersForProducts";
 
         ALSModelApplication model_application = new ALSModelApplication();
+
+        // 向用户推荐商品
         model_application.TopNProductsForUsers(test_table,model_path,user_col,item_col,rating_col,10,opt_table_TopNProductsForUsers);
 
+        // 根据商品推荐用户
         model_application.TopNUsersForProducts(test_table,model_path,user_col,item_col,rating_col,10,opt_table_TopNUsersForProducts);
 
     }

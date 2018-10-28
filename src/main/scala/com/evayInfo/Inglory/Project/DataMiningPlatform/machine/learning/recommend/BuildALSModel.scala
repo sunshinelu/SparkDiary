@@ -23,6 +23,8 @@ import org.apache.spark.sql.{Row, SparkSession}
  * 隐式，不含测试集:ALSModelImplicit
  * 隐式，含测试集:ALSModelImplicit_Test
  *
+ * 注意：隐式模型和显式模型输入参数不同。
+ *
  */
 class BuildALSModel {
 
@@ -127,7 +129,7 @@ class BuildALSModel {
                     rank:Int,numIterations:Int,lambda:Double,
                     model_path:String,test_table:String,opt_table:String)={
 
-    val SparkConf = new SparkConf().setAppName(s"BuildALSModel:ALSModel").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val SparkConf = new SparkConf().setAppName(s"BuildALSModel:ALSModel_test").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
@@ -202,7 +204,7 @@ class BuildALSModel {
                        rank:Int,numIterations:Int,lambda:Double,alpha:Double,
                        model_path:String)={
 
-    val SparkConf = new SparkConf().setAppName(s"BuildALSModel:ALSModel").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val SparkConf = new SparkConf().setAppName(s"BuildALSModel:ALSModelImplicit").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
@@ -272,7 +274,7 @@ class BuildALSModel {
                             rank:Int,numIterations:Int,lambda:Double,alpha:Double,
                             model_path:String,test_table:String, opt_table:String)={
 
-    val SparkConf = new SparkConf().setAppName(s"BuildALSModel:ALSModel").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val SparkConf = new SparkConf().setAppName(s"BuildALSModel:ALSModelImplicit_Test").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._

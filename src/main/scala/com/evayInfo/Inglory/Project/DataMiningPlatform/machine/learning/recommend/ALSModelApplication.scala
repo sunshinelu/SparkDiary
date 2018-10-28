@@ -11,6 +11,41 @@ import org.apache.spark.sql.{Row, SparkSession}
 
 /**
  * Created by sunlu on 18/10/24.
+ *
+ * 功能描述：根据构建的推荐模型对测试集进行预测。
+ *
+ * 方法1.RatingPrediction
+ * 功能描述：输入用户名及商品名，预测其打分
+ * 输入参数：
+ * test_table: 测试集表名，String类型
+ * model_path: 模型路径，String类型
+ * user_col: 用户所在列的列名，String类型（该列数据为String类型）
+ * item_col: 商品所在列的列名，String类型（该列数据为String类型）
+ * rating_col:打分所在列的列名，String（该列数据为Double类型）
+ * opt_table: 预测结果表名，String类型
+ *
+ * 方法2.TopNProductsForUsers
+ * 功能描述：输入用户名，向用户推荐N个商品
+ * 输入参数：
+ * test_table: 测试集表名，String类型
+ * model_path: 模型路径，String类型
+ * user_col: 用户所在列的列名，String类型（该列数据为String类型）
+ * item_col: 商品所在列的列名，String类型（该列数据为String类型）
+ * rating_col:打分所在列的列名，String（该列数据为Double类型）
+ * topN:推荐商品的数量，Int类型
+ * opt_table: 预测结果表名，String类型
+ *
+ * 方法3.TopNUsersForProducts
+ * 功能描述：输入商品名，推荐可能对该商品感兴趣的N个用户
+ * 输入参数：
+ * test_table: 测试集表名，String类型
+ * model_path: 模型路径，String类型
+ * user_col: 用户所在列的列名，String类型（该列数据为String类型）
+ * item_col: 商品所在列的列名，String类型（该列数据为String类型）
+ * rating_col:打分所在列的列名，String（该列数据为Double类型）
+ * topN:推荐商品的数量，Int类型
+ * opt_table: 预测结果表名，String类型
+ *
  */
 
 
@@ -35,6 +70,18 @@ class ALSModelApplication {
   val prop = new Properties()
   prop.setProperty("user", user)
   prop.setProperty("password", password)
+
+  /*
+ * 方法1.RatingPrediction
+ * 功能描述：输入用户名及商品名，预测其打分
+ * 输入参数：
+ * test_table: 测试集表名，String类型
+ * model_path: 模型路径，String类型
+ * user_col: 用户所在列的列名，String类型（该列数据为String类型）
+ * item_col: 商品所在列的列名，String类型（该列数据为String类型）
+ * rating_col:打分所在列的列名，String（该列数据为Double类型）
+ * opt_table: 预测结果表名，String类型
+   */
 
   def RatingPrediction(test_table: String, model_path: String,
                        user_col: String, item_col: String, rating_col: String,
@@ -82,6 +129,18 @@ class ALSModelApplication {
     spark.stop()
   }
 
+  /*
+   * 方法2.TopNProductsForUsers
+ * 功能描述：输入用户名，向用户推荐N个商品
+ * 输入参数：
+ * test_table: 测试集表名，String类型
+ * model_path: 模型路径，String类型
+ * user_col: 用户所在列的列名，String类型（该列数据为String类型）
+ * item_col: 商品所在列的列名，String类型（该列数据为String类型）
+ * rating_col:打分所在列的列名，String（该列数据为Double类型）
+ * topN:推荐商品的数量，Int类型
+ * opt_table: 预测结果表名，String类型
+   */
   def TopNProductsForUsers(test_table: String, model_path: String,
                            user_col: String, item_col: String, rating_col: String,
                            topN: Int, opt_table: String) = {
@@ -133,6 +192,19 @@ class ALSModelApplication {
 
   }
 
+  /*
+   * 方法3.TopNUsersForProducts
+ * 功能描述：输入商品名，推荐可能对该商品感兴趣的N个用户
+ * 输入参数：
+ * test_table: 测试集表名，String类型
+ * model_path: 模型路径，String类型
+ * user_col: 用户所在列的列名，String类型（该列数据为String类型）
+ * item_col: 商品所在列的列名，String类型（该列数据为String类型）
+ * rating_col:打分所在列的列名，String（该列数据为Double类型）
+ * topN:推荐商品的数量，Int类型
+ * opt_table: 预测结果表名，String类型
+
+   */
 
   def TopNUsersForProducts(test_table: String, model_path: String,
                            user_col: String, item_col: String, rating_col: String,
