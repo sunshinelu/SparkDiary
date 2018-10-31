@@ -47,7 +47,9 @@ class BuildFPGrowthModel extends Serializable{
   prop.setProperty("user", user)
   prop.setProperty("password", password)
 
-  def BuildFPGrowthModel(ipt_table:String, col_name:String,sep:String,support:Double,confidence:Double, partitions:Int,opt_table:String,model_path:String) = {
+  def BuildFPGrowthModel(ipt_table:String, col_name:String,sep:String,
+                         support:Double,confidence:Double, partitions:Int,
+                         opt_table:String,model_path:String) = {
 
     val SparkConf = new SparkConf().setAppName(s"BuildFPGrowthModel:FPGrowthModel").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()

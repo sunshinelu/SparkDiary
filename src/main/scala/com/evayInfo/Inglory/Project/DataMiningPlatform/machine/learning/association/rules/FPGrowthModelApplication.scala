@@ -43,7 +43,8 @@ class FPGrowthModelApplication {
   prop.setProperty("user", user)
   prop.setProperty("password", password)
 
-  def FPGrowthModelApplication(model_path:String, ipt_table:String,col_name:String,sep:String,confidence:Double,opt_table:String) = {
+  def FPGrowthModelApplication(model_path:String, ipt_table:String,col_name:String,sep:String,
+                               confidence:Double,opt_table:String) = {
 
     val SparkConf = new SparkConf().setAppName(s"FPGrowthModelApplication:FPGrowthModelApplication").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
