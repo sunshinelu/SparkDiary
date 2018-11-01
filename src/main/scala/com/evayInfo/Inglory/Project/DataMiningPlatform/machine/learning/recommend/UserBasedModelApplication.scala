@@ -49,11 +49,8 @@ class UserBasedModelApplication {
       select(user_col, item_col, rating_col).
       toDF(col_name: _*).
       withColumn("rating", $"rating".cast("double"))
-    test_df.persist()
+
     val userNumber = test_df.select("user").dropDuplicates().count()
-    println("---------userNumber is ------")
-    println(userNumber)
-    test_df.select("user").dropDuplicates().show(truncate = false)
 
     // 读取用户相似性结果
     val user_simi_df = spark.read.jdbc(url, model_name, prop)
@@ -64,7 +61,6 @@ class UserBasedModelApplication {
       groupBy("user_2", "item").agg(sum($"recomValue")).drop("recomValue").
       withColumnRenamed("sum(recomValue)", "recomValue")
 
-    userR_1.show(truncate = false)
 
     val temp_df = test_df.withColumnRenamed("user", "user_2").withColumn("whether", lit(1))
     val userR_2 = userR_1.join(temp_df, Seq("user_2", "item"), "fullouter").filter(col("whether").isNotNull).drop("whether")
@@ -88,7 +84,7 @@ class UserBasedModelApplication {
     val scaled = scaled_Range * recom_Normalized + scaled_Min
     val predict_df = userR_2.withColumn("vScaled", scaled).
       drop("recomValue").withColumnRenamed("vScaled", "prediction").
-      withColumnRenamed("user_2","user").
+      withColumnRenamed("user_2","user").na.fill(Map("prediction" -> 0.0)).
       withColumn("prediction", bround($"prediction", 3)) // 保留3位有效数字
 
     // 将预测结果保存到mysql数据库中
@@ -121,9 +117,11 @@ class UserBasedModelApplication {
     // user1, user2, userSimi, userString, itemString, rating
     val userR_1 = user_simi_df.join(test_df, user_simi_df("user_1") === test_df("user"), "left").
       withColumn("recomValue", col("simi") * col("rating")).
-      groupBy("user_2", "item").agg(avg($"recomValue")).drop("recomValue").
-      withColumnRenamed("avg(recomValue)", "recomValue")
+      groupBy("user_2", "item").agg(sum($"recomValue")).drop("recomValue").
+      withColumnRenamed("sum(recomValue)", "recomValue")
 
+//    userR_1.printSchema()
+//    userR_1.show()
 
     /*
         根据 输入数据的rating的最大值最小值对 预测的结果进行标准化
@@ -152,7 +150,8 @@ class UserBasedModelApplication {
     val predict_df = userR_2.withColumnRenamed("user_2","user")
 
     val w = Window.partitionBy("user").orderBy(col("prediction").desc)
-    val result_df = predict_df.withColumn("rn", row_number.over(w)).where(col("rn") <= topN).drop("rn").drop("whether").
+    val result_df = predict_df.withColumn("rn", row_number.over(w)).where(col("rn") <= topN).
+      drop("rn").drop("whether").na.fill(Map("prediction" -> 0.0)).
       withColumn("prediction", bround($"prediction", 3)) // 保留3位有效数字
 
     // 将结果保存到mysql数据库中
@@ -215,7 +214,8 @@ class UserBasedModelApplication {
     val predict_df = userR_2.withColumnRenamed("user_2","user")
 
     val w = Window.partitionBy("item").orderBy(col("prediction").desc)
-    val result_df = predict_df.withColumn("rn", row_number.over(w)).where(col("rn") <= topN).drop("rn").drop("whether").
+    val result_df = predict_df.withColumn("rn", row_number.over(w)).where(col("rn") <= topN).
+      drop("rn").drop("whether").na.fill(Map("prediction" -> 0.0)).
       withColumn("prediction", bround($"prediction", 3)) // 保留3位有效数字
 
     // 将结果保存到mysql数据库中

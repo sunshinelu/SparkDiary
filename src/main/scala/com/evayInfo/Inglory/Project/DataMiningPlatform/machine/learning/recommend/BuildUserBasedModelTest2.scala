@@ -15,6 +15,7 @@ object BuildUserBasedModelTest2 {
 
     val model_name = "user_simi"
     val test_table = "recommender_test"
+//    val test_table = "recommenderSys_Demo_Data_sample"
     val opt_table = "recommenderSys_Demo_Data_sample_pred_user_based"
 
     val recom = new BuildUserBasedModel()

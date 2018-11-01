@@ -8,6 +8,7 @@ import org.apache.spark.SparkConf
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.feature.StringIndexer
 import org.apache.spark.mllib.linalg.distributed.{CoordinateMatrix, MatrixEntry}
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Row, SparkSession}
 
 /**
@@ -83,7 +84,8 @@ class BuildItemBasedModel {
     val item_1_lab = train_pre_df.select("item_id","item").toDF("item_id_1","item_1")
     val item_2_lab = train_pre_df.select("item_id","item").toDF("item_id_2","item_2")
     val item_simi_df = item_id_simi_df.join(item_1_lab, Seq("item_id_1"), "left").
-      join(item_2_lab, Seq("item_id_2"), "left").na.drop.select("item_1", "item_2", "simi")
+      join(item_2_lab, Seq("item_id_2"), "left").na.drop.select("item_1", "item_2", "simi").
+      withColumn("simi", bround($"simi", 3)) // 保留3位有效数字
 
     // 保存 user_simi_df 到mysql
     item_simi_df.write.mode("overwrite").jdbc(url, model_name, prop) //overwrite ; append
@@ -141,7 +143,8 @@ class BuildItemBasedModel {
     val item_1_lab = train_pre_df.select("item_id","item").toDF("item_id_1","item_1")
     val item_2_lab = train_pre_df.select("item_id","item").toDF("item_id_2","item_2")
     val item_simi_df = item_id_simi_df.join(item_1_lab, Seq("item_id_1"), "left").
-      join(item_2_lab, Seq("item_id_2"), "left").na.drop.select("item_1", "item_2", "simi")
+      join(item_2_lab, Seq("item_id_2"), "left").na.drop.select("item_1", "item_2", "simi").
+      withColumn("simi", bround($"simi", 3)) // 保留3位有效数字
 
     // 保存 user_simi_df 到mysql
     item_simi_df.write.mode("overwrite").jdbc(url, model_name, prop) //overwrite ; append

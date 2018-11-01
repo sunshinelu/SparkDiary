@@ -72,7 +72,9 @@ class ItemBasedModelApplication {
     val recom_Normalized = ($"recomValue" - recom_Min) / (recom_Max - recom_Min) // v normalized to (0, 1) range
     val scaled = scaled_Range * recom_Normalized + scaled_Min
     val predict_df = itemR_2.withColumn("vScaled", scaled).
-      drop("recomValue").withColumnRenamed("vScaled", "prediction").withColumnRenamed("item_2","item").drop("whether").
+      drop("recomValue").withColumnRenamed("vScaled", "prediction").
+      withColumnRenamed("item_2","item").drop("whether").
+      na.fill(Map("prediction" -> 0.0)).
       withColumn("prediction", bround($"prediction", 3)) // 保留3位有效数字
 
 
@@ -131,7 +133,8 @@ class ItemBasedModelApplication {
     val predict_df = itemR_2.withColumnRenamed("item_2","item")
 
     val w = Window.partitionBy("user").orderBy(col("prediction").desc)
-    val result_df = predict_df.withColumn("rn", row_number.over(w)).where(col("rn") <= topN).drop("rn").drop("whether").
+    val result_df = predict_df.withColumn("rn", row_number.over(w)).where(col("rn") <= topN).
+      drop("rn").drop("whether").na.fill(Map("prediction" -> 0.0)).
       withColumn("prediction", bround($"prediction", 3)) // 保留3位有效数字
 
 
@@ -190,7 +193,8 @@ class ItemBasedModelApplication {
     val predict_df = itemR_2.withColumnRenamed("item_2","item")
 
     val w = Window.partitionBy("item").orderBy(col("prediction").desc)
-    val result_df = predict_df.withColumn("rn", row_number.over(w)).where(col("rn") <= topN).drop("rn").drop("whether").
+    val result_df = predict_df.withColumn("rn", row_number.over(w)).where(col("rn") <= topN).
+      drop("rn").drop("whether").na.fill(Map("prediction" -> 0.0)).
       withColumn("prediction", bround($"prediction", 3)) // 保留3位有效数字
 
 

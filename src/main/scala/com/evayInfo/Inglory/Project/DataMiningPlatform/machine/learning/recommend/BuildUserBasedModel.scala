@@ -91,7 +91,8 @@ class BuildUserBasedModel {
     val user_1_lab = train_pre_df.select("user_id","user").toDF("user_id_1","user_1")
     val user_2_lab = train_pre_df.select("user_id","user").toDF("user_id_2","user_2")
     val user_simi_df = user_id_simi_df.join(user_1_lab, Seq("user_id_1"), "left").
-      join(user_2_lab, Seq("user_id_2"), "left").na.drop.select("user_1", "user_2", "simi")
+      join(user_2_lab, Seq("user_id_2"), "left").na.drop.select("user_1", "user_2", "simi").
+      withColumn("simi", bround($"simi", 3)) // 保留3位有效数字
 
     // 保存 user_simi_df 到mysql
     user_simi_df.write.mode("overwrite").jdbc(url, model_name, prop) //overwrite ; append
@@ -153,7 +154,8 @@ class BuildUserBasedModel {
     val user_1_lab = train_pre_df.select("user_id","user").toDF("user_id_1","user_1")
     val user_2_lab = train_pre_df.select("user_id","user").toDF("user_id_2","user_2")
     val user_simi_df = user_id_simi_df.join(user_1_lab, Seq("user_id_1"), "left").
-      join(user_2_lab, Seq("user_id_2"), "left").na.drop.select("user_1", "user_2", "simi")
+      join(user_2_lab, Seq("user_id_2"), "left").na.drop.select("user_1", "user_2", "simi").
+      withColumn("simi", bround($"simi", 3)) // 保留3位有效数字
 
     // 保存 user_simi_df 到mysql
     user_simi_df.write.mode("overwrite").jdbc(url, model_name, prop) //overwrite ; append

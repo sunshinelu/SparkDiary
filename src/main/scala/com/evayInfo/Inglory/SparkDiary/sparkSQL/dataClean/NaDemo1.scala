@@ -57,8 +57,11 @@ object NaDemo1 {
     /*
     对指定的列空值填充
      */
-    val df4 = df3.na.fill(value = "NULL", cols = Array("k"))
+    val df4 = df3.na.fill(value = "NULL", cols = Array("k","v"))
     df4.show(false)
+
+    val df5 = df.na.fill(Map("k" -> 6L ,"v" -> 45.3) )
+    df5.show()
 
     sc.stop()
     spark.stop()
