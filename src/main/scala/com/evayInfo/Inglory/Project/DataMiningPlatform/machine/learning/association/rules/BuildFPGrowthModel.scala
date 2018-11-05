@@ -2,6 +2,7 @@ package com.evayInfo.Inglory.Project.DataMiningPlatform.machine.learning.associa
 
 import java.util.Properties
 
+import com.evayInfo.Inglory.Project.DataMiningPlatform.utils.{Constants, ConfigurationManager}
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.mllib.fpm.{FPGrowthModel, FPGrowth}
@@ -39,10 +40,14 @@ class BuildFPGrowthModel extends Serializable{
   }
 
   // 链接mysql配置信息
-  val url = "jdbc:mysql://localhost:3306/data_mining_DB?useUnicode=true&characterEncoding=UTF-8&" +
-    "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
-  val user = "root"
-  val password = "root"
+  //  val url = "jdbc:mysql://localhost:3306/data_mining_DB?useUnicode=true&characterEncoding=UTF-8&" +
+  //    "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+  //  val user = "root"
+  //  val password = "123456"
+  val url: String = ConfigurationManager.getProperty(Constants.MYSQL_JDBC_URL)
+  val user: String = ConfigurationManager.getProperty(Constants.MYSQL_JDBC_USER)
+  val password: String = ConfigurationManager.getProperty(Constants.MYSQL_JDBC_PASSWORD)
+
   val prop = new Properties()
   prop.setProperty("user", user)
   prop.setProperty("password", password)
