@@ -26,8 +26,8 @@ object BuildFPGrowthModelTest2 {
     val support = 0.2
     val confidence = 0.8
     val partitions = 10
-    val opt_table = "FPGrowth_data_pred"
-    val model_path = "/Users/sunlu/Documents/workspace/IDEA/SparkDiary/result/fpg_model"
+    val opt_table = "FPGrowth_data_pred_2"
+    val model_path = "/Users/sunlu/Documents/workspace/IDEA/SparkDiary/result/fpg_model_2"
 
     val fpg = new BuildFPGrowthModel()
     fpg.BuildFPGrowthModel(ipt_table, col_name, sep, support, confidence, partitions, opt_table, model_path)

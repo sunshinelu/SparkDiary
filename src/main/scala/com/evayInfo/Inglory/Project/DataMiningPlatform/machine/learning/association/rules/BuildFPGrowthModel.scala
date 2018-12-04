@@ -64,7 +64,7 @@ class BuildFPGrowthModel extends Serializable{
     // 读取mysql数据
     val ipt_df = spark.read.jdbc(url, ipt_table, prop).select(col_name)
     val ipt_rdd1 = ipt_df.rdd.map { case Row(x: String) => x }
-    val ipt_rdd2 = ipt_rdd1.map(s => s.trim.split(' '))
+    val ipt_rdd2 = ipt_rdd1.map(s => s.trim.split(sep))
 
     // 建模参数设置
     val minSupport = support // 0.2
