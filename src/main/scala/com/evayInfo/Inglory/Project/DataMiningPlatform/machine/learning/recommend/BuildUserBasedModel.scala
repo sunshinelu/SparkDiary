@@ -46,9 +46,19 @@ class BuildUserBasedModel {
   prop.setProperty("password", password)
 
 
-
+/*
+  构建基于用户的协同过滤模型（构建模型）
+  train_table:训练集名称，String类型
+  user_col:用户列，String类型
+  item_col:商品列，String类型
+  rating_col:打分列，String类型
+  simi_threshold:形似性阈值，Double类型，0～1之间
+  model_name:模型路径，String类型
+  test_table:测试集名称，String类型
+  opt_table:测试集预测结果表，String类型
+ */
   def UserBased(train_table:String,user_col:String,item_col:String,rating_col:String,
-                simi_threshold:Double,model_name:String)={
+                simi_threshold:Double,model_name:String):Boolean={
     val SparkConf = new SparkConf().setAppName(s"BuildUserBasedModel:UserBased").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
@@ -105,12 +115,24 @@ class BuildUserBasedModel {
     sc.stop()
     spark.stop()
 
+    return true
   }
 
 
+  /*
+  构建基于用户的协同过滤模型（构建模型＋模型预测）
+  train_table:训练集名称，String类型
+  user_col:用户列，String类型
+  item_col:商品列，String类型
+  rating_col:打分列，String类型
+  simi_threshold:形似性阈值，Double类型，0～1之间
+  model_name:模型路径，String类型
+  test_table:测试集名称，String类型
+  opt_table:测试集预测结果表，String类型
+   */
   def UserBased_test(train_table:String,user_col:String,item_col:String,rating_col:String,
                      simi_threshold:Double,
-                     model_name:String,test_table:String,opt_table:String)={
+                     model_name:String,test_table:String,opt_table:String):Boolean={
 
     val SparkConf = new SparkConf().setAppName(s"BuildUserBasedModel:UserBased_test").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
@@ -171,6 +193,7 @@ class BuildUserBasedModel {
 
     sc.stop()
     spark.stop()
+    return true
 
   }
 

@@ -36,9 +36,19 @@ class ItemBasedModelApplication {
   prop.setProperty("user", user)
   prop.setProperty("password", password)
 
+
+  /*
+  基于商品的协同过滤模型（模型预测-预测打分）
+  test_table:测试集名称，String类型
+  model_name:模型路径，String类型
+  user_col:用户列，String类型
+  item_col:商品列，String类型
+  rating_col:打分列，String类型
+  opt_table:测试集预测结果表，String类型
+   */
   def RatingPrediction(test_table: String, model_name: String,
                        user_col: String, item_col: String, rating_col: String,
-                       opt_table: String)={
+                       opt_table: String):Boolean={
     val SparkConf = new SparkConf().setAppName(s"ItemBasedModelApplication:RatingPrediction").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
@@ -89,11 +99,22 @@ class ItemBasedModelApplication {
     sc.stop()
     spark.stop()
 
+    return true
   }
 
+  /*
+   基于商品的协同过滤模型（模型预测-向用户推荐商品）
+  test_table:测试集名称，String类型
+  model_name:模型路径，String类型
+  user_col:用户列，String类型
+  item_col:商品列，String类型
+  rating_col:打分列，String类型
+  topN:推荐的个数，Int类型
+  opt_table:测试集预测结果表，String类型
+   */
   def TopNProductsForUsers(test_table: String, model_name: String,
                            user_col: String, item_col: String, rating_col: String,
-                           topN:Int,opt_table: String)={
+                           topN:Int,opt_table: String):Boolean={
     val SparkConf = new SparkConf().setAppName(s"ItemBasedModelApplication:TopNProductsForUsers").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
@@ -148,12 +169,23 @@ class ItemBasedModelApplication {
 
     sc.stop()
     spark.stop()
+    return true
 
   }
 
+  /*
+  基于商品的协同过滤模型（模型预测-向商品推荐用户）
+  test_table:测试集名称，String类型
+  model_name:模型路径，String类型
+  user_col:用户列，String类型
+  item_col:商品列，String类型
+  rating_col:打分列，String类型
+  topN:推荐的个数，Int类型
+  opt_table:测试集预测结果表，String类型
+   */
   def TopNUsersForProducts(test_table: String, model_name: String,
                            user_col: String, item_col: String, rating_col: String,
-                           topN:Int,opt_table: String)={
+                           topN:Int,opt_table: String):Boolean={
     val SparkConf = new SparkConf().setAppName(s"ItemBasedModelApplication:TopNUsersForProducts").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
@@ -208,7 +240,7 @@ class ItemBasedModelApplication {
 
     sc.stop()
     spark.stop()
+    return true
   }
-
 
 }

@@ -54,7 +54,7 @@ class BuildFPGrowthModel extends Serializable{
 
   def BuildFPGrowthModel(ipt_table:String, col_name:String,sep:String,
                          support:Double,confidence:Double, partitions:Int,
-                         opt_table:String,model_path:String) = {
+                         opt_table:String,model_path:String):String = {
 
     val SparkConf = new SparkConf().setAppName(s"BuildFPGrowthModel:FPGrowthModel").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
@@ -135,6 +135,7 @@ class BuildFPGrowthModel extends Serializable{
 
     sc.stop()
     spark.stop()
+    return "001"
 
   }
 
