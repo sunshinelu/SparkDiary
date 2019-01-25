@@ -70,6 +70,10 @@ object CosinDemo1 {
     println("相似度：" + d)
     println( "str1 等于str2 吗？" +str1.equals(str2))
 
+    /*
+相似度：1.0
+str1 等于str2 吗？false
+     */
 
   }
 
