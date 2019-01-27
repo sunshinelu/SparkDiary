@@ -192,7 +192,7 @@ prop2.setProperty("password", "rcDsj_56")
 
     result_df.persist(StorageLevel.MEMORY_AND_DISK_SER)
     //将结果保存到数据框中
-    result_df.coalesce(10).write.mode("append").jdbc(url2, "relation_xiaoyou", prop2) //overwrite
+    result_df.coalesce(10).write.mode("append").jdbc(url2, "relation", prop2) //overwrite
 
 
 
