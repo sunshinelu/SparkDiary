@@ -31,6 +31,30 @@ select count(*) from relation_new
 7179948（全部转为小写）
 7179948（全部转为小写，第二次运行结果）
 
+
+SET FOREIGN_KEY_CHECKS=0;
+
+-- ----------------------------
+-- Table structure for relation_tongshi
+-- ----------------------------
+DROP TABLE IF EXISTS `relation_tongshi`;
+CREATE TABLE `relation_tongshi` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '序号',
+  `source_id` varchar(255) NOT NULL COMMENT '人才ID',
+  `source_name` varchar(50) NOT NULL COMMENT '人才名称',
+  `target_id` varchar(36) NOT NULL COMMENT '相关联人才ID',
+  `target_name` varchar(50) NOT NULL COMMENT '相关联人才名称',
+  `relation` varchar(50) NOT NULL COMMENT '人才关系:同学，校友，同事，下属，领导，熟悉程度，领域相关',
+  `relation_object` varchar(255) DEFAULT NULL COMMENT '关系对象，即学校或单位',
+  `weight` double(6,3) NOT NULL COMMENT '权重 0.0~100.0',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `update_time` datetime NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+select count(*) from relation_tongshi
+7179948
+
  */
 
 object TongShiRelation {
@@ -158,7 +182,7 @@ object TongShiRelation {
 
     result_df.persist(StorageLevel.MEMORY_AND_DISK_SER)
     //将结果保存到数据框中
-    result_df.coalesce(10).write.mode("append").jdbc(url2, "relation_new", prop2) //overwrite
+    result_df.coalesce(10).write.mode("append").jdbc(url2, "relation_tongshi", prop2) //overwrite
 
 
     sc.stop()

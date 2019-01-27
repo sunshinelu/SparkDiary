@@ -34,6 +34,28 @@ CREATE TABLE `relation_new` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+SET FOREIGN_KEY_CHECKS=0;
+
+-- ----------------------------
+-- Table structure for relation_shuxi
+-- ----------------------------
+DROP TABLE IF EXISTS `relation_shuxi`;
+CREATE TABLE `relation_shuxi` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '序号',
+  `source_id` varchar(255) NOT NULL COMMENT '人才ID',
+  `source_name` varchar(50) NOT NULL COMMENT '人才名称',
+  `target_id` varchar(36) NOT NULL COMMENT '相关联人才ID',
+  `target_name` varchar(50) NOT NULL COMMENT '相关联人才名称',
+  `relation` varchar(50) NOT NULL COMMENT '人才关系:同学，校友，同事，下属，领导，熟悉程度，领域相关',
+  `relation_object` varchar(255) DEFAULT NULL COMMENT '关系对象，即学校或单位',
+  `weight` double(6,3) NOT NULL COMMENT '权重 0.0~100.0',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `update_time` datetime NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
  */
 object FamiliarityRelation {
   def SetLogger = {
@@ -104,7 +126,6 @@ prop1.setProperty("password", "rcDsj_56")
 聘任时间相差比较近就默认为两个人比较熟悉，比如A入职为2017.06.01，B入职为2018.01.01，入职时间差为半年，1-0.5/3 就作为最终结果
      */
     def profession_degree_date(t1: String, t2: String): Double = {
-
       val result = if (t1 == "无" | t2 == "无") {
         0.0
       } else {
@@ -124,7 +145,6 @@ prop1.setProperty("password", "rcDsj_56")
       }
       return result
     }
-
     val profession_degree_date_udf = udf((t1: String, t2: String) => profession_degree_date(t1, t2))
 
     def profession_degree_title(t1: String, t2: String): Double = {
@@ -135,21 +155,16 @@ prop1.setProperty("password", "rcDsj_56")
       }
       return result * 100
     }
-
     val profession_degree_title_udf = udf((title_1: String, title_2: String) => profession_degree_title(title_1, title_2))
 
     val profession_ds4 = profession_ds3.withColumn("degree_date", profession_degree_date_udf($"t1", $"t2")).
       withColumn("degree_title", profession_degree_title_udf($"technical_title_1", $"technical_title_2")).
       withColumn("degree", bround($"degree_date" * 0.5 + $"degree_title" * 0.5, 3))
 
-    //    profession_ds4.show(truncate = false)
-
     val profession_col = Seq("id_1","id_2","degree_profession")
     val profession_ds5 = profession_ds4.select("id_1", "id_2", "degree").toDF(profession_col:_*)
     val profession_ds6 = profession_ds4.select("id_2","id_1","degree").toDF(profession_col:_*)
     val profession_ds7 = profession_ds5.union(profession_ds6)
-
-
 
     /*
     2. 主要职务和社会兼职表
@@ -174,7 +189,6 @@ prop1.setProperty("password", "rcDsj_56")
     val academic_ds4 = academic_temp1.join(academic_temp2, Seq("organization_name"), "outer").
       filter($"id_1" =!= $"id_2")
 
-
     def academic_degree_duty(t1: String, t2: String): Double = {
       val result = if (t1 == t2 & t1 != "无" & t2 != "无") {
         1.0
@@ -183,9 +197,7 @@ prop1.setProperty("password", "rcDsj_56")
       }
       return result * 100
     }
-
     val academic_degree_duty_udf = udf((title_1: String, title_2: String) => academic_degree_duty(title_1, title_2))
-
 
     def academic_degree_date(s1: String, e1: String, s2: String, e2: String): Double = {
       //定义时间格式
@@ -209,30 +221,18 @@ prop1.setProperty("password", "rcDsj_56")
       } else {
         (overlap * 100).toDouble
       }
-
       return result
     }
-
     val academic_degree_date_udf = udf((s1: String, e1: String, s2: String, e2: String) => academic_degree_date(s1, e1, s2, e2))
 
     val academic_ds5 = academic_ds4.withColumn("degree_duty", academic_degree_duty_udf($"duty_1", $"duty_2")).
       withColumn("degree_date", academic_degree_date_udf($"s1", $"e1", $"s2", $"e2")).
       withColumn("degree", bround($"degree_duty" * 0.5 + $"degree_date" * 0.5, 3)) // 保留三位有效数字
 
-//    academic_ds5.show(truncate = false)
-
     val academic_col = Seq("id_1","id_2","degree_academic")
     val academic_ds6 = academic_ds5.select("id_1", "id_2", "degree").toDF(academic_col:_*)
     val academic_ds7 = academic_ds5.select("id_2", "id_1", "degree").toDF(academic_col:_*)
     val academic_ds8 = academic_ds6.union(academic_ds7)
-
-
-
-    //    val (degree_max, degree_min) = academic_ds6.agg(f_max($"degree"),f_min($"degree")).first match {
-    //      case Row(x:Double,y: Double) => (x,y)
-    //    }
-    //    println(s"degree_date_max is: $degree_max, degree_date_min is: $degree_min")
-
 
     /*
     3. 参加会议情况表
@@ -272,16 +272,13 @@ prop1.setProperty("password", "rcDsj_56")
       val earliest_end = min(e1_L, e2_L)
 
       val overlap = ((earliest_end - latest_start) / (1000 * 3600 * 24) + 1) / mean_diff
-
       val result = if (overlap < 0) {
         0.0
       } else {
         (overlap * 100).toDouble
       }
-
       return result
     }
-
     val meeting_degree_date_udf = udf((s1: String, e1: String, s2: String, e2: String) => meeting_degree_date(s1, e1, s2, e2))
 
     val meeting_ds5 = meeting_ds4.withColumn("degree", meeting_degree_date_udf($"s1", $"e1", $"s2", $"e2"))
@@ -290,7 +287,6 @@ prop1.setProperty("password", "rcDsj_56")
     val meeting_ds6 = meeting_ds5.select("id_1", "id_2", "degree").toDF(meeting_col:_*)
     val meeting_ds7 = meeting_ds5.select("id_2", "id_1", "degree").toDF(meeting_col:_*)
     val meeting_ds8 = meeting_ds6.union(meeting_ds7)
-
 
     /*
     4. 享受人才工程表
@@ -336,10 +332,8 @@ prop1.setProperty("password", "rcDsj_56")
       } else {
         (overlap * 100).toDouble
       }
-
       return result
     }
-
     val project_degree_date_udf = udf((s1: String, e1: String, s2: String, e2: String) => project_degree_date(s1, e1, s2, e2))
 
     val project_ds5 = project_ds4.withColumn("degree", bround(project_degree_date_udf($"s1", $"e1", $"s2", $"e2"), 3))
@@ -348,7 +342,6 @@ prop1.setProperty("password", "rcDsj_56")
     val project_ds6 = project_ds5.select("id_1", "id_2", "degree").toDF(project_col:_*)
     val project_ds7 = project_ds5.select("id_2", "id_1", "degree").toDF(project_col:_*)
     val project_ds8 = project_ds6.union(project_ds7)
-
 
 
     /*
@@ -370,7 +363,8 @@ prop2.setProperty("password", "rcDsj_56")
 
 //    val ds1 = spark.read.jdbc(url2, "relation_new", prop2).
     val ds1 = spark.read.jdbc(url2, "relation", prop2).
-      select("source_id","target_id","relation","weight")
+      select("source_id","target_id","relation","weight").
+      filter($"weight" > 0)
 
     val ds2_xiaoyou = ds1.filter($"relation" === "校友").
       toDF("id_1","id_2","relation","degree_xiaoyou").drop("relation")
@@ -381,8 +375,8 @@ prop2.setProperty("password", "rcDsj_56")
     val ds3 = profession_ds7.join(academic_ds8, Seq("id_1","id_2"), "outer").
       join(meeting_ds8, Seq("id_1","id_2"), "outer").
       join(project_ds8, Seq("id_1","id_2"), "outer").
-      join(ds2_xiaoyou, Seq("id_1","id_2"), "outer").
-      join(ds2_tongshi, Seq("id_1","id_2"), "outer").
+      join(ds2_xiaoyou, Seq("id_1","id_2"), "left").
+      join(ds2_tongshi, Seq("id_1","id_2"), "left").
       na.fill(value = 0.0, cols = Array("degree_profession","degree_academic","degree_meeting","degree_project","degree_xiaoyou", "degree_tongshi")).
       withColumn("relation",lit("熟悉程度")).
       withColumn("relation_object", lit(null))
@@ -418,7 +412,7 @@ prop2.setProperty("password", "rcDsj_56")
 
     result_ds.persist(StorageLevel.MEMORY_AND_DISK_SER)
     //将结果保存到数据框中
-    result_ds.coalesce(10).write.mode("append").jdbc(url2, "relation_new", prop2) //overwrite
+    result_ds.coalesce(10).write.mode("append").jdbc(url2, "relation_shuxi", prop2) //overwrite
 
 
     sc.stop()

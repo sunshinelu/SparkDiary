@@ -23,6 +23,33 @@ spark-shell --master yarn --num-executors 8 --executor-cores  4 --executor-memor
 select count(*) from relation_new
 1147260(未全部转为小写)
 67471844（全部转为小写，但是bigdata7忽然断掉链接，任务可能尚未执行完毕！！！）
+79529388（全部转为小写，但是bigdata7忽然断掉链接，任务可能尚未执行完毕！！！）
+
+SET FOREIGN_KEY_CHECKS=0;
+
+-- ----------------------------
+-- Table structure for relation_xiaoyou
+-- ----------------------------
+DROP TABLE IF EXISTS `relation_xiaoyou`;
+CREATE TABLE `relation_xiaoyou` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '序号',
+  `source_id` varchar(255) NOT NULL COMMENT '人才ID',
+  `source_name` varchar(50) NOT NULL COMMENT '人才名称',
+  `target_id` varchar(36) NOT NULL COMMENT '相关联人才ID',
+  `target_name` varchar(50) NOT NULL COMMENT '相关联人才名称',
+  `relation` varchar(50) NOT NULL COMMENT '人才关系:同学，校友，同事，下属，领导，熟悉程度，领域相关',
+  `relation_object` varchar(255) DEFAULT NULL COMMENT '关系对象，即学校或单位',
+  `weight` double(6,3) NOT NULL COMMENT '权重 0.0~100.0',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `update_time` datetime NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+spark-shell --master yarn --num-executors 4 --executor-cores  4 --executor-memory 4g
+运行时间5个小时左右
+
+select count(*) from relation_xiaoyou
+120579188（全部转为小写，运行完成）
 
  */
 object XiaoYouRelation {
@@ -165,7 +192,7 @@ prop2.setProperty("password", "rcDsj_56")
 
     result_df.persist(StorageLevel.MEMORY_AND_DISK_SER)
     //将结果保存到数据框中
-    result_df.coalesce(10).write.mode("append").jdbc(url2, "relation_new", prop2) //overwrite
+    result_df.coalesce(10).write.mode("append").jdbc(url2, "relation_xiaoyou", prop2) //overwrite
 
 
 
