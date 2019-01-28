@@ -14,7 +14,7 @@ import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDes
 import org.apache.hadoop.io.Text
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.functions._
+import org.apache.spark.sql.functions.{max =>f_max,udf,bround,sum,lit,current_timestamp,current_date,date_format}
 import org.apache.spark.sql.{Row, SparkSession}
 
 /*
@@ -110,7 +110,20 @@ prop1.setProperty("password", "rcDsj_56")
 
     val maxWeight_udf = udf((x: Double) => maxWeight(x))
 
-    val temp_6 = temp_5.withColumn("degree", bround(maxWeight_udf($"sum(degree)"),3))
+    val temp_6 = temp_5.withColumn("degree", bround(maxWeight_udf($"sum(degree)"),3)).
+      drop("sum(degree)")
+
+
+
+    val temp_7 = temp_6.select("id_2","id_1","school_name","degree").
+      toDF("id_1","id_2","school_name","degree")
+
+    val temp_8 = temp_7.union(temp_6).groupBy("id_1","id_2","school_name").
+      agg(f_max("degree")).withColumnRenamed("max(degree)","degree")
+
+    temp_8.printSchema()
+
+
 
     //get data
     val info_ds = spark.read.jdbc(url1, "talent_info_new", prop1).
@@ -121,7 +134,7 @@ prop1.setProperty("password", "rcDsj_56")
     val info_id1 = info_ds.toDF("id_1","name_1")
     val info_id2 = info_ds.toDF("id_2","name_2")
 
-    val join_df = temp_6.join(info_id1,Seq("id_1"),"left").join(info_id2,Seq("id_2"),"left")
+    val join_df = temp_8.join(info_id1,Seq("id_1"),"left").join(info_id2,Seq("id_2"),"left")
 
     val ds3 = join_df.withColumn("relation",lit("校友")).
       withColumn("create_time", current_timestamp()).
@@ -129,11 +142,11 @@ prop1.setProperty("password", "rcDsj_56")
       withColumn("update_time",$"create_time")
 
     val result_col = Seq("source_id","source_name","target_id","target_name","relation","relation_object","weight","create_time","update_time")
-    val ds4 = ds3.select("id_1","name_1","id_2","name_2","relation","school_name","degree","create_time","update_time").
+    val result_df = ds3.select("id_1","name_1","id_2","name_2","relation","school_name","degree","create_time","update_time").
       toDF(result_col:_*).dropDuplicates().na.drop()
 
-    val result_df = ds4.select("target_id","target_name","source_id","source_name","relation","relation_object","weight","create_time","update_time").
-      toDF(result_col:_*).union(ds4)
+//    val result_df = ds4.select("target_id","target_name","source_id","source_name","relation","relation_object","weight","create_time","update_time").
+//      toDF(result_col:_*).union(ds4)
 
     val conf_hbase = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
 
@@ -176,6 +189,8 @@ prop1.setProperty("password", "rcDsj_56")
         (new ImmutableBytesWritable, put)
       }
     }.saveAsNewAPIHadoopDataset(jobConf)
+
+
 
     sc.stop()
     spark.stop()
