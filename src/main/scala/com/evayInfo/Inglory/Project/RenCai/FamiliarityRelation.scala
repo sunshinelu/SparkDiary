@@ -3,11 +3,13 @@ package com.evayInfo.Inglory.Project.RenCai
 import java.text.SimpleDateFormat
 import java.util.Properties
 
-import breeze.linalg.{max, min}
+import breeze.linalg.{max, min, sum}
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.{Row, SparkSession}
-import org.apache.spark.sql.functions.{bround, current_timestamp, date_format, lit, udf, max => f_max, min => f_min}
+import org.apache.spark.sql.functions.{bround, col, current_timestamp, date_format, lit, row_number, udf, max => f_max, min => f_min,sum => f_sum}
+import org.apache.spark.sql.types.StringType
 import org.apache.spark.storage.StorageLevel
 
 /*
@@ -55,6 +57,7 @@ CREATE TABLE `relation_shuxi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+spark-shell --master yarn --num-executors 8 --executor-cores  8 --executor-memory 8g
 
  */
 object FamiliarityRelation {
@@ -67,6 +70,11 @@ object FamiliarityRelation {
 
 
   def main(args: Array[String]): Unit = {
+
+    // 获取当前时间
+//    val d0 = new java.util.Date()
+//    println("任务启动时间 " + d0.getTime)
+
     //不打印日志信息
     SetLogger
 
@@ -164,8 +172,30 @@ prop1.setProperty("password", "rcDsj_56")
     val profession_col = Seq("id_1","id_2","degree_profession")
     val profession_ds5 = profession_ds4.select("id_1", "id_2", "degree").toDF(profession_col:_*)
     val profession_ds6 = profession_ds4.select("id_2","id_1","degree").toDF(profession_col:_*)
-    val profession_ds7 = profession_ds5.union(profession_ds6)
+    val profession_ds7 = profession_ds5.union(profession_ds6).
+      groupBy("id_1","id_2").agg(f_max($"degree_profession")).
+      drop("degree_profession").toDF(profession_col:_*)
 
+
+    // 新增一列递增列
+//    val w1 = Window.partitionBy("id_1", "id_2").orderBy(col("degree_profession").desc)
+//    val test1 = profession_ds7.withColumn("col3", row_number().over(w1))//.filter($"col3" >= 2)
+//    test1.show(truncate = false)
+//
+//
+//    profession_ds4.filter($"id_1" === "00281988-b02b-4954-85e3-2bada3032fa2" &&
+//      $"id_2" === "2f700da9-178f-45c5-924d-ddc3476ca344").show(truncate = false)
+//    profession_ds5.filter($"id_1" === "00281988-b02b-4954-85e3-2bada3032fa2" &&
+//      $"id_2" === "2f700da9-178f-45c5-924d-ddc3476ca344").show(truncate = false)
+//    profession_ds6.filter($"id_1" === "00281988-b02b-4954-85e3-2bada3032fa2" &&
+//      $"id_2" === "2f700da9-178f-45c5-924d-ddc3476ca344").show(truncate = false)
+
+
+//    println(profession_ds7.count())
+//    println(profession_ds7.dropDuplicates().count())
+//    println(profession_ds7.select("id_1","id_2").dropDuplicates().count())
+//    println(profession_ds7.groupBy("id_1","id_2").agg(f_sum($"degree_profession")).count())
+//
     /*
     2. 主要职务和社会兼职表
 
@@ -232,7 +262,14 @@ prop1.setProperty("password", "rcDsj_56")
     val academic_col = Seq("id_1","id_2","degree_academic")
     val academic_ds6 = academic_ds5.select("id_1", "id_2", "degree").toDF(academic_col:_*)
     val academic_ds7 = academic_ds5.select("id_2", "id_1", "degree").toDF(academic_col:_*)
-    val academic_ds8 = academic_ds6.union(academic_ds7)
+    val academic_ds8 = academic_ds6.union(academic_ds7).
+      groupBy("id_1","id_2").agg(f_max($"degree_academic")).
+      drop("degree_academic").toDF(academic_col:_*)
+
+//        println(academic_ds8.count())
+//        println(academic_ds8.dropDuplicates().count())
+//        println(academic_ds8.select("id_1","id_2").dropDuplicates().count())
+//        println(academic_ds8.groupBy("id_1","id_2").agg(f_max($"degree_academic")).count())
 
     /*
     3. 参加会议情况表
@@ -286,7 +323,14 @@ prop1.setProperty("password", "rcDsj_56")
     val meeting_col = Seq("id_1","id_2","degree_meeting")
     val meeting_ds6 = meeting_ds5.select("id_1", "id_2", "degree").toDF(meeting_col:_*)
     val meeting_ds7 = meeting_ds5.select("id_2", "id_1", "degree").toDF(meeting_col:_*)
-    val meeting_ds8 = meeting_ds6.union(meeting_ds7)
+    val meeting_ds8 = meeting_ds6.union(meeting_ds7).
+      groupBy("id_1","id_2").agg(f_max($"degree_meeting")).
+      drop("degree_meeting").toDF(meeting_col:_*)
+
+//    println(meeting_ds8.count())
+//    println(meeting_ds8.dropDuplicates().count())
+//    println(meeting_ds8.select("id_1","id_2").dropDuplicates().count())
+//    println(meeting_ds8.groupBy("id_1","id_2").agg(f_max($"degree_meeting")).count())
 
     /*
     4. 享受人才工程表
@@ -341,8 +385,15 @@ prop1.setProperty("password", "rcDsj_56")
     val project_col = Seq("id_1","id_2","degree_project")
     val project_ds6 = project_ds5.select("id_1", "id_2", "degree").toDF(project_col:_*)
     val project_ds7 = project_ds5.select("id_2", "id_1", "degree").toDF(project_col:_*)
-    val project_ds8 = project_ds6.union(project_ds7)
+    val project_ds8 = project_ds6.union(project_ds7).
+      groupBy("id_1","id_2").agg(f_max($"degree_project")).
+      drop("degree_project").toDF(project_col:_*)
 
+//    println(project_ds8.count())
+//    println(project_ds8.dropDuplicates().count())
+//    println(project_ds8.select("id_1","id_2").dropDuplicates().count())
+//    println(project_ds8.groupBy("id_1","id_2").agg(f_max($"degree_project")).count())
+//
 
     /*
 val url2 = "jdbc:mysql://10.20.7.156:3306/rck?useUnicode=true&characterEncoding=UTF-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
@@ -375,12 +426,42 @@ prop2.setProperty("password", "rcDsj_56")
     val ds3 = profession_ds7.join(academic_ds8, Seq("id_1","id_2"), "outer").
       join(meeting_ds8, Seq("id_1","id_2"), "outer").
       join(project_ds8, Seq("id_1","id_2"), "outer").
-      join(ds2_xiaoyou, Seq("id_1","id_2"), "left").
-      join(ds2_tongshi, Seq("id_1","id_2"), "left").
+      join(ds2_xiaoyou, Seq("id_1","id_2"), "outer").
+      join(ds2_tongshi, Seq("id_1","id_2"), "outer").
       na.fill(value = 0.0, cols = Array("degree_profession","degree_academic","degree_meeting","degree_project","degree_xiaoyou", "degree_tongshi")).
       withColumn("relation",lit("熟悉程度")).
-      withColumn("relation_object", lit(null))
+      withColumn("relation_object", lit(null).cast(StringType))
 
+
+    val ds3_temp = profession_ds7.join(academic_ds8, Seq("id_1","id_2"), "outer").
+      join(meeting_ds8, Seq("id_1","id_2"), "outer").
+      join(project_ds8, Seq("id_1","id_2"), "outer").
+      na.fill(value = 0.0, cols = Array("degree_profession","degree_academic","degree_meeting","degree_project")).
+      withColumn("relation",lit("熟悉程度")).
+      withColumn("relation_object", lit(null).cast(StringType))
+
+//    println(ds3_temp.count())
+//    println(ds3_temp.dropDuplicates().count())
+//    println(ds3_temp.select("id_1","id_2").dropDuplicates().count())
+//
+//
+    ds3_temp.coalesce(10).write.mode("overwrite").jdbc(url2, "relation_shuxi_temp", prop2) //overwrite;append
+//    ds3_temp.write.mode("overwrite").jdbc(url2, "relation_shuxi_temp", prop2) //overwrite;append
+
+    /*
+    select count(*) from relation_shuxi_temp
+    3469076
+     */
+
+    // 获取时间差
+//    val d3 = new java.util.Date()
+//    println("计算相似性时间： " + d3.getTime)
+//    val diff = d3.getTime - d0.getTime // 返回自此Date对象表示的1970年1月1日，00:00:00 GMT以来的毫秒数。
+//    val diffMinutes = diff / (1000.0) // 时间间隔，单位：秒
+//    println("时间间隔(单位：秒): " + diffMinutes)
+//    println("时间间隔(单位：分钟): " + diffMinutes / 60.0) // 6.729299999999999
+
+    /*
     def mean_func(x1:Double, x2:Double,x3:Double,x4:Double, x5:Double,x6:Double):Double={
       val arr1 = Array(x1,x2,x3,x4,x5,x6)
       val sum_value = arr1.sum
@@ -414,7 +495,9 @@ prop2.setProperty("password", "rcDsj_56")
     //将结果保存到数据框中
     result_ds.coalesce(10).write.mode("append").jdbc(url2, "relation_shuxi", prop2) //overwrite
 
+//    result_ds.write.mode("append").jdbc(url2, "relation_shuxi", prop2) //overwrite
 
+*/
     sc.stop()
     spark.stop()
   }
