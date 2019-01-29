@@ -42,8 +42,8 @@ object HBaseToMySQL {
     val sc = spark.sparkContext
     import spark.implicits._
 
-//    val table_name_ipt = "relation"
-    val table_name_ipt = "relation_shuxi"
+    val table_name_ipt = "relation"
+//    val table_name_ipt = "relation_shuxi"
     val conf_hbase = HBaseConfiguration.create() //在HBaseConfiguration设置可以将扫描限制到部分列，以及限制扫描的时间范围
     //设置查询的表名
     conf_hbase.set(TableInputFormat.INPUT_TABLE, table_name_ipt) //设置输入表名 第一个参数yeeso-test-ywk_webpage
