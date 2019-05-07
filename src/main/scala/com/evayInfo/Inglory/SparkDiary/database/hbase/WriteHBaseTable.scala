@@ -75,7 +75,7 @@ object WriteHBaseTable {
       val target_name = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("target_name")) //target_name
       val relation = v.getValue(Bytes.toBytes("info"), Bytes.toBytes("relation")) //relation
       (source_id, source_name, target_id, target_name,relation)
-    }}.take(100)
+    }}//.take(100)
 
 
     val opt_table = "writeHBase_test" // 输出表表名
@@ -110,7 +110,8 @@ object WriteHBaseTable {
     jobConf.set("mapreduce.job.outputformat.class", classOf[TableOutputFormat[Text]].getName)
 
 
-    val resultRDD = sc.parallelize(hbaseRDD).map{x => (x(0),x(1),x(2),x(3),x(4))}
+//    val resultRDD = sc.parallelize(hbaseRDD).map{x => (x(0),x(1),x(2),x(3),x(4))}
+    val resultRDD = hbaseRDD//.map{x => (x(0),x(1),x(2),x(3),x(4))}
     resultRDD.map{ x=> {
       val id = UUID.randomUUID().toString().toLowerCase()
       val key = Bytes.toBytes(id)
