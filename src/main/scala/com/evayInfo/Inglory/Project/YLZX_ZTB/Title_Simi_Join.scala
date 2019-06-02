@@ -99,7 +99,7 @@ object Title_Simi_Join {
     println(ds8.count()) // 77
     ds8.write.mode("overwrite").jdbc(url1, "sunlu_diff_title", prop1)
 
-//    val s = "山东省潍坊市寿光市殡仪馆服务大厅建设项目中标公告"
+//    val s = "山东省潍坊市寿光市殡仪馆服务大厅建设项目中标公告"  // http://www.ccgp-shandong.gov.cn/sdgp2017/site/read.jsp?colcode=02&id=201072239
     val s = "青岛职业技术学院学前教育专业智慧实训室建设项目更正公告"
     val ds_check = ds1_0.filter($"title" === s)
     ds_check.show(truncate = false)
