@@ -11,6 +11,8 @@ import org.apache.spark.sql.{SparkSession, functions}
   *  参考链接：
   *  在 Spark DataFrame 中使用Time Window
   *  https://blog.csdn.net/wangpei1949/article/details/83855223
+  *  https://github.com/turtlebin/spark/blob/ad841954b7d23fb345721d439e27ecda7024a309/SparkCommerce/src/main/scala/xhb/SparkCommerce/SparkSqlWindow.scala
+  *  https://github.com/tarak-mpc/cppentry.github.io/blob/4ef0953ae37dcbe7f1a99263d65ef0477b0599d9/_posts/2018-11-22-%E5%9C%A8%20Spark%20DataFrame%20%E4%B8%AD%E4%BD%BF%E7%94%A8Time%20Window.markdown
   *
   */
 object SparkDataFrameTimeWindow {
