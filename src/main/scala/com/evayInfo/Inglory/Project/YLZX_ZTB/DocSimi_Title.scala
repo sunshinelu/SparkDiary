@@ -10,6 +10,7 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions.{col, _}
 import org.apache.spark.sql.types.TimestampType
+
 /*
 
 计算文档相似性

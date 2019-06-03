@@ -31,10 +31,11 @@ object Title_Simi_Join {
     prop1.setProperty("password", "BigData@2018")
     //get data
     val ds0 = spark.read.jdbc(url1, "collect_ccgp", prop1)
-    println(ds0.count()) // 3886
+    println(ds0.count()) // 3886   4074
+
 
     val ds1 = spark.read.jdbc(url1, "collect_ccgp", prop1).dropDuplicates(Seq("title","website"))
-    println(ds1.count()) //3539
+    println(ds1.count()) //3539  3668
 
     val col_names = Seq("id","title", "data", "website").map(col(_))
     val ds1_0 = ds1.select(col_names: _*).na.drop()
@@ -80,24 +81,26 @@ object Title_Simi_Join {
 
     val ds5 = ds4.filter($"title" === $"title_tag" && $"website" =!= $"website_tag").na.drop()
 
-    println(ds5.count()) // 4477(X)  2136
+    println(ds5.count()) // 4477(X)  2136  2270
 
     val ds6 = ds5.filter($"website" === "山东政府采购网").select("title")
     val ds6_0 = ds1_2.filter($"website" === "山东政府采购网").select("title")
 
-    println(ds6.count()) //1068
+    println(ds6.count()) //1068  1135
 
-    println(ds6_0.count()) // 1141
+    println(ds6_0.count()) // 1141  1141
+
 
 
     //    val ds7 = ds6_0.join(ds6,Seq("website"),"cross")
     val ds7 = ds6_0.except(ds6)
-    println(ds7.count()) // 73
+    println(ds7.count()) // 73 6
     ds7.show(truncate = false)
 
-    val ds8 = ds7.join(ds0, Seq("title"), "left").select(col_names: _*).na.drop()
-    println(ds8.count()) // 77
-    ds8.write.mode("overwrite").jdbc(url1, "sunlu_diff_title", prop1)
+    val ds8 = ds7.join(ds0, Seq("title"), "left").select(col_names: _*).na.drop().
+      dropDuplicates(Seq("title","website"))
+    println(ds8.count()) // 77  7
+    ds8.write.mode("overwrite").jdbc(url1, "sunlu_diff_title_0603", prop1)
 
 //    val s = "山东省潍坊市寿光市殡仪馆服务大厅建设项目中标公告"  // http://www.ccgp-shandong.gov.cn/sdgp2017/site/read.jsp?colcode=02&id=201072239
     val s = "青岛职业技术学院学前教育专业智慧实训室建设项目更正公告"
