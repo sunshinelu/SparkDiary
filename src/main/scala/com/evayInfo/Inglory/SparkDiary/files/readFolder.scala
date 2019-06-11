@@ -34,8 +34,9 @@ object readFolder {
     replaceAll("\\s*", "") 可以替换大部分空白字符， 不限于空格
     \s 可以匹配空格、制表符、换页符等空白字符的其中任意一个
      */
-    val df = rdd.map{x => (x._1.split("/")(11),x._2.replaceAll("\\s", "").replace("&nbsp;", "").replace("　　",""))}.toDF("label","txt")
-    df.show(truncate = false)
+    val df = rdd.map{x => (x._1.split("/")(11),x._2.replaceAll("\\s", "").replace("&nbsp;", "").replace("　　",""))}.
+      toDF("label","txt")
+//    df.show(truncate = false)
 
     val url = "jdbc:mysql://localhost:3306/data_mining_DB?useUnicode=true&characterEncoding=UTF-8&" +
       "useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
