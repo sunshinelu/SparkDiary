@@ -27,7 +27,7 @@ object readFolder2 {
 
     SetLogger
 
-    val SparkConf = new SparkConf().setAppName(s"readFolder").setMaster("local[*]").set("spark.executor.memory", "2g")
+    val SparkConf = new SparkConf().setAppName(s"readFolder2").setMaster("local[*]").set("spark.executor.memory", "2g")
     val spark = SparkSession.builder().config(SparkConf).getOrCreate()
     val sc = spark.sparkContext
     import spark.implicits._
@@ -50,8 +50,10 @@ object readFolder2 {
 //
 //    df1.write.mode(SaveMode.Append).jdbc(url, opt_table, prop)
     df1.coalesce(1).
-      write.format("csv").mode(SaveMode.Overwrite).
-      save("/Users/sunlu/Documents/workspace/IDEA/SparkDiary/result/gongsi")
+      write.format("csv").
+      option("header", true).
+      mode(SaveMode.Overwrite).
+      save("/Users/sunlu/Documents/workspace/IDEA/SparkDiary/result/gongsi2")
 
 
 

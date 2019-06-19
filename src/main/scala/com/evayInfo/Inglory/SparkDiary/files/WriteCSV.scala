@@ -26,11 +26,14 @@ object WriteCSV {
     // 读取csv文件，含表头
     val ColumnsName = Seq("words", "words2")
     val df1 = spark.read.option("header", true).option("delimiter", ",").
-      csv("file:///Users/sunlu/Documents/workspace/IDEA/Github/SparkDiary/data/country.csv").toDF(ColumnsName: _*)
+      csv("file:///Users/sunlu/Documents/workspace/IDEA/SparkDiary/data/country.csv").toDF(ColumnsName: _*)
     df1.show()
 
-    df1.select("id","features").coalesce(1).
-      write.format("csv").option("delimiter", "#").mode(SaveMode.Append).
+    df1.//select("id","features").
+      coalesce(1).
+      write.format("csv").option("delimiter", "#").
+      option("header", true).
+      mode(SaveMode.Overwrite).
       save("/Users/sunlu/Documents/workspace/IDEA/SparkDiary/result/csv_file")
 
     sc.stop()
