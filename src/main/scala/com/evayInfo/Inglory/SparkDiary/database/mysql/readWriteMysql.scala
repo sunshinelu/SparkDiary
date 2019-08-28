@@ -34,7 +34,7 @@ object readWriteMysql {
     prop1.setProperty("user", "root")
     prop1.setProperty("password", "root")
     //get data
-    val ds1 = spark.read.jdbc(url1, "testTable", prop1)
+    val ds1 = spark.read.jdbc(url1, "testTable2", prop1)
 
     //将ds1保存到testTable2表中
     val url2 = "jdbc:mysql://localhost:3306/sunluMySQL?useUnicode=true&characterEncoding=UTF-8"
@@ -48,7 +48,7 @@ object readWriteMysql {
     prop2.setProperty("password", "root")
 
     //将结果保存到数据框中
-    ds1.write.mode("append").jdbc(url2, "testTable2", prop2) //overwrite
+    ds1.write.mode("append").jdbc(url2, "testTable4", prop2) //overwrite
 
     sc.stop()
     spark.stop()
