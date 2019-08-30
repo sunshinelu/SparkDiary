@@ -139,6 +139,10 @@ object LDATest2 {
     val topics = topicIndices.map { case (terms, termWeights) =>
       terms.zip(termWeights).map { case (term, weight) => (vocabArray(term.toInt), weight) }
     }
+    println("========================")
+    println("topics is: ")
+    topics.take(50).foreach(println)
+    println("========================")
 
     val topics2 = topics.zipWithIndex.map { x =>
       val vec = x._1.toIterable
