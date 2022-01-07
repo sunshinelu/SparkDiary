@@ -333,7 +333,7 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>2.6.1</version>
+            <version>3.16.1</version>
         </dependency>
         <!-- ansj_seg -->
         <!-- mvn install:install-file -Dfile=ansj_seg-3.7.6-all-in-one.jar -DgroupId=org.ansj -DartifactId=ansj_seg -Dversion=3.7.6 -Dpackaging=jar -->
