@@ -16,7 +16,7 @@
         <container.version>2.17</container.version>
         <scala.version>2.11.8</scala.version>
         <scala.binary.version>2.11</scala.binary.version>
-        <mysql.version>5.1.17</mysql.version>
+        <mysql.version>8.0.28</mysql.version>
         <java.version>1.7</java.version>
         <hadoop.version>2.6.0</hadoop.version>
         <hbase.version>0.98.4-hadoop2</hbase.version>
